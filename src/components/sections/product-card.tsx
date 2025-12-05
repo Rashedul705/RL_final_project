@@ -3,6 +3,7 @@ import type { Product } from "@/lib/data";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { AddToCartButton } from "@/components/cart/add-to-cart-button";
+import Link from "next/link";
 
 interface ProductCardProps {
   product: Product;
@@ -12,7 +13,7 @@ export function ProductCard({ product }: ProductCardProps) {
   return (
     <Card className="overflow-hidden flex flex-col transition-all hover:shadow-lg">
       <CardHeader className="p-0">
-        <div className="relative aspect-[3/4] w-full">
+        <Link href={`/product/${product.id}`} target="_blank" className="block relative aspect-[3/4] w-full">
           <Image
             src={product.image}
             alt={product.name}
@@ -26,10 +27,14 @@ export function ProductCard({ product }: ProductCardProps) {
               <span className="text-white font-bold text-lg bg-black/50 px-4 py-2 rounded-md">Out of Stock</span>
             </div>
           )}
-        </div>
+        </Link>
       </CardHeader>
       <CardContent className="p-4 flex-1">
-        <CardTitle className="text-lg font-bold leading-tight tracking-normal">{product.name}</CardTitle>
+        <CardTitle className="text-lg font-bold leading-tight tracking-normal">
+          <Link href={`/product/${product.id}`} target="_blank" className="hover:underline">
+            {product.name}
+          </Link>
+        </CardTitle>
         <p className="mt-2 text-lg font-semibold text-primary">BDT {product.price.toLocaleString()}</p>
       </CardContent>
       <CardFooter className="p-4 pt-0 flex flex-col sm:flex-row gap-2 justify-center">
