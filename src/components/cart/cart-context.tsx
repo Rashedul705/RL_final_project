@@ -30,11 +30,13 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   const addToCart = (product: Product, quantity = 1) => {
     if (product.stock === 0) {
-      toast({
-        variant: "destructive",
-        title: "Out of Stock",
-        description: `${product.name} is currently out of stock.`,
-      });
+      setTimeout(() => {
+        toast({
+          variant: "destructive",
+          title: "Out of Stock",
+          description: `${product.name} is currently out of stock.`,
+        });
+      }, 0);
       return;
     }
 
@@ -46,11 +48,13 @@ export function CartProvider({ children }: { children: ReactNode }) {
       if (existingItem) {
         const newQuantity = existingItem.quantity + quantity;
         if (newQuantity > product.stock) {
-          toast({
-            variant: "destructive",
-            title: "Stock limit reached",
-            description: `You can only add up to ${product.stock} of ${product.name}.`,
-          });
+          setTimeout(() => {
+            toast({
+              variant: "destructive",
+              title: "Stock limit reached",
+              description: `You can only add up to ${product.stock} of ${product.name}.`,
+            });
+          }, 0);
           return prevCart.map((item) =>
             item.product.id === product.id
               ? { ...item, quantity: product.stock }
@@ -65,28 +69,34 @@ export function CartProvider({ children }: { children: ReactNode }) {
       }
       
       if (quantity > product.stock) {
-        toast({
-            variant: "destructive",
-            title: "Stock limit reached",
-            description: `You can only add up to ${product.stock} of ${product.name}.`,
-        });
+        setTimeout(() => {
+            toast({
+                variant: "destructive",
+                title: "Stock limit reached",
+                description: `You can only add up to ${product.stock} of ${product.name}.`,
+            });
+        }, 0);
         return [...prevCart, { product, quantity: product.stock }];
       }
 
-      toast({
-        title: "Added to cart",
-        description: `${product.name} has been added to your cart.`,
-      });
+      setTimeout(() => {
+        toast({
+          title: "Added to cart",
+          description: `${product.name} has been added to your cart.`,
+        });
+      }, 0);
       return [...prevCart, { product, quantity }];
     });
   };
 
   const removeFromCart = (productId: string) => {
     setCart((prevCart) => prevCart.filter((item) => item.product.id !== productId));
-     toast({
-      title: "Removed from cart",
-      variant: "destructive",
-    });
+     setTimeout(() => {
+        toast({
+          title: "Removed from cart",
+          variant: "destructive",
+        });
+     }, 0);
   };
 
   const updateQuantity = (productId: string, quantity: number) => {
@@ -94,11 +104,13 @@ export function CartProvider({ children }: { children: ReactNode }) {
     if (!item) return;
 
     if (quantity > item.product.stock) {
-      toast({
-        variant: "destructive",
-        title: "Stock limit reached",
-        description: `You can only add up to ${item.product.stock} of ${item.product.name}.`,
-      });
+        setTimeout(() => {
+            toast({
+                variant: "destructive",
+                title: "Stock limit reached",
+                description: `You can only add up to ${item.product.stock} of ${item.product.name}.`,
+            });
+        }, 0);
       setCart((prevCart) =>
         prevCart.map((cartItem) =>
           cartItem.product.id === productId ? { ...cartItem, quantity: item.product.stock } : cartItem
