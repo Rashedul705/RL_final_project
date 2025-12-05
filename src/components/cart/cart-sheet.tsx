@@ -26,15 +26,15 @@ export function CartSheet({ children }: { children?: React.ReactNode }) {
   return (
     <Sheet>
       {children && <SheetTrigger asChild>{children}</SheetTrigger>}
-      <SheetContent className="flex w-full flex-col pr-0 sm:max-w-lg">
+      <SheetContent className="flex w-full flex-col sm:max-w-lg">
         <SheetHeader className="px-6">
           <SheetTitle>Shopping Cart</SheetTitle>
         </SheetHeader>
         <Separator />
         {cart.length > 0 ? (
           <>
-            <ScrollArea className="flex-1">
-              <div className="flex flex-col gap-4 px-6">
+            <ScrollArea className="flex-1 px-6">
+              <div className="flex flex-col gap-4">
                 {cart.map((item) => (
                   <CartItem key={item.product.id} item={item} />
                 ))}
@@ -69,3 +69,5 @@ export function CartSheet({ children }: { children?: React.ReactNode }) {
     </Sheet>
   );
 }
+
+    

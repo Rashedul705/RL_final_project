@@ -232,9 +232,8 @@ export default function CheckoutPage() {
                                                     <Button
                                                         variant="outline"
                                                         size="icon"
-                                                        className="h-6 w-6"
+                                                        className="h-6 w-6 text-red-500 hover:bg-red-500 hover:text-white"
                                                         onClick={() => updateQuantity(item.product.id, item.quantity - 1)}
-                                                        disabled={item.quantity <= 1}
                                                     >
                                                         <Minus className="h-3 w-3" />
                                                     </Button>
@@ -252,7 +251,7 @@ export default function CheckoutPage() {
                                                     <Button
                                                         variant="outline"
                                                         size="icon"
-                                                        className="h-6 w-6"
+                                                        className="h-6 w-6 text-[#00846E] hover:bg-[#00846E] hover:text-white"
                                                         onClick={() => updateQuantity(item.product.id, item.quantity + 1)}
                                                     >
                                                         <Plus className="h-3 w-3" />
@@ -311,3 +310,5 @@ export default function CheckoutPage() {
     </div>
   );
 }
+
+    
