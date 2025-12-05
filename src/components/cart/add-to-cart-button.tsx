@@ -7,28 +7,32 @@ import { useRouter } from "next/navigation";
 
 type AddToCartButtonProps = ButtonProps & {
   product: Product;
+  quantity?: number;
   redirectToCheckout?: boolean;
 };
 
-export function AddToCartButton({ product, redirectToCheckout = false, ...props }: AddToCartButtonProps) {
+export function AddToCartButton({ product, quantity = 1, redirectToCheckout = false, ...props }: AddToCartButtonProps) {
   const { addToCart, getItem } = useCart();
   const router = useRouter();
 
   const cartItem = getItem(product.id);
-  const isAtMaxStock = cartItem && cartItem.quantity >= product.stock;
+  const isAtMaxStock = cartItem && (cartItem.quantity + quantity > product.stock);
   const isOutOfStock = product.stock === 0;
 
   const handleClick = () => {
-    if (isAtMaxStock || isOutOfStock) return;
-    addToCart(product);
+    if (isOutOfStock) return;
+    addToCart(product, quantity);
     if (redirectToCheckout) {
       router.push('/checkout');
     }
   };
 
+  const isDisabled = isOutOfStock || (cartItem && cartItem.quantity >= product.stock);
+
+
   return (
-    <Button onClick={handleClick} disabled={isAtMaxStock || isOutOfStock} {...props}>
-      {isOutOfStock ? "Out of Stock" : isAtMaxStock ? "Max Stock Reached" : props.children || "Add to Cart"}
+    <Button onClick={handleClick} disabled={isDisabled} {...props}>
+      {isOutOfStock ? "Out of Stock" : (cartItem && cartItem.quantity >= product.stock) ? "Max Stock Reached" : props.children || "Add to Cart"}
     </Button>
   );
 }

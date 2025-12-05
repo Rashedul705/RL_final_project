@@ -18,6 +18,9 @@ import { ProductCard } from '@/components/sections/product-card';
 import { notFound } from 'next/navigation';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
+import { Button } from '@/components/ui/button';
+import { Plus, Minus } from 'lucide-react';
+import { Input } from '@/components/ui/input';
 
 // Even in a client component, params can be a promise.
 // We can use `React.use` to unwrap it.
@@ -28,6 +31,7 @@ type ProductPageProps = {
 export default function ProductDetailPage({ params }: ProductPageProps) {
   const [api, setApi] = useState<CarouselApi>();
   const [current, setCurrent] = useState(0);
+  const [quantity, setQuantity] = useState(1);
   
   // Asynchronously get the id from the params promise.
   const { id } = use(params);
@@ -55,6 +59,16 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
   if (!product) {
     notFound();
   }
+
+  const handleQuantityChange = (newQuantity: number) => {
+    if (newQuantity < 1) {
+      setQuantity(1);
+    } else if (newQuantity > product.stock) {
+      setQuantity(product.stock);
+    } else {
+      setQuantity(newQuantity);
+    }
+  };
 
   const relatedProducts = products
     .filter((p) => p.category === product.category && p.id !== product.id)
@@ -127,35 +141,67 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
                 BDT {product.price.toLocaleString()}
               </p>
 
-              <div className="mt-4 text-sm text-muted-foreground">
-                {product.stock > 0 ? (
-                  <p>
-                    In Stock:{' '}
-                    <span className="font-semibold text-green-600">
-                      {product.stock} items available
-                    </span>
-                  </p>
-                ) : (
-                  <p className="font-semibold text-red-600">Out of Stock</p>
-                )}
-              </div>
+              {product.stock > 0 ? (
+                <div className="mt-8 space-y-4">
+                    <div className="flex items-center gap-2">
+                        <Label htmlFor="quantity" className="text-sm font-medium">Quantity:</Label>
+                        <div className="flex items-center">
+                            <Button
+                                variant="outline"
+                                size="icon"
+                                className="h-8 w-8"
+                                onClick={() => handleQuantityChange(quantity - 1)}
+                                disabled={quantity <= 1}
+                            >
+                                <Minus className="h-4 w-4" />
+                            </Button>
+                            <Input
+                                id="quantity"
+                                type="number"
+                                value={quantity}
+                                onChange={(e) => handleQuantityChange(parseInt(e.target.value) || 1)}
+                                className="h-8 w-16 text-center [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                min={1}
+                                max={product.stock}
+                            />
+                            <Button
+                                variant="outline"
+                                size="icon"
+                                className="h-8 w-8"
+                                onClick={() => handleQuantityChange(quantity + 1)}
+                                disabled={quantity >= product.stock}
+                            >
+                                <Plus className="h-4 w-4" />
+                            </Button>
+                        </div>
+                         <p className="text-sm text-muted-foreground">({product.stock} items available)</p>
+                    </div>
 
-              <div className="mt-8 flex flex-col sm:flex-row gap-2">
-                <AddToCartButton
-                  product={product}
-                  variant="outline"
-                  className="w-full flex-1 text-lg py-6"
-                >
-                  Add to Cart
-                </AddToCartButton>
-                <AddToCartButton
-                  product={product}
-                  redirectToCheckout
-                  className="w-full flex-1 bg-accent hover:bg-accent/90 text-accent-foreground text-lg py-6"
-                >
-                  Order Now
-                </AddToCartButton>
-              </div>
+                    <div className="flex flex-col sm:flex-row gap-2">
+                        <AddToCartButton
+                        product={product}
+                        quantity={quantity}
+                        variant="outline"
+                        className="w-full flex-1 text-lg py-6"
+                        >
+                        Add to Cart
+                        </AddToCartButton>
+                        <AddToCartButton
+                        product={product}
+                        quantity={quantity}
+                        redirectToCheckout
+                        className="w-full flex-1 bg-accent hover:bg-accent/90 text-accent-foreground text-lg py-6"
+                        >
+                        Order Now
+                        </AddToCartButton>
+                    </div>
+                </div>
+              ) : (
+                <div className="mt-8">
+                    <p className="font-semibold text-red-600 text-lg">Out of Stock</p>
+                </div>
+              )}
+
 
                <div className="mt-8">
                 <h2 className="text-xl font-semibold">Product Highlights:</h2>
