@@ -25,6 +25,12 @@
       "imageHint": "elegant dress"
     },
     {
+      "id": "three-piece-4",
+      "description": "Chic summer three-piece suit",
+      "imageUrl": "https://images.unsplash.com/photo-1624280217162-466a76286d0f?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw3fHxzdW1tZXIlMjBzdWl0fGVufDB8fHx8MTc2NDk3MzU1MHww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "summer suit"
+    },
+    {
       "id": "hijab-1",
       "description": "Silk hijab",
       "imageUrl": "https://images.unsplash.com/photo-1625987306773-8b9e554b25e2?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw1fHxzaWxrJTIwaGlqYWJ8ZW58MHx8fHwxNzY0ODk4NzEyfDA&ixlib=rb-4.1.0&q=80&w=1080",

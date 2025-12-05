@@ -49,6 +49,14 @@ export const products: Product[] = [
     imageHint: findImage('three-piece-3').imageHint,
     category: 'three-piece'
   },
+  {
+    id: '9',
+    name: 'Chic Summer Three-Piece',
+    price: 3800,
+    image: findImage('three-piece-4').imageUrl,
+    imageHint: findImage('three-piece-4').imageHint,
+    category: 'three-piece',
+  },
   { 
     id: '4', 
     name: 'Premium Silk Hijab', 
