@@ -55,16 +55,6 @@ export function Footer() {
                   <Facebook className="h-5 w-5" />
                 </Link>
               </Button>
-              <Button variant="ghost" size="icon" asChild>
-                <Link href="#" aria-label="Instagram">
-                  <Instagram className="h-5 w-5" />
-                </Link>
-              </Button>
-              <Button variant="ghost" size="icon" asChild>
-                <Link href="#" aria-label="YouTube">
-                  <Youtube className="h-5 w-5" />
-                </Link>
-              </Button>
             </div>
           </div>
         </div>
