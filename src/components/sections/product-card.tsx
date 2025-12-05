@@ -10,10 +10,11 @@ interface ProductCardProps {
 }
 
 export function ProductCard({ product }: ProductCardProps) {
+  const productSlug = product.name.toLowerCase().replace(/\s+/g, '-');
   return (
     <Card className="overflow-hidden flex flex-col transition-all hover:shadow-lg">
       <CardHeader className="p-0">
-        <Link href={`/product/${product.id}`} className="block relative aspect-[3/4] w-full">
+        <Link href={`/product/${productSlug}`} className="block relative aspect-[3/4] w-full">
           <Image
             src={product.image}
             alt={product.name}
@@ -31,7 +32,7 @@ export function ProductCard({ product }: ProductCardProps) {
       </CardHeader>
       <CardContent className="p-4 flex-1">
         <CardTitle className="text-lg font-bold leading-tight tracking-normal">
-          <Link href={`/product/${product.id}`} className="hover:underline">
+          <Link href={`/product/${productSlug}`} className="hover:underline">
             {product.name}
           </Link>
         </CardTitle>
