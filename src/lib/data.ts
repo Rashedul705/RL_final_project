@@ -11,6 +11,7 @@ export type Product = {
   image: string;
   imageHint: string;
   category: string;
+  stock: number;
 };
 
 export type Category = {
@@ -31,7 +32,8 @@ export const products: Product[] = [
     price: 3200, 
     image: findImage('three-piece-1').imageUrl,
     imageHint: findImage('three-piece-1').imageHint,
-    category: 'three-piece' 
+    category: 'three-piece',
+    stock: 10,
   },
   { 
     id: '2', 
@@ -39,7 +41,8 @@ export const products: Product[] = [
     price: 4500, 
     image: findImage('three-piece-2').imageUrl,
     imageHint: findImage('three-piece-2').imageHint,
-    category: 'three-piece' 
+    category: 'three-piece',
+    stock: 5,
   },
   { 
     id: '3', 
@@ -47,7 +50,8 @@ export const products: Product[] = [
     price: 2800, 
     image: findImage('three-piece-3').imageUrl,
     imageHint: findImage('three-piece-3').imageHint,
-    category: 'three-piece'
+    category: 'three-piece',
+    stock: 15,
   },
   {
     id: '9',
@@ -56,6 +60,7 @@ export const products: Product[] = [
     image: findImage('three-piece-4').imageUrl,
     imageHint: findImage('three-piece-4').imageHint,
     category: 'three-piece',
+    stock: 8,
   },
   { 
     id: '4', 
@@ -63,7 +68,8 @@ export const products: Product[] = [
     price: 1200, 
     image: findImage('hijab-1').imageUrl,
     imageHint: findImage('hijab-1').imageHint,
-    category: 'hijab'
+    category: 'hijab',
+    stock: 0,
   },
   { 
     id: '5', 
@@ -71,7 +77,8 @@ export const products: Product[] = [
     price: 800, 
     image: findImage('hijab-2').imageUrl,
     imageHint: findImage('hijab-2').imageHint,
-    category: 'hijab'
+    category: 'hijab',
+    stock: 20,
   },
   { 
     id: '6', 
@@ -79,7 +86,8 @@ export const products: Product[] = [
     price: 950, 
     image: findImage('hijab-3').imageUrl,
     imageHint: findImage('hijab-3').imageHint,
-    category: 'hijab'
+    category: 'hijab',
+    stock: 12,
   },
   { 
     id: '7', 
@@ -87,7 +95,8 @@ export const products: Product[] = [
     price: 5500, 
     image: findImage('bedsheet-1').imageUrl,
     imageHint: findImage('bedsheet-1').imageHint,
-    category: 'bedsheet'
+    category: 'bedsheet',
+    stock: 7,
   },
   { 
     id: '8', 
@@ -95,7 +104,8 @@ export const products: Product[] = [
     price: 3500, 
     image: findImage('bedsheet-2').imageUrl,
     imageHint: findImage('bedsheet-2').imageHint,
-    category: 'bedsheet'
+    category: 'bedsheet',
+    stock: 9,
   },
 ];
 

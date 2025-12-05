@@ -30,7 +30,7 @@ import { Footer } from '@/components/layout/footer';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { X, Plus, Minus } from 'lucide-react';
+import { Plus, Minus } from 'lucide-react';
 
 const bangladeshDistricts = [
   'Bagerhat', 'Bandarban', 'Barguna', 'Barishal', 'Bhola', 'Bogra',
@@ -253,6 +253,7 @@ export default function CheckoutPage() {
                                                         size="icon"
                                                         className="h-6 w-6 text-[#00846E] hover:bg-[#00846E] hover:text-white"
                                                         onClick={() => updateQuantity(item.product.id, item.quantity + 1)}
+                                                        disabled={item.quantity >= item.product.stock}
                                                     >
                                                         <Plus className="h-3 w-3" />
                                                     </Button>

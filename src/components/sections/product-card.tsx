@@ -21,6 +21,11 @@ export function ProductCard({ product }: ProductCardProps) {
             data-ai-hint={product.imageHint}
             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
           />
+           {product.stock === 0 && (
+            <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+              <span className="text-white font-bold text-lg bg-black/50 px-4 py-2 rounded-md">Out of Stock</span>
+            </div>
+          )}
         </div>
       </CardHeader>
       <CardContent className="p-4 flex-1">

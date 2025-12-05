@@ -11,10 +11,15 @@ type AddToCartButtonProps = ButtonProps & {
 };
 
 export function AddToCartButton({ product, redirectToCheckout = false, ...props }: AddToCartButtonProps) {
-  const { addToCart } = useCart();
+  const { addToCart, getItem } = useCart();
   const router = useRouter();
 
+  const cartItem = getItem(product.id);
+  const isAtMaxStock = cartItem && cartItem.quantity >= product.stock;
+  const isOutOfStock = product.stock === 0;
+
   const handleClick = () => {
+    if (isAtMaxStock || isOutOfStock) return;
     addToCart(product);
     if (redirectToCheckout) {
       router.push('/checkout');
@@ -22,8 +27,8 @@ export function AddToCartButton({ product, redirectToCheckout = false, ...props 
   };
 
   return (
-    <Button onClick={handleClick} {...props}>
-      {props.children || "Add to Cart"}
+    <Button onClick={handleClick} disabled={isAtMaxStock || isOutOfStock} {...props}>
+      {isOutOfStock ? "Out of Stock" : isAtMaxStock ? "Max Stock Reached" : props.children || "Add to Cart"}
     </Button>
   );
 }

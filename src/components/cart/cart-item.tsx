@@ -36,9 +36,8 @@ export function CartItem({ item }: CartItemProps) {
             <Button
               variant="outline"
               size="icon"
-              className="h-8 w-8"
+              className="h-8 w-8 text-red-500 hover:bg-red-500 hover:text-white"
               onClick={() => updateQuantity(product.id, quantity - 1)}
-              disabled={quantity <= 1}
             >
               <Minus className="h-4 w-4" />
             </Button>
@@ -56,8 +55,9 @@ export function CartItem({ item }: CartItemProps) {
             <Button
               variant="outline"
               size="icon"
-              className="h-8 w-8"
+              className="h-8 w-8 text-[#00846E] hover:bg-[#00846E] hover:text-white"
               onClick={() => updateQuantity(product.id, quantity + 1)}
+              disabled={quantity >= product.stock}
             >
               <Plus className="h-4 w-4" />
             </Button>
@@ -81,5 +81,3 @@ export function CartItem({ item }: CartItemProps) {
     </div>
   );
 }
-
-    
