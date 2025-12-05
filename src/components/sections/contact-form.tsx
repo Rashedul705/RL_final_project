@@ -45,7 +45,7 @@ export function ContactForm() {
   }
 
   return (
-    <section className="bg-card py-16 md:py-24">
+    <section id="contact" className="bg-card py-16 md:py-24 scroll-mt-20">
       <div className="container max-w-2xl">
         <Card>
             <CardHeader className="text-center">

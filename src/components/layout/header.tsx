@@ -12,10 +12,10 @@ export function Header() {
   const cartItemCount = cart.reduce((sum, item) => sum + item.quantity, 0);
 
   const navLinks = [
-    { href: "#three-piece", label: "Three-Piece" },
-    { href: "#hijab", label: "Hijab" },
-    { href: "#bedsheet", label: "Bedsheet" },
-    { href: "/admin", label: "Admin" },
+    { href: "/", label: "Home" },
+    { href: "#categories", label: "Shop" },
+    { href: "#why-us", label: "About" },
+    { href: "#contact", label: "Contact" },
   ];
 
   return (
@@ -27,13 +27,24 @@ export function Header() {
           </Link>
         </div>
 
-        <div className="hidden md:flex items-center gap-4">
-          <Button variant="ghost" size="icon" aria-label="WhatsApp">
-            <Phone className="h-5 w-5" />
-          </Button>
-          <Button variant="ghost" size="icon" aria-label="Search">
-            <Search className="h-5 w-5" />
-          </Button>
+        <nav className="hidden md:flex items-center gap-6">
+          {navLinks.map((link) => (
+            <Link key={link.href} href={link.href} className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground">
+                {link.label}
+            </Link>
+          ))}
+        </nav>
+
+        <div className="flex items-center gap-4">
+          <div className="hidden md:flex items-center gap-2">
+            <Button variant="ghost" size="icon" aria-label="WhatsApp">
+              <Phone className="h-5 w-5" />
+            </Button>
+            <Button variant="ghost" size="icon" aria-label="Search">
+              <Search className="h-5 w-5" />
+            </Button>
+          </div>
+          
           <CartSheet>
             <Button variant="ghost" size="icon" className="relative" aria-label="Shopping Cart">
               <ShoppingCart className="h-5 w-5" />
@@ -44,53 +55,44 @@ export function Header() {
               )}
             </Button>
           </CartSheet>
-        </div>
 
-        <div className="md:hidden">
-          <Sheet>
-            <SheetTrigger asChild>
-              <Button variant="ghost" size="icon">
-                <Menu className="h-6 w-6" />
-                <span className="sr-only">Open Menu</span>
-              </Button>
-            </SheetTrigger>
-            <SheetContent side="left">
-              <div className="flex flex-col gap-4 p-4">
-                <Link href="/" className="text-lg font-bold font-headline">
-                  Rodela&apos;s Boutique
-                </Link>
-                <nav className="flex flex-col gap-3">
-                  {navLinks.map((link) => (
-                    <Link
-                      key={link.href}
-                      href={link.href}
-                      className="text-muted-foreground hover:text-foreground"
-                    >
-                      {link.label}
-                    </Link>
-                  ))}
-                </nav>
-                <div className="mt-4 flex items-center gap-4">
-                  <Button variant="outline" size="icon" aria-label="WhatsApp">
-                    <Phone className="h-5 w-5" />
-                  </Button>
-                  <Button variant="outline" size="icon" aria-label="Search">
-                    <Search className="h-5 w-5" />
-                  </Button>
-                   <CartSheet>
-                    <Button variant="outline" size="icon" className="relative" aria-label="Shopping Cart">
-                      <ShoppingCart className="h-5 w-5" />
-                      {cartItemCount > 0 && (
-                        <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">
-                          {cartItemCount}
-                        </span>
-                      )}
+          <div className="md:hidden">
+            <Sheet>
+              <SheetTrigger asChild>
+                <Button variant="ghost" size="icon">
+                  <Menu className="h-6 w-6" />
+                  <span className="sr-only">Open Menu</span>
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="left">
+                <div className="flex flex-col gap-4 p-4">
+                  <Link href="/" className="text-lg font-bold font-headline">
+                    Rodela&apos;s Boutique
+                  </Link>
+                  <nav className="flex flex-col gap-3">
+                    {navLinks.map((link) => (
+                      <Link
+                        key={link.href}
+                        href={link.href}
+                        className="text-muted-foreground hover:text-foreground"
+                      >
+                        {link.label}
+                      </Link>
+                    ))}
+                    <Link href="/admin" className="text-muted-foreground hover:text-foreground">Admin</Link>
+                  </nav>
+                  <div className="mt-4 flex items-center gap-4">
+                    <Button variant="outline" size="icon" aria-label="WhatsApp">
+                      <Phone className="h-5 w-5" />
                     </Button>
-                  </CartSheet>
+                    <Button variant="outline" size="icon" aria-label="Search">
+                      <Search className="h-5 w-5" />
+                    </Button>
+                  </div>
                 </div>
-              </div>
-            </SheetContent>
-          </Sheet>
+              </SheetContent>
+            </Sheet>
+          </div>
         </div>
       </div>
     </header>
