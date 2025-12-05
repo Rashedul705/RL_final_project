@@ -57,14 +57,14 @@ export default function CheckoutPage() {
   const { cart, clearCart } = useCart();
   const { toast } = useToast();
   const router = useRouter();
-  const [shippingCharge, setShippingCharge] = useState(120);
+  const [shippingCharge, setShippingCharge] = useState<number | null>(null);
 
   const subtotal = cart.reduce(
     (acc, item) => acc + item.product.price * item.quantity,
     0
   );
   
-  const total = subtotal + shippingCharge;
+  const total = subtotal + (shippingCharge ?? 0);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -84,7 +84,7 @@ export default function CheckoutPage() {
     } else if (selectedCity) {
       setShippingCharge(120);
     } else {
-        setShippingCharge(120);
+        setShippingCharge(null);
     }
   }, [selectedCity]);
   
@@ -218,10 +218,12 @@ export default function CheckoutPage() {
                                         <span>Subtotal</span>
                                         <span>BDT {subtotal.toLocaleString()}</span>
                                     </div>
-                                    <div className="flex justify-between">
-                                        <span>Shipping</span>
-                                        <span>BDT {shippingCharge.toLocaleString()}</span>
-                                    </div>
+                                    {shippingCharge !== null && (
+                                        <div className="flex justify-between">
+                                            <span>Shipping</span>
+                                            <span>BDT {shippingCharge.toLocaleString()}</span>
+                                        </div>
+                                    )}
                                 </div>
                                 <Separator />
                                 <div className="flex justify-between font-bold text-lg">
