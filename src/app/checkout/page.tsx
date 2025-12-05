@@ -129,9 +129,9 @@ export default function CheckoutPage() {
         <main className="flex-1 py-8 md:py-12">
             <div className="container mx-auto px-4">
                 <h1 className="text-3xl md:text-4xl font-bold text-center mb-8">Checkout</h1>
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
                     {/* Shipping Details */}
-                    <div className="lg:col-span-2">
+                    <div className="lg:col-span-3">
                         <Card>
                             <CardHeader>
                                 <CardTitle>Shipping Information</CardTitle>
@@ -209,7 +209,7 @@ export default function CheckoutPage() {
                     </div>
 
                     {/* Order Summary */}
-                    <div className="lg:col-span-1">
+                    <div className="lg:col-span-2">
                         <Card className="sticky top-24">
                             <CardHeader>
                                 <CardTitle>Order Summary</CardTitle>
