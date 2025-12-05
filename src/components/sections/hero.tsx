@@ -17,7 +17,7 @@ export function Hero() {
       <Carousel>
         <CarouselContent>
           <CarouselItem>
-            <div className="relative h-[50vh] md:h-[calc(100vh-4rem)] w-full">
+            <div className="relative h-[50vh] md:h-[70vh] w-full">
               <Image
                 src={heroImage.imageUrl}
                 alt="Promotional banner"
