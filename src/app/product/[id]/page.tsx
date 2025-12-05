@@ -157,7 +157,7 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
                 </AddToCartButton>
               </div>
                 <div className="mt-8 space-y-4">
-                    <h2 className="text-xl font-semibold">Product Description</h2>
+                    <h2 className="text-xl font-semibold">Product Highlights:</h2>
                     <p className="text-muted-foreground">{product.description}</p>
                 </div>
             </div>
