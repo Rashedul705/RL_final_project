@@ -7,7 +7,7 @@ export function Footer() {
   return (
     <footer className="bg-card text-card-foreground">
       <div className="container py-12 md:py-16">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {/* About Section */}
           <div className="space-y-4">
             <h3 className="text-xl font-bold">Rodela&apos;s Boutique</h3>
@@ -45,31 +45,12 @@ export function Footer() {
               </li>
             </ul>
           </div>
-
-          {/* Social Links */}
-          <div className="space-y-4">
-            <h4 className="text-lg font-semibold">Follow Us</h4>
-            <div className="flex items-center gap-2">
-              <Button variant="ghost" size="icon" asChild>
-                <Link href="#" aria-label="Facebook">
-                  <Facebook className="h-5 w-5" />
-                </Link>
-              </Button>
-            </div>
-          </div>
         </div>
 
-        <div className="mt-12 border-t border-border pt-8 flex flex-col md:flex-row items-center justify-between gap-4">
+        <div className="mt-12 border-t border-border pt-8 flex flex-col md:flex-row items-center justify-center gap-4">
           <p className="text-sm text-muted-foreground">
             &copy; {new Date().getFullYear()} Rodela's Boutique. All Rights Reserved.
           </p>
-          <div className="flex items-center gap-2">
-            <Button variant="ghost" size="icon" asChild>
-              <Link href="#" aria-label="Facebook">
-                <Facebook className="h-5 w-5" />
-              </Link>
-            </Button>
-          </div>
         </div>
       </div>
     </footer>
