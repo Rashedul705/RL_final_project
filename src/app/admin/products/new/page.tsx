@@ -79,8 +79,8 @@ export default function NewProductPage() {
                 </div>
               </div>
                <div className="grid gap-3">
-                    <Label htmlFor="picture">Product Image</Label>
-                    <Input id="picture" type="file" />
+                    <Label htmlFor="picture">Product Images</Label>
+                    <Input id="picture" type="file" multiple />
                 </div>
                 <div className="flex items-center gap-4">
                     <Label htmlFor="stock-status">In Stock</Label>
