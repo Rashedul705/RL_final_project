@@ -3,14 +3,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import {
-  Sidebar,
-  SidebarHeader,
-  SidebarMenu,
-  SidebarMenuItem,
-  SidebarMenuButton,
-  SidebarContent,
-} from "@/components/ui/sidebar";
+import React from "react";
 import { LayoutDashboard, ShoppingCart, Package, FileText, Home, Tags, Truck, MessageSquare } from "lucide-react";
 
 const adminNavItems = [
