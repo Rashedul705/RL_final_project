@@ -31,7 +31,7 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { MoreHorizontal, PlusCircle } from 'lucide-react';
+import { MoreHorizontal, PlusCircle, Edit, Trash2 } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -161,26 +161,16 @@ export default function AdminCategoriesPage() {
                     <TableCell className="text-muted-foreground">{category.id}</TableCell>
                     <TableCell className="text-right">
                        <Dialog open={!!editingCategory && editingCategory.id === category.id} onOpenChange={(isOpen) => !isOpen && setEditingCategory(null)}>
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button aria-haspopup="true" size="icon" variant="ghost">
-                              <MoreHorizontal className="h-4 w-4" />
-                              <span className="sr-only">Toggle menu</span>
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                             <DialogTrigger asChild>
-                                <DropdownMenuItem onSelect={() => setEditingCategory(category)}>Edit</DropdownMenuItem>
+                            <DialogTrigger asChild>
+                               <Button variant="ghost" size="icon" onClick={() => setEditingCategory(category)}>
+                                    <Edit className="h-4 w-4" />
+                                    <span className="sr-only">Edit</span>
+                                </Button>
                             </DialogTrigger>
-                            <DropdownMenuItem
-                              className="text-red-600"
-                              onSelect={() => handleDeleteCategory(category.id)}
-                            >
-                              Delete
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
+                             <Button variant="ghost" size="icon" className="text-red-600 hover:text-red-700" onClick={() => handleDeleteCategory(category.id)}>
+                                <Trash2 className="h-4 w-4" />
+                                <span className="sr-only">Delete</span>
+                            </Button>
                         <DialogContent>
                             <DialogHeader>
                             <DialogTitle>Edit Category</DialogTitle>
