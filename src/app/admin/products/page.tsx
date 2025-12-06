@@ -1,3 +1,4 @@
+
 import {
   Card,
   CardContent,
@@ -26,15 +27,15 @@ import {
 import { Switch } from "@/components/ui/switch";
 import Image from "next/image";
 import Link from "next/link";
-
-const products = [
-    { id: '1', name: 'Elegant Floral Three-Piece', price: 3200, stock: true, category: 'Three-Piece', image: 'https://picsum.photos/seed/suit1/40/40' },
-    { id: '2', name: 'Modern Silk Three-Piece', price: 4500, stock: true, category: 'Three-Piece', image: 'https://picsum.photos/seed/suit2/40/40' },
-    { id: '4', name: 'Premium Silk Hijab', price: 1200, stock: false, category: 'Hijab', image: 'https://picsum.photos/seed/hijab1/40/40' },
-    { id: '7', name: 'Luxury King Size Bedsheet', price: 5500, stock: true, category: 'Bedsheet', image: 'https://picsum.photos/seed/bedsheet1/40/40' },
-];
+import { products, categories } from "@/lib/data";
 
 export default function AdminProductsPage() {
+    
+    const getCategoryName = (categoryId: string) => {
+        const category = categories.find(c => c.id === categoryId);
+        return category ? category.name : 'N/A';
+    }
+
     return (
         <div className="flex flex-col">
             <header className="flex h-16 items-center justify-between border-b bg-background px-6 shrink-0">
@@ -74,10 +75,10 @@ export default function AdminProductsPage() {
                                         </TableCell>
                                         <TableCell className="font-medium">{product.name}</TableCell>
                                         <TableCell>
-                                            <Badge variant="outline">{product.category}</Badge>
+                                            <Badge variant="outline">{getCategoryName(product.category)}</Badge>
                                         </TableCell>
                                         <TableCell>
-                                            <Switch checked={product.stock} aria-label="In Stock" />
+                                            <Switch checked={product.stock > 0} aria-label="In Stock" />
                                         </TableCell>
                                         <TableCell className="text-right">BDT {product.price.toLocaleString()}</TableCell>
                                         <TableCell>
