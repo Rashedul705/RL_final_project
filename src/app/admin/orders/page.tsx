@@ -20,7 +20,7 @@ export default function AdminOrdersPage() {
             <CardDescription>
               This is where you will manage your orders.
             </CardDescription>
-          </Header>
+          </CardHeader>
           <CardContent>
             <p>Order list and management tools will go here.</p>
           </CardContent>
