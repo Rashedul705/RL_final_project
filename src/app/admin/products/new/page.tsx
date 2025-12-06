@@ -79,13 +79,19 @@ export default function NewProductPage() {
                 </div>
               </div>
               <div className="grid md:grid-cols-2 gap-6">
+                 <div className="grid gap-3">
+                    <Label htmlFor="picture">Featured Image</Label>
+                    <Input id="picture" type="file" />
+                </div>
+                 <div className="grid gap-3">
+                    <Label htmlFor="gallery">Product Gallery</Label>
+                    <Input id="gallery" type="file" multiple />
+                </div>
+              </div>
+              <div className="grid md:grid-cols-2 gap-6">
                 <div className="grid gap-3">
                     <Label htmlFor="stock">Stock Quantity</Label>
                     <Input id="stock" type="number" placeholder="e.g. 25" defaultValue="10" />
-                </div>
-                <div className="grid gap-3">
-                    <Label htmlFor="picture">Product Images</Label>
-                    <Input id="picture" type="file" multiple />
                 </div>
               </div>
             </form>
