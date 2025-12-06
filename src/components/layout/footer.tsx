@@ -32,10 +32,6 @@ export function Footer() {
             <h4 className="text-lg font-semibold">Contact Us</h4>
             <ul className="space-y-3 text-muted-foreground">
               <li className="flex items-start gap-3">
-                <MapPin className="h-5 w-5 mt-1 flex-shrink-0" />
-                <span>Rajshahi, Bangladesh</span>
-              </li>
-              <li className="flex items-start gap-3">
                 <Phone className="h-5 w-5 mt-1 flex-shrink-0" />
                 <a href="tel:+8801776180359" className="hover:text-foreground">01776180359</a>
               </li>
