@@ -25,6 +25,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Switch } from "@/components/ui/switch";
 import Image from "next/image";
+import Link from "next/link";
 
 const products = [
     { id: '1', name: 'Elegant Floral Three-Piece', price: 3200, stock: true, category: 'Three-Piece', image: 'https://picsum.photos/seed/suit1/40/40' },
@@ -38,9 +39,11 @@ export default function AdminProductsPage() {
         <div className="flex flex-col">
             <header className="flex h-16 items-center justify-between border-b bg-background px-6 shrink-0">
                 <h1 className="text-xl font-semibold tracking-tight">Products</h1>
-                <Button>
-                    <PlusCircle className="mr-2 h-4 w-4" />
-                    Add Product
+                <Button asChild>
+                    <Link href="/admin/products/new">
+                        <PlusCircle className="mr-2 h-4 w-4" />
+                        Add Product
+                    </Link>
                 </Button>
             </header>
             <main className="flex-1 p-6">
