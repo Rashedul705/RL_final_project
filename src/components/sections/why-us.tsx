@@ -6,7 +6,7 @@ export function WhyUs() {
       <div className="container">
         <Card className="bg-card/50 border-2 border-dashed">
           <CardHeader className="text-center">
-            <CardTitle className="text-3xl md:text-4xl">Why Choose Rodela&apos;s Boutique?</CardTitle>
+            <CardTitle className="text-3xl md:text-4xl">Why Choose Rodelas lifestyle?</CardTitle>
           </CardHeader>
           <CardContent className="text-center max-w-3xl mx-auto text-lg text-muted-foreground">
             <p>

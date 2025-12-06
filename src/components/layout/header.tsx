@@ -32,7 +32,7 @@ export function Header() {
       <div className="container flex h-16 items-center justify-between">
         <div className="flex items-center gap-6 md:gap-10">
           <Link href="/" className="text-xl font-bold tracking-wide">
-            Rodela&apos;s Boutique
+            Rodelas lifestyle
           </Link>
         </div>
 
@@ -79,7 +79,7 @@ export function Header() {
               <SheetContent side="left">
                 <div className="flex flex-col gap-4 p-4">
                   <Link href="/" className="text-lg font-bold">
-                    Rodela&apos;s Boutique
+                    Rodelas lifestyle
                   </Link>
                   <nav className="flex flex-col gap-3">
                     {navLinks.map((link) => (

@@ -10,7 +10,7 @@ export function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {/* About Section */}
           <div className="space-y-4">
-            <h3 className="text-xl font-bold">Rodela&apos;s Boutique</h3>
+            <h3 className="text-xl font-bold">Rodelas lifestyle</h3>
             <p className="text-muted-foreground">
               Your destination for premium apparel and lifestyle products, curated with an eye for elegance and quality.
             </p>
@@ -49,7 +49,7 @@ export function Footer() {
 
         <div className="mt-12 border-t border-border pt-8 flex flex-col md:flex-row items-center justify-center gap-4">
           <p className="text-sm text-muted-foreground">
-            &copy; {new Date().getFullYear()} Rodela's Boutique. All Rights Reserved.
+            &copy; {new Date().getFullYear()} Rodelas lifestyle. All Rights Reserved.
           </p>
         </div>
       </div>

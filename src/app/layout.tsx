@@ -4,7 +4,7 @@ import { CartProvider } from "@/components/cart/cart-context";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Rodela's Online Boutique",
+  title: "Rodelas lifestyle",
   description: "A premium online boutique for lifestyle products.",
 };
 
