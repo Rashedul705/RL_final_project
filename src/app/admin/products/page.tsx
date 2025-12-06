@@ -19,14 +19,26 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { MoreHorizontal, PlusCircle } from "lucide-react";
+import { MoreHorizontal, PlusCircle, Trash2 } from "lucide-react";
 import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuItem,
     DropdownMenuLabel,
     DropdownMenuTrigger,
+    DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 import {
   Select,
   SelectContent,
@@ -36,14 +48,15 @@ import {
 } from "@/components/ui/select";
 import Image from "next/image";
 import Link from "next/link";
-import { products, categories } from "@/lib/data";
+import { products as initialProducts, categories, type Product } from "@/lib/data";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Label } from "@/components/ui/label";
+import { useToast } from "@/hooks/use-toast";
 
 type StockStatus = 'all' | 'in-stock' | 'low-stock' | 'out-of-stock';
 
 export default function AdminProductsPage() {
-    
+    const { toast } = useToast();
+    const [products, setProducts] = useState<Product[]>(initialProducts);
     const [selectedCategory, setSelectedCategory] = useState('all');
     const [stockStatus, setStockStatus] = useState<StockStatus>('all');
     const [selectedProducts, setSelectedProducts] = useState<string[]>([]);
@@ -65,8 +78,8 @@ export default function AdminProductsPage() {
         return categoryMatch && stockMatch;
     });
 
-    const handleSelectAll = (checked: boolean) => {
-        if (checked) {
+    const handleSelectAll = (checked: boolean | 'indeterminate') => {
+        if (checked === true) {
             setSelectedProducts(filteredProducts.map(p => p.id));
         } else {
             setSelectedProducts([]);
@@ -80,6 +93,24 @@ export default function AdminProductsPage() {
             setSelectedProducts(prev => prev.filter(id => id !== productId));
         }
     };
+
+    const handleDeleteProduct = (productId: string) => {
+        setProducts(prev => prev.filter(p => p.id !== productId));
+        toast({
+            title: "Product Deleted",
+            description: "The product has been removed from the list.",
+        });
+    };
+    
+    const handleDeleteSelected = () => {
+        setProducts(prev => prev.filter(p => !selectedProducts.includes(p.id)));
+        toast({
+            title: `${selectedProducts.length} Product(s) Deleted`,
+            description: "The selected products have been removed.",
+        });
+        setSelectedProducts([]);
+    };
+
 
     return (
         <div className="flex flex-col">
@@ -102,17 +133,44 @@ export default function AdminProductsPage() {
                     </CardHeader>
                     <CardContent>
                          <div className="flex flex-wrap items-center gap-2 mb-4">
-                            <Select>
-                                <SelectTrigger className="w-auto">
-                                    <SelectValue placeholder="Bulk actions" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="delete">Delete Selected</SelectItem>
-                                    <SelectItem value="mark-in-stock">Mark as In Stock</SelectItem>
-                                    <SelectItem value="mark-out-of-stock">Mark as Out of Stock</SelectItem>
-                                </SelectContent>
-                            </Select>
-                            <Button variant="outline">Apply</Button>
+                            <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                    <Button variant="outline" className="w-auto">
+                                        Bulk actions
+                                    </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent>
+                                    <DropdownMenuLabel>Actions for {selectedProducts.length} selected items</DropdownMenuLabel>
+                                    <DropdownMenuSeparator />
+                                     <AlertDialog>
+                                        <AlertDialogTrigger asChild>
+                                            <DropdownMenuItem
+                                                className="text-red-600"
+                                                disabled={selectedProducts.length === 0}
+                                                onSelect={(e) => e.preventDefault()}
+                                            >
+                                                <Trash2 className="mr-2 h-4 w-4" />
+                                                Delete Selected
+                                            </DropdownMenuItem>
+                                        </AlertDialogTrigger>
+                                        <AlertDialogContent>
+                                            <AlertDialogHeader>
+                                                <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                                                <AlertDialogDescription>
+                                                    This action cannot be undone. This will permanently delete {selectedProducts.length} product(s).
+                                                </AlertDialogDescription>
+                                            </AlertDialogHeader>
+                                            <AlertDialogFooter>
+                                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                                <AlertDialogAction onClick={handleDeleteSelected}>
+                                                    Yes, delete
+                                                </AlertDialogAction>
+                                            </AlertDialogFooter>
+                                        </AlertDialogContent>
+                                    </AlertDialog>
+                                </DropdownMenuContent>
+                            </DropdownMenu>
+
                             <Select value={selectedCategory} onValueChange={setSelectedCategory}>
                                 <SelectTrigger className="w-auto">
                                     <SelectValue placeholder="Select a category" />
@@ -137,7 +195,6 @@ export default function AdminProductsPage() {
                                     <SelectItem value="out-of-stock">Out of Stock</SelectItem>
                                 </SelectContent>
                             </Select>
-                            
                         </div>
                         <Table>
                             <TableHeader>
@@ -145,7 +202,10 @@ export default function AdminProductsPage() {
                                     <TableHead className="w-12">
                                         <Checkbox 
                                             onCheckedChange={handleSelectAll}
-                                            checked={selectedProducts.length > 0 && selectedProducts.length === filteredProducts.length}
+                                            checked={
+                                                selectedProducts.length > 0 &&
+                                                selectedProducts.length === filteredProducts.length
+                                            }
                                             aria-label="Select all rows"
                                         />
                                     </TableHead>
@@ -185,6 +245,7 @@ export default function AdminProductsPage() {
                                         </TableCell>
                                         <TableCell className="text-right">BDT {product.price.toLocaleString()}</TableCell>
                                         <TableCell>
+                                        <AlertDialog>
                                             <DropdownMenu>
                                                 <DropdownMenuTrigger asChild>
                                                 <Button aria-haspopup="true" size="icon" variant="ghost">
@@ -197,9 +258,31 @@ export default function AdminProductsPage() {
                                                 <DropdownMenuItem asChild>
                                                     <Link href={`/admin/products/edit/${product.id}`}>Edit</Link>
                                                 </DropdownMenuItem>
-                                                <DropdownMenuItem>Delete</DropdownMenuItem>
+                                                <AlertDialogTrigger asChild>
+                                                    <DropdownMenuItem
+                                                        className="text-red-600"
+                                                        onSelect={(e) => e.preventDefault()}
+                                                    >
+                                                        Delete
+                                                    </DropdownMenuItem>
+                                                </AlertDialogTrigger>
                                                 </DropdownMenuContent>
                                             </DropdownMenu>
+                                             <AlertDialogContent>
+                                                <AlertDialogHeader>
+                                                <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                                                <AlertDialogDescription>
+                                                    This action cannot be undone. This will permanently delete the product "{product.name}".
+                                                </AlertDialogDescription>
+                                                </AlertDialogHeader>
+                                                <AlertDialogFooter>
+                                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                                <AlertDialogAction onClick={() => handleDeleteProduct(product.id)}>
+                                                    Yes, delete
+                                                </AlertDialogAction>
+                                                </AlertDialogFooter>
+                                            </AlertDialogContent>
+                                         </AlertDialog>
                                         </TableCell>
                                     </TableRow>
                                 ))}
