@@ -18,7 +18,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { DollarSign, ShoppingBag, Users, Activity, Printer } from "lucide-react";
+import { DollarSign, ShoppingBag, Users, Activity, Printer, MessageSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -81,16 +81,18 @@ export default function AdminDashboardPage() {
               <p className="text-xs text-muted-foreground">Items need restocking</p>
             </CardContent>
           </Card>
-           <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">New Inquiries</CardTitle>
-              <Users className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">2</div>
-              <p className="text-xs text-muted-foreground">Waiting for a response</p>
-            </CardContent>
-          </Card>
+           <Link href="/admin/inquiries">
+            <Card className="hover:bg-muted/50 transition-colors">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">New Inquiries</CardTitle>
+                <MessageSquare className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                <div className="text-2xl font-bold">2</div>
+                <p className="text-xs text-muted-foreground">Waiting for a response</p>
+                </CardContent>
+            </Card>
+           </Link>
         </div>
         <div className="grid gap-6 mt-6 lg:grid-cols-2">
             <Card>

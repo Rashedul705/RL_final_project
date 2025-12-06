@@ -12,7 +12,7 @@ import {
   SidebarTrigger,
   SidebarContent,
 } from "@/components/ui/sidebar";
-import { LayoutDashboard, ShoppingCart, Package, FileText, Home, Tags, Truck } from "lucide-react";
+import { LayoutDashboard, ShoppingCart, Package, FileText, Home, Tags, Truck, MessageSquare } from "lucide-react";
 
 const adminNavItems = [
   { href: "/admin", label: "Dashboard", icon: <LayoutDashboard /> },
@@ -20,6 +20,7 @@ const adminNavItems = [
   { href: "/admin/orders", label: "Orders", icon: <ShoppingCart /> },
   { href: "/admin/categories", label: "Categories", icon: <Tags /> },
   { href: "/admin/shipping", label: "Shipping", icon: <Truck /> },
+  { href: "/admin/inquiries", label: "Inquiries", icon: <MessageSquare /> },
   { href: "/admin/content", label: "Content", icon: <FileText /> },
 ];
 
