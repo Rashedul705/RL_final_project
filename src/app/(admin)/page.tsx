@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState } from 'react';
@@ -46,9 +45,11 @@ export default function AdminDashboardPage() {
   };
 
   return (
-    
+    <div className="flex flex-col">
+      <header className="flex h-16 items-center border-b bg-background px-6 shrink-0">
+          <h1 className="text-xl font-semibold tracking-tight">Dashboard</h1>
+      </header>
       <main className="flex-1 p-6">
-        <h1 className="text-xl font-semibold tracking-tight mb-6 hidden md:block">Dashboard</h1>
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -180,6 +181,6 @@ export default function AdminDashboardPage() {
             </Card>
         </div>
       </main>
-   
+    </div>
   );
 }

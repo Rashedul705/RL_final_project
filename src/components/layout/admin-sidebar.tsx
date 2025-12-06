@@ -27,35 +27,37 @@ export function AdminSidebar() {
   const pathname = usePathname();
 
   return (
-    <Sidebar>
-      <SidebarContent>
-        <SidebarHeader>
-          <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold">Admin Panel</h2>
-          </div>
-        </SidebarHeader>
-        <SidebarMenu>
-          {adminNavItems.map((item) => (
-            <SidebarMenuItem key={item.href}>
-              <Link href={item.href}>
-                <SidebarMenuButton
-                  isActive={pathname.startsWith(item.href) && (item.href !== "/admin" || pathname === "/admin")}
-                  icon={item.icon}
-                >
-                  {item.label}
-                </SidebarMenuButton>
+    <div className="lg:w-64 border-r bg-background hidden md:block">
+      <div className="flex h-full max-h-screen flex-col gap-2">
+        <div className="flex h-16 items-center border-b px-6">
+          <Link href="/admin" className="flex items-center gap-2 font-semibold">
+            <span className="">Admin Panel</span>
+          </Link>
+        </div>
+        <div className="flex-1 overflow-auto py-2">
+          <nav className="grid items-start px-4 text-sm font-medium">
+            {adminNavItems.map((item) => (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={`flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary ${
+                  (pathname.startsWith(item.href) && (item.href !== "/admin" || pathname === "/admin")) ? 'bg-muted text-primary' : ''
+                }`}
+              >
+                {React.cloneElement(item.icon, { className: "h-4 w-4" })}
+                {item.label}
               </Link>
-            </SidebarMenuItem>
-          ))}
-          <SidebarMenuItem>
-             <Link href="/">
-              <SidebarMenuButton icon={<Home />}>
+            ))}
+             <Link
+                href="/"
+                className="flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary"
+              >
+                <Home className="h-4 w-4" />
                 Storefront
-              </SidebarMenuButton>
-            </Link>
-          </SidebarMenuItem>
-        </SidebarMenu>
-      </SidebarContent>
-    </Sidebar>
+              </Link>
+          </nav>
+        </div>
+      </div>
+    </div>
   );
 }
