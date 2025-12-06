@@ -77,16 +77,22 @@ export default function AdminInquiriesPage() {
             });
             return;
         }
-        console.log(`Replying to ${selectedInquiry?.name}: ${replyMessage}`);
+        // In a real app, you would integrate with an SMS/Email service here.
+        console.log(`Replying to ${selectedInquiry?.name} (${selectedInquiry?.phone}): ${replyMessage}`);
+        
         toast({
             title: 'Reply Sent!',
             description: `Your message to ${selectedInquiry?.name} has been sent.`,
         });
+
         if(selectedInquiry){
-            handleMarkAsRead(selectedInquiry.id);
+            // Mark the inquiry as read after replying
+            setInquiries(prev => prev.map(inq => inq.id === selectedInquiry.id ? { ...inq, status: 'Read' } : inq));
         }
+
         setReplyMessage('');
         setIsDialogOpen(false);
+        setSelectedInquiry(null);
     };
 
     const handleOpenDialog = (inquiry: Inquiry) => {
