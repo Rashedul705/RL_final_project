@@ -52,7 +52,8 @@ export default function AdminProductsPage() {
       const stockMatch =
         stockFilter === 'all' ||
         (stockFilter === 'in-stock' && product.stock > 0) ||
-        (stockFilter === 'out-of-stock' && product.stock === 0);
+        (stockFilter === 'out-of-stock' && product.stock === 0) ||
+        (stockFilter === 'low-stock' && product.stock > 0 && product.stock <= 5);
       return categoryMatch && stockMatch;
     });
   }, [allProducts, categoryFilter, stockFilter]);
@@ -152,6 +153,7 @@ export default function AdminProductsPage() {
                       <SelectContent>
                         <SelectItem value="all">All Statuses</SelectItem>
                         <SelectItem value="in-stock">In Stock</SelectItem>
+                        <SelectItem value="low-stock">Low Stock</SelectItem>
                         <SelectItem value="out-of-stock">Out of Stock</SelectItem>
                       </SelectContent>
                     </Select>
@@ -211,8 +213,8 @@ export default function AdminProductsPage() {
                     </TableCell>
                     <TableCell className="font-medium">{product.name}</TableCell>
                     <TableCell>
-                      <Badge variant={product.stock > 0 ? 'default' : 'destructive'}>
-                        {product.stock > 0 ? 'In Stock' : 'Out of Stock'}
+                      <Badge variant={product.stock > 0 ? (product.stock <= 5 ? 'secondary' : 'default') : 'destructive'}>
+                        {product.stock > 0 ? (product.stock <= 5 ? 'Low Stock' : 'In Stock') : 'Out of Stock'}
                       </Badge>
                     </TableCell>
                     <TableCell>
