@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { useCart } from "@/components/cart/cart-context";
 import { CartSheet } from "@/components/cart/cart-sheet";
+import { SearchDialog } from "@/components/search-dialog";
 
 const WhatsAppIcon = (props: React.SVGProps<SVGSVGElement>) => (
     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
@@ -52,9 +53,11 @@ export function Header() {
                     01776180359
                 </Link>
             </Button>
-            <Button variant="ghost" size="icon" aria-label="Search">
-              <Search className="h-5 w-5" />
-            </Button>
+             <SearchDialog>
+              <Button variant="ghost" size="icon" aria-label="Search">
+                <Search className="h-5 w-5" />
+              </Button>
+            </SearchDialog>
           </div>
           
           <Link href="/checkout" passHref>
@@ -111,9 +114,12 @@ export function Header() {
                             WhatsApp
                         </Link>
                     </Button>
-                    <Button variant="outline" size="icon" aria-label="Search">
-                      <Search className="h-5 w-5" />
-                    </Button>
+                    <SearchDialog>
+                        <Button variant="outline" className="justify-start">
+                            <Search className="h-5 w-5 mr-2" />
+                            Search
+                        </Button>
+                    </SearchDialog>
                   </div>
                 </div>
               </SheetContent>
