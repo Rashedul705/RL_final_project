@@ -61,6 +61,7 @@ export default function AdminOrdersPage() {
                                 <TableRow>
                                     <TableHead>Order ID</TableHead>
                                     <TableHead>Customer</TableHead>
+                                    <TableHead>Phone</TableHead>
                                     <TableHead>Products</TableHead>
                                     <TableHead>Status</TableHead>
                                     <TableHead className="text-right">Amount</TableHead>
@@ -73,9 +74,9 @@ export default function AdminOrdersPage() {
                                         <TableCell className="font-medium">{order.id}</TableCell>
                                         <TableCell>
                                             <div className="font-medium">{order.customer}</div>
-                                            <div className="text-sm text-muted-foreground">{order.phone}</div>
                                             <div className="text-sm text-muted-foreground">{order.address}</div>
                                         </TableCell>
+                                        <TableCell>{order.phone}</TableCell>
                                         <TableCell>{order.products}</TableCell>
                                         <TableCell>
                                             <Select defaultValue={order.status}>
