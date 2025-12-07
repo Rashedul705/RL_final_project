@@ -1,4 +1,5 @@
 
+
 import {
   Card,
   CardContent,
@@ -13,12 +14,12 @@ import { Textarea } from "@/components/ui/textarea";
 
 export default function AdminContentPage() {
     return (
-        <div className="flex flex-col">
-            <header className="flex h-16 items-center justify-between border-b bg-background px-6 shrink-0">
+        <div className="flex flex-col gap-4">
+            <div className="flex items-center justify-between">
                 <h1 className="text-xl font-semibold tracking-tight">Site Content</h1>
                 <Button>Save Changes</Button>
-            </header>
-            <main className="flex-1 p-6 grid gap-6">
+            </div>
+            <div className="grid gap-6">
                 <Card>
                     <CardHeader>
                         <CardTitle>Hero Banner</CardTitle>
@@ -64,7 +65,7 @@ export default function AdminContentPage() {
                         <Button variant="outline">Add New FAQ</Button>
                     </CardContent>
                 </Card>
-            </main>
+            </div>
         </div>
     );
 }

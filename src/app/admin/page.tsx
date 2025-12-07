@@ -8,10 +8,7 @@ import {
   CircleDollarSign,
   ClipboardList,
   Mail,
-  Package,
-  PackageCheck,
   PackageX,
-  Warehouse,
 } from 'lucide-react';
 import Link from 'next/link';
 import {
@@ -32,7 +29,7 @@ import {
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { useMemo } from 'react';
-import { recentOrders, products, type Order, type Product } from '@/lib/data';
+import { recentOrders, products } from '@/lib/data';
 import { Separator } from '@/components/ui/separator';
 
 export default function AdminDashboardPage() {
@@ -76,11 +73,8 @@ export default function AdminDashboardPage() {
   }, []);
 
   return (
-    <>
-      <div className="flex items-center justify-between">
-        <h1 className="text-xl font-semibold tracking-tight">Dashboard</h1>
-      </div>
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mt-4">
+    <div className="flex flex-col gap-4">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Sales</CardTitle>
@@ -138,7 +132,7 @@ export default function AdminDashboardPage() {
           </CardContent>
         </Card>
       </div>
-      <div className="grid gap-4 mt-4 lg:grid-cols-3">
+      <div className="grid gap-4 lg:grid-cols-3">
         <Card className="lg:col-span-2">
           <CardHeader className="flex flex-row items-center justify-between">
             <div className="grid gap-2">
@@ -155,40 +149,42 @@ export default function AdminDashboardPage() {
             </Button>
           </CardHeader>
           <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Order ID</TableHead>
-                  <TableHead>Customer</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Total</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {lastFiveOrders.map((order) => (
-                  <TableRow key={order.id}>
-                    <TableCell className="font-medium">{order.id}</TableCell>
-                    <TableCell>{order.customer}</TableCell>
-                    <TableCell>
-                      <Badge
-                        variant={
-                          order.status === 'Delivered'
-                            ? 'default'
-                            : order.status === 'Cancelled'
-                            ? 'destructive'
-                            : 'secondary'
-                        }
-                      >
-                        {order.status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      BDT {parseInt(order.amount).toLocaleString()}
-                    </TableCell>
+            <div className="relative w-full overflow-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Order ID</TableHead>
+                    <TableHead>Customer</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead className="text-right">Total</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {lastFiveOrders.map((order) => (
+                    <TableRow key={order.id}>
+                      <TableCell className="font-medium">{order.id}</TableCell>
+                      <TableCell>{order.customer}</TableCell>
+                      <TableCell>
+                        <Badge
+                          variant={
+                            order.status === 'Delivered'
+                              ? 'default'
+                              : order.status === 'Cancelled'
+                              ? 'destructive'
+                              : 'secondary'
+                          }
+                        >
+                          {order.status}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        BDT {parseInt(order.amount).toLocaleString()}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
           </CardContent>
         </Card>
         <Card>
@@ -239,6 +235,6 @@ export default function AdminDashboardPage() {
           </CardContent>
         </Card>
       </div>
-    </>
+    </div>
   );
 }

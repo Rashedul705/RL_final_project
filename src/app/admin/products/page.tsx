@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useMemo } from 'react';
@@ -87,83 +88,83 @@ export default function AdminProductsPage() {
     selectedProductIds.length === filteredProducts.length;
 
   return (
-    <>
-      <div className="flex items-center justify-between">
+    <div className="flex flex-col gap-4">
+       <div className="flex items-center justify-between">
         <h1 className="text-xl font-semibold tracking-tight">Products</h1>
         <Button asChild>
           <Link href="/admin/products/new">Add Product</Link>
         </Button>
       </div>
-      <div className="mt-4">
-        <Card>
-          <CardHeader>
-            <div className="flex items-start justify-between gap-4">
-              <div>
-                <CardTitle>Product Management</CardTitle>
-                <CardDescription>
-                  Here you can view, add, edit, or remove products from your
-                  store.
-                </CardDescription>
-              </div>
+      <Card>
+        <CardHeader>
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <CardTitle>Product Management</CardTitle>
+              <CardDescription>
+                Here you can view, add, edit, or remove products from your
+                store.
+              </CardDescription>
+            </div>
 
-              {selectedProductIds.length > 0 && (
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="outline" size="sm" className="h-8">
-                      Bulk Actions ({selectedProductIds.length})
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem
-                      className="text-red-600"
-                      onSelect={handleDeleteSelected}
-                    >
-                      Delete Selected
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              )}
-            </div>
-             <div className="mt-4 grid sm:grid-cols-2 md:grid-cols-3 gap-4">
-                 <div className="grid gap-2">
-                    <Label htmlFor="category-filter">Filter by Category</Label>
-                    <Select
-                      value={categoryFilter}
-                      onValueChange={setCategoryFilter}
-                    >
-                      <SelectTrigger id="category-filter" aria-label="Select category">
-                        <SelectValue placeholder="Select Category" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">All Categories</SelectItem>
-                        {categories.map((cat) => (
-                          <SelectItem key={cat.id} value={cat.id}>
-                            {cat.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                </div>
-                 <div className="grid gap-2">
-                    <Label htmlFor="stock-filter">Filter by Stock</Label>
-                     <Select
-                      value={stockFilter}
-                      onValueChange={setStockFilter}
-                    >
-                      <SelectTrigger id="stock-filter" aria-label="Select stock status">
-                        <SelectValue placeholder="Select Stock Status" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">All Statuses</SelectItem>
-                        <SelectItem value="in-stock">In Stock</SelectItem>
-                        <SelectItem value="low-stock">Low Stock</SelectItem>
-                        <SelectItem value="out-of-stock">Out of Stock</SelectItem>
-                      </SelectContent>
-                    </Select>
-                </div>
-            </div>
-          </CardHeader>
-          <CardContent>
+            {selectedProductIds.length > 0 && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm" className="h-8">
+                    Bulk Actions ({selectedProductIds.length})
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem
+                    className="text-red-600"
+                    onSelect={handleDeleteSelected}
+                  >
+                    Delete Selected
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
+          </div>
+           <div className="mt-4 grid sm:grid-cols-2 md:grid-cols-3 gap-4">
+               <div className="grid gap-2">
+                  <Label htmlFor="category-filter">Filter by Category</Label>
+                  <Select
+                    value={categoryFilter}
+                    onValueChange={setCategoryFilter}
+                  >
+                    <SelectTrigger id="category-filter" aria-label="Select category">
+                      <SelectValue placeholder="Select Category" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Categories</SelectItem>
+                      {categories.map((cat) => (
+                        <SelectItem key={cat.id} value={cat.id}>
+                          {cat.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+              </div>
+               <div className="grid gap-2">
+                  <Label htmlFor="stock-filter">Filter by Stock</Label>
+                   <Select
+                    value={stockFilter}
+                    onValueChange={setStockFilter}
+                  >
+                    <SelectTrigger id="stock-filter" aria-label="Select stock status">
+                      <SelectValue placeholder="Select Stock Status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Statuses</SelectItem>
+                      <SelectItem value="in-stock">In Stock</SelectItem>
+                      <SelectItem value="low-stock">Low Stock</SelectItem>
+                      <SelectItem value="out-of-stock">Out of Stock</SelectItem>
+                    </SelectContent>
+                  </Select>
+              </div>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="relative w-full overflow-auto">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -249,9 +250,9 @@ export default function AdminProductsPage() {
                 ))}
               </TableBody>
             </Table>
-          </CardContent>
-        </Card>
-      </div>
-    </>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
   );
 }

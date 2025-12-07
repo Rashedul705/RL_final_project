@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
@@ -62,6 +63,7 @@ export default function AdminOrdersPage() {
   const [orderToDelete, setOrderToDelete] = useState<string | null>(null);
   
   useEffect(() => {
+    // Initialize orders on the client side to avoid hydration errors
     setOrders(recentOrders);
   }, []);
 
@@ -181,48 +183,47 @@ export default function AdminOrdersPage() {
     }
   };
 
-
   return (
-    <>
+    <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-semibold tracking-tight">Orders</h1>
       </div>
-      <div className="mt-4">
-        <Card>
-          <CardHeader>
-            <CardTitle>Order Management</CardTitle>
-            <CardDescription>
-              View and manage all customer orders.
-            </CardDescription>
-            <div className="mt-4 grid sm:grid-cols-2 md:grid-cols-3 gap-4">
-                 <div className="grid gap-2">
-                    <Label htmlFor="status-filter">Filter by Status</Label>
-                    <Select
-                      value={statusFilter}
-                      onValueChange={setStatusFilter}
-                    >
-                      <SelectTrigger id="status-filter" aria-label="Select status">
-                        <SelectValue placeholder="Select Status" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">All Statuses</SelectItem>
-                        <SelectItem value="Pending">Pending</SelectItem>
-                        <SelectItem value="Processing">Processing</SelectItem>
-                        <SelectItem value="Shipped">Shipped</SelectItem>
-                        <SelectItem value="Delivered">Delivered</SelectItem>
-                        <SelectItem value="Cancelled">Cancelled</SelectItem>
-                      </SelectContent>
-                    </Select>
-                </div>
-            </div>
-          </CardHeader>
-          <CardContent>
+      <Card>
+        <CardHeader>
+          <CardTitle>Order Management</CardTitle>
+          <CardDescription>
+            View and manage all customer orders.
+          </CardDescription>
+          <div className="mt-4 grid sm:grid-cols-2 md:grid-cols-3 gap-4">
+               <div className="grid gap-2">
+                  <Label htmlFor="status-filter">Filter by Status</Label>
+                  <Select
+                    value={statusFilter}
+                    onValueChange={setStatusFilter}
+                  >
+                    <SelectTrigger id="status-filter" aria-label="Select status">
+                      <SelectValue placeholder="Select Status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Statuses</SelectItem>
+                      <SelectItem value="Pending">Pending</SelectItem>
+                      <SelectItem value="Processing">Processing</SelectItem>
+                      <SelectItem value="Shipped">Shipped</SelectItem>
+                      <SelectItem value="Delivered">Delivered</SelectItem>
+                      <SelectItem value="Cancelled">Cancelled</SelectItem>
+                    </SelectContent>
+                  </Select>
+              </div>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="relative w-full overflow-auto">
             <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>Order ID</TableHead>
-                  <TableHead>Customer</TableHead>
-                  <TableHead>Date</TableHead>
+                  <TableHead className="hidden sm:table-cell">Customer</TableHead>
+                  <TableHead className="hidden md:table-cell">Date</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead className="text-right">Amount</TableHead>
                   <TableHead>
@@ -234,8 +235,8 @@ export default function AdminOrdersPage() {
                 {filteredOrders.map((order) => (
                   <TableRow key={order.id}>
                     <TableCell className="font-medium">{order.id}</TableCell>
-                    <TableCell>{order.customer}</TableCell>
-                    <TableCell>{order.date}</TableCell>
+                    <TableCell className="hidden sm:table-cell">{order.customer}</TableCell>
+                    <TableCell className="hidden md:table-cell">{order.date}</TableCell>
                     <TableCell>
                       <Select value={order.status} onValueChange={(newStatus: Order['status']) => handleStatusChange(order.id, newStatus)}>
                         <SelectTrigger className="w-32">
@@ -283,10 +284,10 @@ export default function AdminOrdersPage() {
                 ))}
               </TableBody>
             </Table>
-          </CardContent>
-        </Card>
-      </div>
-
+          </div>
+        </CardContent>
+      </Card>
+      
       {/* Order Details Dialog */}
       <Dialog open={!!selectedOrder} onOpenChange={() => setSelectedOrder(null)}>
           <DialogContent className="sm:max-w-lg">
@@ -343,7 +344,7 @@ export default function AdminOrdersPage() {
       </Dialog>
       
       {/* Delete Confirmation Dialog */}
-      <AlertDialog open={!!orderToDelete} onOpenChange={setOrderToDelete}>
+      <AlertDialog open={!!orderToDelete} onOpenChange={() => setOrderToDelete(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
@@ -354,12 +355,12 @@ export default function AdminOrdersPage() {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={() => handleDeleteOrder(orderToDelete!)}>
+            <AlertDialogAction onClick={() => orderToDelete && handleDeleteOrder(orderToDelete)}>
               Yes, delete order
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </>
+    </div>
   );
 }

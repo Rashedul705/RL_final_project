@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useMemo } from 'react';
@@ -73,25 +74,25 @@ export default function AdminCustomersPage() {
   }
 
   return (
-    <>
+    <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-semibold tracking-tight">Customers</h1>
       </div>
-      <div className="mt-4">
-        <Card>
-          <CardHeader>
-            <CardTitle>Customer Management</CardTitle>
-            <CardDescription>
-              View and manage your customer data.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
+      <Card>
+        <CardHeader>
+          <CardTitle>Customer Management</CardTitle>
+          <CardDescription>
+            View and manage your customer data.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="relative w-full overflow-auto">
             <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>Customer</TableHead>
-                  <TableHead>Phone</TableHead>
-                  <TableHead>Location</TableHead>
+                  <TableHead className="hidden sm:table-cell">Phone</TableHead>
+                  <TableHead className="hidden md:table-cell">Location</TableHead>
                   <TableHead className="text-center">Orders</TableHead>
                   <TableHead className="text-right">Total Spent</TableHead>
                   <TableHead>
@@ -112,8 +113,8 @@ export default function AdminCustomersPage() {
                         <div className="font-medium">{customer.name}</div>
                       </div>
                     </TableCell>
-                    <TableCell>{customer.phone}</TableCell>
-                    <TableCell>{customer.location}</TableCell>
+                    <TableCell className="hidden sm:table-cell">{customer.phone}</TableCell>
+                    <TableCell className="hidden md:table-cell">{customer.location}</TableCell>
                     <TableCell className="text-center">
                       {customer.totalOrders}
                     </TableCell>
@@ -143,9 +144,9 @@ export default function AdminCustomersPage() {
                 ))}
               </TableBody>
             </Table>
-          </CardContent>
-        </Card>
-      </div>
-    </>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
   );
 }
