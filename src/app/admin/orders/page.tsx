@@ -63,6 +63,14 @@ export default function AdminOrdersPage() {
     }
   }
 
+  const handleStatusChange = (orderId: string, newStatus: Order['status']) => {
+    setOrders(currentOrders => 
+        currentOrders.map(o => 
+            o.id === orderId ? { ...o, status: newStatus } : o
+        )
+    );
+  };
+
   return (
     <>
       <div className="flex items-center justify-between">
@@ -118,7 +126,18 @@ export default function AdminOrdersPage() {
                     <TableCell>{order.customer}</TableCell>
                     <TableCell>{order.date}</TableCell>
                     <TableCell>
-                      <Badge variant={getStatusVariant(order.status)}>{order.status}</Badge>
+                      <Select value={order.status} onValueChange={(newStatus: Order['status']) => handleStatusChange(order.id, newStatus)}>
+                        <SelectTrigger className="w-32">
+                           <SelectValue placeholder="Update status" />
+                        </SelectTrigger>
+                        <SelectContent>
+                           <SelectItem value="Pending">Pending</SelectItem>
+                           <SelectItem value="Processing">Processing</SelectItem>
+                           <SelectItem value="Shipped">Shipped</SelectItem>
+                           <SelectItem value="Delivered">Delivered</SelectItem>
+                           <SelectItem value="Cancelled">Cancelled</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </TableCell>
                     <TableCell className="text-right">
                       BDT {parseInt(order.amount).toLocaleString()}
@@ -138,7 +157,6 @@ export default function AdminOrdersPage() {
                         <DropdownMenuContent align="end">
                           <DropdownMenuLabel>Actions</DropdownMenuLabel>
                           <DropdownMenuItem>View Details</DropdownMenuItem>
-                          <DropdownMenuItem>Update Status</DropdownMenuItem>
                           <DropdownMenuItem className="text-red-600">
                             Delete
                           </DropdownMenuItem>
