@@ -75,7 +75,7 @@ export default function AdminOrdersPage() {
         const statusMatch = statusFilter === 'all' || order.status === statusFilter;
         const searchMatch = !lowercasedQuery ||
             order.id.toLowerCase().includes(lowercasedQuery) ||
-            order.phone.includes(lowercasedQuery);
+            order.phone.replace(/[\s-]/g, '').includes(lowercasedQuery.replace(/[\s-]/g, ''));
         return statusMatch && searchMatch;
     });
   }, [orders, statusFilter, searchQuery]);
@@ -253,56 +253,64 @@ export default function AdminOrdersPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredOrders.map((order) => (
-                  <TableRow key={order.id}>
-                    <TableCell className="font-medium">{order.id}</TableCell>
-                    <TableCell className="hidden sm:table-cell">{order.customer}</TableCell>
-                    <TableCell className="hidden md:table-cell">{order.date}</TableCell>
-                    <TableCell>
-                      <Select value={order.status} onValueChange={(newStatus: Order['status']) => handleStatusChange(order.id, newStatus)}>
-                        <SelectTrigger className="w-32">
-                           <SelectValue placeholder="Update status" />
-                        </SelectTrigger>
-                        <SelectContent>
-                           <SelectItem value="Pending">Pending</SelectItem>
-                           <SelectItem value="Processing">Processing</SelectItem>
-                           <SelectItem value="Shipped">Shipped</SelectItem>
-                           <SelectItem value="Delivered">Delivered</SelectItem>
-                           <SelectItem value="Cancelled">Cancelled</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      BDT {parseInt(order.amount).toLocaleString()}
-                    </TableCell>
-                    <TableCell>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button
-                            aria-haspopup="true"
-                            size="icon"
-                            variant="ghost"
-                          >
-                            <MoreHorizontal className="h-4 w-4" />
-                            <span className="sr-only">Toggle menu</span>
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                          <DropdownMenuItem onSelect={() => setSelectedOrder(order)}>
-                            View Details
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            className="text-red-600"
-                            onSelect={() => setOrderToDelete(order.id)}
-                          >
-                            Delete
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+                {filteredOrders.length > 0 ? (
+                  filteredOrders.map((order) => (
+                    <TableRow key={order.id}>
+                      <TableCell className="font-medium">{order.id}</TableCell>
+                      <TableCell className="hidden sm:table-cell">{order.customer}</TableCell>
+                      <TableCell className="hidden md:table-cell">{order.date}</TableCell>
+                      <TableCell>
+                        <Select value={order.status} onValueChange={(newStatus: Order['status']) => handleStatusChange(order.id, newStatus)}>
+                          <SelectTrigger className="w-32">
+                             <SelectValue placeholder="Update status" />
+                          </SelectTrigger>
+                          <SelectContent>
+                             <SelectItem value="Pending">Pending</SelectItem>
+                             <SelectItem value="Processing">Processing</SelectItem>
+                             <SelectItem value="Shipped">Shipped</SelectItem>
+                             <SelectItem value="Delivered">Delivered</SelectItem>
+                             <SelectItem value="Cancelled">Cancelled</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        BDT {parseInt(order.amount).toLocaleString()}
+                      </TableCell>
+                      <TableCell>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button
+                              aria-haspopup="true"
+                              size="icon"
+                              variant="ghost"
+                            >
+                              <MoreHorizontal className="h-4 w-4" />
+                              <span className="sr-only">Toggle menu</span>
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                            <DropdownMenuItem onSelect={() => setSelectedOrder(order)}>
+                              View Details
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              className="text-red-600"
+                              onSelect={() => setOrderToDelete(order.id)}
+                            >
+                              Delete
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={6} className="h-24 text-center">
+                      No orders found.
                     </TableCell>
                   </TableRow>
-                ))}
+                )}
               </TableBody>
             </Table>
           </div>
