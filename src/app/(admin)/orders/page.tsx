@@ -325,7 +325,7 @@ export default function AdminOrdersPage() {
                       <DialogHeader>
                           <DialogTitle>Order Details: {selectedOrder.id}</DialogTitle>
                           <DialogDescription>
-                              Full details for the order placed on {selectedOrder.date}.
+                              Full details for the order placed on {new Date(selectedOrder.date).toLocaleDateString()}.
                           </DialogDescription>
                       </DialogHeader>
                       <div className="grid gap-4 py-4">
@@ -393,3 +393,5 @@ export default function AdminOrdersPage() {
     </div>
   );
 }
+
+    
