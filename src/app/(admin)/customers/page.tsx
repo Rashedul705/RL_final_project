@@ -1,31 +1,152 @@
 
+
+'use client';
+
+import { useMemo } from 'react';
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
+} from '@/components/ui/card';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import { recentOrders } from '@/lib/data';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { Button } from '@/components/ui/button';
+import { MoreHorizontal } from 'lucide-react';
+
+type Customer = {
+  name: string;
+  phone: string;
+  location: string;
+  totalOrders: number;
+  totalSpent: number;
+};
 
 export default function AdminCustomersPage() {
+  const customers = useMemo(() => {
+    const customerMap = new Map<string, Customer>();
+
+    recentOrders.forEach((order) => {
+      const customerKey = `${order.customer}-${order.phone}`;
+      const existingCustomer = customerMap.get(customerKey);
+
+      if (existingCustomer) {
+        existingCustomer.totalOrders += 1;
+        existingCustomer.totalSpent += parseFloat(order.amount);
+      } else {
+        customerMap.set(customerKey, {
+          name: order.customer,
+          phone: order.phone,
+          location: order.address,
+          totalOrders: 1,
+          totalSpent: parseFloat(order.amount),
+        });
+      }
+    });
+
+    return Array.from(customerMap.values()).sort(
+      (a, b) => b.totalSpent - a.totalSpent
+    );
+  }, []);
+  
+  const getInitials = (name: string) => {
+    return name
+      .split(' ')
+      .map((n) => n[0])
+      .join('')
+      .toUpperCase();
+  }
+
   return (
-    <>
-      <header className="flex h-16 items-center border-b bg-background px-6 shrink-0">
+    <div className="flex flex-col gap-4">
+      <div className="flex items-center justify-between">
         <h1 className="text-xl font-semibold tracking-tight">Customers</h1>
-      </header>
-      <div className="flex-1 overflow-y-auto p-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>Customer Management</CardTitle>
-            <CardDescription>
-              This is where you will manage your customers.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <p>Customer list and management tools will go here.</p>
-          </CardContent>
-        </Card>
       </div>
-    </>
+      <Card>
+        <CardHeader>
+          <CardTitle>Customer Management</CardTitle>
+          <CardDescription>
+            View and manage your customer data.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="relative w-full overflow-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Customer</TableHead>
+                  <TableHead className="hidden sm:table-cell">Phone</TableHead>
+                  <TableHead className="hidden md:table-cell">Location</TableHead>
+                  <TableHead className="text-center">Orders</TableHead>
+                  <TableHead className="text-right">Total Spent</TableHead>
+                  <TableHead>
+                    <span className="sr-only">Actions</span>
+                  </TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {customers.map((customer) => (
+                  <TableRow key={`${customer.name}-${customer.phone}`}>
+                    <TableCell>
+                      <div className="flex items-center gap-3">
+                        <Avatar className="h-9 w-9">
+                          <AvatarFallback>
+                            {getInitials(customer.name)}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="font-medium">{customer.name}</div>
+                      </div>
+                    </TableCell>
+                    <TableCell className="hidden sm:table-cell">{customer.phone}</TableCell>
+                    <TableCell className="hidden md:table-cell">{customer.location}</TableCell>
+                    <TableCell className="text-center">
+                      {customer.totalOrders}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      BDT {customer.totalSpent.toLocaleString()}
+                    </TableCell>
+                    <TableCell>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            aria-haspopup="true"
+                            size="icon"
+                            variant="ghost"
+                          >
+                            <MoreHorizontal className="h-4 w-4" />
+                            <span className="sr-only">Toggle menu</span>
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                          <DropdownMenuItem>View Details</DropdownMenuItem>
+                          <DropdownMenuItem>Contact Customer</DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
   );
 }

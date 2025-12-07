@@ -9,7 +9,6 @@ import { useMediaQuery } from '@/hooks/use-media-query';
 type SidebarContextType = {
   isOpen: boolean;
   setIsOpen: (isOpen: boolean) => void;
-  toggle: () => void;
   isDesktop: boolean;
 };
 
@@ -24,17 +23,12 @@ export function useSidebar() {
 }
 
 export function SidebarProvider({ children }: { children: ReactNode }) {
-  const isDesktop = useMediaQuery('(min-width: 768px)');
+  const isDesktop = useMediaQuery('(min-width: 1024px)');
   const [isOpen, setIsOpen] = useState(false);
 
-  const toggle = useCallback(() => {
-    setIsOpen((prev) => !prev);
-  }, []);
-
   const value = {
-    isOpen: isDesktop || isOpen,
-    setIsOpen: isDesktop ? () => {} : setIsOpen,
-    toggle: isDesktop ? () => {} : toggle,
+    isOpen,
+    setIsOpen,
     isDesktop,
   };
 
@@ -44,31 +38,34 @@ export function SidebarProvider({ children }: { children: ReactNode }) {
 const SidebarTrigger = React.forwardRef<
     HTMLButtonElement,
     React.ButtonHTMLAttributes<HTMLButtonElement> & { asChild?: boolean }
->(({ asChild = false, ...props }, ref) => {
-    const { toggle, isDesktop } = useSidebar();
+>(({ asChild = false, onClick, ...props }, ref) => {
+    const { setIsOpen } = useSidebar();
     const Comp = asChild ? Slot : 'button';
 
-    if (isDesktop) {
-        return null;
-    }
+    const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+      setIsOpen(true);
+      if (onClick) {
+        onClick(event);
+      }
+    };
 
-    return <Comp ref={ref} onClick={toggle} {...props} />;
+    return <Comp ref={ref} onClick={handleClick} {...props} />;
 });
 SidebarTrigger.displayName = 'SidebarTrigger';
 
 const SidebarClose = React.forwardRef<
     HTMLButtonElement,
     React.ButtonHTMLAttributes<HTMLButtonElement> & { asChild?: boolean }
->(({ asChild = false, ...props }, ref) => {
+>(({ asChild = false, onClick, ...props }, ref) => {
     const { setIsOpen, isDesktop } = useSidebar();
     const Comp = asChild ? Slot : 'button';
 
-    const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+    const handleClick = (event: React.MouseEvent<any>) => {
       if (!isDesktop) {
         setIsOpen(false);
       }
-      if (props.onClick) {
-        props.onClick(event);
+      if (onClick) {
+        onClick(event as React.MouseEvent<HTMLButtonElement>);
       }
     };
     
@@ -76,54 +73,8 @@ const SidebarClose = React.forwardRef<
 });
 SidebarClose.displayName = 'SidebarClose';
 
-const Sidebar = React.forwardRef<
-  HTMLDivElement,
-  React.HTMLAttributes<HTMLDivElement>
->(({ className, ...props }, ref) => {
-  const { isOpen } = useSidebar();
-  
-  return (
-    <aside
-      ref={ref}
-      className={cn(
-        'fixed inset-y-0 left-0 z-40 h-screen w-64 -translate-x-full border-r bg-background transition-transform duration-300 ease-in-out md:translate-x-0',
-        isOpen && 'translate-x-0',
-        className
-      )}
-      {...props}
-    />
-  );
-});
-Sidebar.displayName = 'Sidebar';
-
-const SidebarOverlay = React.forwardRef<
-    HTMLDivElement,
-    React.HTMLAttributes<HTMLDivElement>
->(({ className, ...props }, ref) => {
-    const { isOpen, isDesktop, setIsOpen } = useSidebar();
-
-    if (isDesktop || !isOpen) {
-        return null;
-    }
-
-    return (
-        <div
-            ref={ref}
-            className={cn(
-                'fixed inset-0 z-30 bg-black/50 md:hidden',
-                className
-            )}
-            onClick={() => setIsOpen(false)}
-            {...props}
-        />
-    );
-});
-SidebarOverlay.displayName = 'SidebarOverlay';
-
 
 export {
-  Sidebar,
   SidebarTrigger,
   SidebarClose,
-  SidebarOverlay,
 };
