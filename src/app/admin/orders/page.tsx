@@ -39,7 +39,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from '@/components/ui/button';
-import { MoreHorizontal } from 'lucide-react';
+import { MoreHorizontal, Printer } from 'lucide-react';
 import { recentOrders, type Order } from '@/lib/data';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
@@ -66,6 +66,105 @@ export default function AdminOrdersPage() {
         )
     );
   };
+  
+  const handlePrintInvoice = (order: Order) => {
+    const printWindow = window.open('', '_blank');
+    if (printWindow) {
+      const totalAmount = parseInt(order.amount).toLocaleString();
+      const orderDate = new Date(order.date).toLocaleDateString();
+
+      const invoiceHtml = `
+        <html>
+          <head>
+            <title>Invoice - ${order.id}</title>
+            <style>
+              body { 
+                font-family: 'monospace', sans-serif; 
+                width: 80mm; 
+                margin: 0;
+                padding: 10px;
+                font-size: 10px;
+              }
+              .header { text-align: center; margin-bottom: 10px; }
+              .header h2 { margin: 0; font-size: 14px; }
+              .header p { margin: 0; font-size: 10px; }
+              .section { margin-bottom: 10px; }
+              .section-title { border-top: 1px dashed #000; border-bottom: 1px dashed #000; padding: 5px 0; margin: 5px 0; font-weight: bold; }
+              table { width: 100%; border-collapse: collapse; }
+              th, td { text-align: left; padding: 2px 0; }
+              .text-right { text-align: right; }
+              .totals-table td { padding: 1px 0; }
+              .footer { text-align: center; margin-top: 15px; border-top: 1px dashed #000; padding-top: 5px;}
+            </style>
+          </head>
+          <body>
+            <div class="header">
+              <h2>Rodelas lifestyle</h2>
+              <p>Your destination for premium apparel</p>
+            </div>
+            <div class="section">
+              <p>Order ID: ${order.id}</p>
+              <p>Date: ${orderDate}</p>
+            </div>
+            <div class="section">
+                <p><strong>Customer:</strong> ${order.customer}</p>
+                <p><strong>Phone:</strong> ${order.phone}</p>
+                <p><strong>Address:</strong> ${order.address}</p>
+            </div>
+            <div class="section-title">ITEMS</div>
+            <table>
+              <thead>
+                <tr>
+                  <th>Item</th>
+                  <th class="text-right">Total</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${order.products.map(p => `
+                  <tr>
+                    <td>
+                      ${p.quantity} x ${p.name}<br/>
+                      &nbsp;&nbsp;&nbsp;@ ${p.price.toLocaleString()}
+                    </td>
+                    <td class="text-right">${(p.quantity * p.price).toLocaleString()}</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+            <div class="section-title">TOTALS</div>
+             <table class="totals-table">
+                <tbody>
+                    <tr>
+                        <td>Subtotal:</td>
+                        <td class="text-right">${totalAmount}</td>
+                    </tr>
+                    <tr>
+                        <td>Shipping:</td>
+                        <td class="text-right">0</td>
+                    </tr>
+                     <tr>
+                        <td><strong>Total:</strong></td>
+                        <td class="text-right"><strong>BDT ${totalAmount}</strong></td>
+                    </tr>
+                </tbody>
+            </table>
+            <div class="footer">
+              <p>Thank you for your purchase!</p>
+            </div>
+            <script>
+              window.onload = function() {
+                window.print();
+                window.close();
+              }
+            </script>
+          </body>
+        </html>
+      `;
+      printWindow.document.write(invoiceHtml);
+      printWindow.document.close();
+    }
+  };
+
 
   return (
     <>
@@ -213,6 +312,10 @@ export default function AdminOrdersPage() {
                           </div>
                       </div>
                       <DialogFooter>
+                          <Button variant="secondary" onClick={() => handlePrintInvoice(selectedOrder)}>
+                            <Printer className="mr-2 h-4 w-4" />
+                            Print Invoice
+                          </Button>
                           <Button variant="outline" onClick={() => setSelectedOrder(null)}>Close</Button>
                       </DialogFooter>
                   </>
