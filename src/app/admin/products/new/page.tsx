@@ -201,14 +201,14 @@ export default function AdminNewProductPage() {
                   </div>
                 </CardContent>
               </Card>
-               <div className="flex items-center justify-end gap-2">
-                  <Button variant="outline" asChild>
-                    <Link href="/admin/products">Discard</Link>
-                  </Button>
-                  <Button type="submit">Save Product</Button>
-                </div>
             </div>
           </div>
+           <div className="flex items-center justify-end gap-2 mt-8">
+              <Button variant="outline" asChild>
+                <Link href="/admin/products">Discard</Link>
+              </Button>
+              <Button type="submit">Save Product</Button>
+            </div>
         </form>
       </div>
     </>
