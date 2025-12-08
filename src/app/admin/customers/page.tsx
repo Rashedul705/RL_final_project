@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useMemo } from 'react';
@@ -33,7 +32,6 @@ import { MoreHorizontal } from 'lucide-react';
 type Customer = {
   name: string;
   phone: string;
-  location: string;
   totalOrders: number;
   totalSpent: number;
 };
@@ -53,7 +51,6 @@ export default function AdminCustomersPage() {
         customerMap.set(customerKey, {
           name: order.customer,
           phone: order.phone,
-          location: order.address,
           totalOrders: 1,
           totalSpent: parseFloat(order.amount),
         });
@@ -91,8 +88,7 @@ export default function AdminCustomersPage() {
               <TableHeader>
                 <TableRow>
                   <TableHead>Customer</TableHead>
-                  <TableHead className="hidden sm:table-cell">Phone</TableHead>
-                  <TableHead className="hidden md:table-cell">Location</TableHead>
+                  <TableHead>Phone</TableHead>
                   <TableHead className="text-center">Orders</TableHead>
                   <TableHead className="text-right">Total Spent</TableHead>
                   <TableHead>
@@ -113,8 +109,7 @@ export default function AdminCustomersPage() {
                         <div className="font-medium">{customer.name}</div>
                       </div>
                     </TableCell>
-                    <TableCell className="hidden sm:table-cell">{customer.phone}</TableCell>
-                    <TableCell className="hidden md:table-cell">{customer.location}</TableCell>
+                    <TableCell>{customer.phone}</TableCell>
                     <TableCell className="text-center">
                       {customer.totalOrders}
                     </TableCell>
@@ -136,7 +131,6 @@ export default function AdminCustomersPage() {
                         <DropdownMenuContent align="end">
                           <DropdownMenuLabel>Actions</DropdownMenuLabel>
                           <DropdownMenuItem>View Details</DropdownMenuItem>
-                          <DropdownMenuItem>Contact Customer</DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </TableCell>
