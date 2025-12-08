@@ -103,7 +103,7 @@ function AdminMobileSidebar() {
 
 export function AdminMobileHeader() {
   const pathname = usePathname();
-  const currentNavItem = adminNavItems.find(item => item.href === pathname || (item.href !== '/admin' && pathname.startsWith(item.href)));
+  const currentNavItem = adminNavItems.find(item => item.href !== '/admin' ? pathname.startsWith(item.href) : pathname === item.href);
   const title = currentNavItem ? currentNavItem.label : "Admin Panel";
 
 
