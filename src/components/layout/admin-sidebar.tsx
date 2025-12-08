@@ -45,13 +45,12 @@ function AdminNavLinks() {
 function SidebarContent() {
   return (
     <div className="flex h-full flex-col gap-2">
-      <SheetHeader className="h-16 items-center border-b px-6 flex flex-row justify-between">
+      <div className="flex h-16 items-center border-b px-6">
           <Link href="/admin" className="flex items-center gap-2 font-semibold">
             <Bot className="h-6 w-6 text-primary" />
             <span className="">Admin Panel</span>
           </Link>
-        <SheetTitle className="sr-only">Admin Menu</SheetTitle>
-      </SheetHeader>
+      </div>
       <div className="flex-1 overflow-y-auto py-2">
         <AdminNavLinks />
       </div>
@@ -86,7 +85,27 @@ function AdminMobileSidebar() {
     return (
         <Sheet open={isOpen} onOpenChange={setIsOpen}>
             <SheetContent side="left" className="p-0 w-64 flex flex-col">
-                <SidebarContent />
+                <SheetHeader className="h-16 items-center border-b px-6 flex flex-row justify-between">
+                  <Link href="/admin" className="flex items-center gap-2 font-semibold">
+                    <Bot className="h-6 w-6 text-primary" />
+                    <span className="">Admin Panel</span>
+                  </Link>
+                <SheetTitle className="sr-only">Admin Menu</SheetTitle>
+              </SheetHeader>
+               <div className="flex-1 overflow-y-auto py-2">
+                <AdminNavLinks />
+              </div>
+              <div className="mt-auto border-t p-4">
+                <SidebarClose asChild>
+                  <Link
+                    href="/"
+                    className="flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary"
+                  >
+                    <Home className="h-4 w-4" />
+                    Storefront
+                  </Link>
+                </SidebarClose>
+              </div>
             </SheetContent>
         </Sheet>
     );
