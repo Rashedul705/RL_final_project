@@ -3,11 +3,12 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import React, { ReactNode } from "react";
-import { LayoutDashboard, ShoppingCart, Package, Users, Pencil, Home, Menu, Bot, Shapes, AreaChart, MessageSquareQuote, Truck } from "lucide-react";
+import React from "react";
+import { LayoutDashboard, ShoppingCart, Package, Users, Pencil, Home, Menu, Bot, Shapes, AreaChart, MessageSquareQuote, Truck, LogOut } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { useSidebar, SidebarTrigger, SidebarClose } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
+import { useRouter } from "next/navigation";
 
 const adminNavItems = [
   { href: "/admin", label: "Dashboard", icon: <LayoutDashboard /> },
@@ -23,6 +24,13 @@ const adminNavItems = [
 
 function AdminNavLinks() {
   const pathname = usePathname();
+  const router = useRouter();
+
+  const handleLogout = () => {
+    localStorage.removeItem('isAuthenticated');
+    router.push('/admin/login');
+  };
+  
   return (
     <nav className="grid items-start px-4 text-sm font-medium">
       {adminNavItems.map((item) => (
@@ -40,6 +48,15 @@ function AdminNavLinks() {
           </Link>
         </SidebarClose>
       ))}
+      <SidebarClose asChild>
+        <button
+            onClick={handleLogout}
+            className="flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary"
+        >
+            <LogOut className="h-4 w-4" />
+            Logout
+        </button>
+      </SidebarClose>
     </nav>
   );
 }
