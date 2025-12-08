@@ -120,6 +120,7 @@ export default function AdminDashboardPage() {
           </CardContent>
         </Card>
         <Card>
+         <Link href="/admin/inquiries">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">New Inquiries</CardTitle>
             <Mail className="h-4 w-4 text-muted-foreground" />
@@ -130,6 +131,7 @@ export default function AdminDashboardPage() {
               Unread messages from customers
             </p>
           </CardContent>
+          </Link>
         </Card>
       </div>
       <div className="grid gap-4 lg:grid-cols-3">
