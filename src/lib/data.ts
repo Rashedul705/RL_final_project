@@ -20,17 +20,19 @@ export type Product = {
 export type Category = {
   id: string;
   name: string;
+  description?: string;
+  image?: string;
 };
 
 export type Order = {
-    id: string;
-    customer: string;
-    phone: string;
-    address: string;
-    amount: string;
-    status: 'Delivered' | 'Shipped' | 'Processing' | 'Pending' | 'Cancelled';
-    products: { name: string; quantity: number; price: number }[];
-    date: string;
+  id: string;
+  customer: string;
+  phone: string;
+  address: string;
+  amount: string;
+  status: 'Delivered' | 'Shipped' | 'Processing' | 'Pending' | 'Cancelled';
+  products: { name: string; quantity: number; price: number }[];
+  date: string;
 };
 
 export const bangladeshDistricts = [
@@ -56,31 +58,31 @@ export const categories: Category[] = [
 ];
 
 export const products: Product[] = [
-  { 
-    id: '1', 
-    name: 'Elegant Floral Three-Piece', 
+  {
+    id: '1',
+    name: 'Elegant Floral Three-Piece',
     description: 'A beautifully crafted three-piece suit with an elegant floral design. Made from high-quality fabric for a comfortable and stylish fit, perfect for any occasion.',
-    price: 3200, 
+    price: 3200,
     image: findImage('three-piece-1').imageUrl,
     imageHint: findImage('three-piece-1').imageHint,
     category: 'three-piece',
     stock: 10,
   },
-  { 
-    id: '2', 
-    name: 'Modern Silk Three-Piece', 
+  {
+    id: '2',
+    name: 'Modern Silk Three-Piece',
     description: 'Experience luxury with our modern silk three-piece. The smooth texture and contemporary design make it a standout choice for formal events and celebrations.',
-    price: 4500, 
+    price: 4500,
     image: findImage('three-piece-2').imageUrl,
     imageHint: findImage('three-piece-2').imageHint,
     category: 'three-piece',
     stock: 5,
   },
-  { 
-    id: '3', 
-    name: 'Classic Cotton Three-Piece', 
+  {
+    id: '3',
+    name: 'Classic Cotton Three-Piece',
     description: 'Our classic cotton three-piece offers timeless style and unbeatable comfort. Ideal for daily wear, it combines traditional aesthetics with modern tailoring.',
-    price: 2800, 
+    price: 2800,
     image: findImage('three-piece-3').imageUrl,
     imageHint: findImage('three-piece-3').imageHint,
     category: 'three-piece',
@@ -96,51 +98,51 @@ export const products: Product[] = [
     category: 'three-piece',
     stock: 8,
   },
-  { 
-    id: '4', 
-    name: 'Premium Silk Hijab', 
+  {
+    id: '4',
+    name: 'Premium Silk Hijab',
     description: 'Drape yourself in elegance with our premium silk hijab. Its soft, lustrous finish adds a touch of sophistication to any outfit.',
-    price: 1200, 
+    price: 1200,
     image: findImage('hijab-1').imageUrl,
     imageHint: findImage('hijab-1').imageHint,
     category: 'hijab',
     stock: 0,
   },
-  { 
-    id: '5', 
-    name: 'Soft Cotton Hijab', 
+  {
+    id: '5',
+    name: 'Soft Cotton Hijab',
     description: 'Comfortable and versatile, our soft cotton hijab is a wardrobe essential. Available in a variety of colors to match your style.',
-    price: 800, 
+    price: 800,
     image: findImage('hijab-2').imageUrl,
     imageHint: findImage('hijab-2').imageHint,
     category: 'hijab',
     stock: 20,
   },
-  { 
-    id: '6', 
-    name: 'Georgette Patterned Hijab', 
+  {
+    id: '6',
+    name: 'Georgette Patterned Hijab',
     description: 'Make a statement with this beautiful georgette hijab, featuring a unique pattern that adds a fashionable touch to your look.',
-    price: 950, 
+    price: 950,
     image: findImage('hijab-3').imageUrl,
     imageHint: findImage('hijab-3').imageHint,
     category: 'hijab',
     stock: 12,
   },
-  { 
-    id: '7', 
-    name: 'Luxury King Size Bedsheet', 
+  {
+    id: '7',
+    name: 'Luxury King Size Bedsheet',
     description: 'Transform your bedroom into a sanctuary with our luxury king-size bedsheet set. Made from premium materials for a soft and comfortable night\'s sleep.',
-    price: 5500, 
+    price: 5500,
     image: findImage('bedsheet-1').imageUrl,
     imageHint: findImage('bedsheet-1').imageHint,
     category: 'bedsheet',
     stock: 7,
   },
-  { 
-    id: '8', 
-    name: 'Floral Print Bedsheet', 
+  {
+    id: '8',
+    name: 'Floral Print Bedsheet',
     description: 'Brighten up your bedroom with our beautiful floral print bedsheet. The vibrant design and soft fabric create a cheerful and inviting atmosphere.',
-    price: 3500, 
+    price: 3500,
     image: findImage('bedsheet-2').imageUrl,
     imageHint: findImage('bedsheet-2').imageHint,
     category: 'bedsheet',
@@ -149,40 +151,40 @@ export const products: Product[] = [
 ];
 
 export const faqs = [
-    {
-        question: "What are the delivery charges?",
-        answer: "Inside Rajshahi city, the delivery charge is 60 Taka. For the rest of Bangladesh, it is 120 Taka."
-    },
-    {
-        question: "How long does delivery take?",
-        answer: "Deliveries inside Rajshahi are typically completed within 24-48 hours. For other locations in Bangladesh, it may take 3-5 business days."
-    },
-    {
-        question: "What is your return policy?",
-        answer: "We offer a 7-day return policy for unused and undamaged products. Please contact our customer service to initiate a return."
-    },
-    {
-        question: "Is Cash on Delivery (COD) available?",
-        answer: "Yes, Cash on Delivery is available for all orders across Bangladesh."
-    }
+  {
+    question: "What are the delivery charges?",
+    answer: "Inside Rajshahi city, the delivery charge is 60 Taka. For the rest of Bangladesh, it is 120 Taka."
+  },
+  {
+    question: "How long does delivery take?",
+    answer: "Deliveries inside Rajshahi are typically completed within 24-48 hours. For other locations in Bangladesh, it may take 3-5 business days."
+  },
+  {
+    question: "What is your return policy?",
+    answer: "We offer a 7-day return policy for unused and undamaged products. Please contact our customer service to initiate a return."
+  },
+  {
+    question: "Is Cash on Delivery (COD) available?",
+    answer: "Yes, Cash on Delivery is available for all orders across Bangladesh."
+  }
 ];
 
 const generateSeededRandom = (seed: number) => {
-    let state = seed;
-    return () => {
-        state = (state * 16807) % 2147483647;
-        return state / 2147483647;
-    };
+  let state = seed;
+  return () => {
+    state = (state * 16807) % 2147483647;
+    return state / 2147483647;
+  };
 };
 
 const generateOrder = (index: number): Order => {
   const seededRandom = generateSeededRandom(index + 1);
-  
+
   const customerNames = ['Sadia Islam', 'Karim Ahmed', 'Nusrat Jahan', 'Rahim Sheikh', 'Farhana Begum', 'Liam Smith', 'Olivia Jones', 'Noah Williams', 'Emma Brown', 'Oliver Taylor'];
   const phones = ['01712345678', '01823456789', '01934567890', '01645678901', '01556789012', '01345678901', '01456789012', '01567890123', '01678901234', '01789012345'];
   const addresses = ['Rajshahi', 'Dhaka', 'Chittagong', 'Sylhet', 'Khulna', 'Barishal', 'Rangpur', 'Mymensingh', 'Comilla', 'Gazipur'];
   const statuses: Order['status'][] = ['Delivered', 'Shipped', 'Processing', 'Pending', 'Cancelled'];
-  
+
   const product1Index = Math.floor(seededRandom() * products.length);
   let product2Index = Math.floor(seededRandom() * products.length);
   while (product1Index === product2Index) {
@@ -196,10 +198,10 @@ const generateOrder = (index: number): Order => {
   let amount = product1.price;
 
   if (seededRandom() > 0.5) {
-      orderProducts.push({ name: product2.name, quantity: 1, price: product2.price });
-      amount += product2.price;
+    orderProducts.push({ name: product2.name, quantity: 1, price: product2.price });
+    amount += product2.price;
   }
-  
+
   // Deterministic date generation
   const startDate = new Date(2024, 0, 1).getTime();
   const endDate = new Date(2024, 6, 25).getTime(); // Use a fixed end date

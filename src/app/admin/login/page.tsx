@@ -1,4 +1,3 @@
-
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -17,8 +16,7 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
-import { Bot } from 'lucide-react';
-import Link from 'next/link';
+import { Bot, Loader2 } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -28,8 +26,9 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
-import { useState } from 'react';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { useState, useEffect } from 'react';
+import { auth } from '@/lib/firebase';
+import { useSignInWithEmailAndPassword, useSendPasswordResetEmail } from 'react-firebase-hooks/auth';
 
 const loginFormSchema = z.object({
   email: z.string().email('Please enter a valid email address.'),
@@ -41,26 +40,27 @@ const recoveryEmailSchema = z.object({
   recoveryEmail: z.string().email('Please enter a valid email address.'),
 });
 
-const recoveryOtpSchema = z.object({
-  otp: z.string().length(4, 'OTP must be 4 digits.'),
-});
-
-const recoveryNewCredsSchema = z.object({
-  newPassword: z.string().min(6, 'Password must be at least 6 characters.'),
-  newPin: z.string().regex(/^\d{4}$/, 'Security PIN must be 4 digits.'),
-});
-
+// Admin emails allowed (simple strict check for now)
+const ALLOWED_ADMIN_EMAILS = [
+  'admin@rodela.com',
+  // Add other admin emails here or use process.env
+  process.env.NEXT_PUBLIC_ADMIN_EMAIL,
+].filter(Boolean);
 
 export default function AdminLoginPage() {
   const { toast } = useToast();
   const router = useRouter();
   const [isRecoveryOpen, setIsRecoveryOpen] = useState(false);
-  const [recoveryStep, setRecoveryStep] = useState(1);
-  const [recoveryEmail, setRecoveryEmail] = useState('');
-  const [generatedOtp, setGeneratedOtp] = useState('');
 
-  const [newPassword, setNewPassword] = useState('123456');
-  const [newPin, setNewPin] = useState('9999');
+  // Firebase Hooks
+  const [
+    signInWithEmailAndPassword,
+    user,
+    loading,
+    error,
+  ] = useSignInWithEmailAndPassword(auth);
+
+  const [sendPasswordResetEmail, sending, resetError] = useSendPasswordResetEmail(auth);
 
   const loginForm = useForm<z.infer<typeof loginFormSchema>>({
     resolver: zodResolver(loginFormSchema),
@@ -75,93 +75,81 @@ export default function AdminLoginPage() {
     resolver: zodResolver(recoveryEmailSchema),
     defaultValues: { recoveryEmail: '' },
   });
-  
-  const recoveryFormOtp = useForm<z.infer<typeof recoveryOtpSchema>>({
-    resolver: zodResolver(recoveryOtpSchema),
-    defaultValues: { otp: '' },
-  });
 
-  const recoveryFormNewCreds = useForm<z.infer<typeof recoveryNewCredsSchema>>({
-    resolver: zodResolver(recoveryNewCredsSchema),
-    defaultValues: { newPassword: '', newPin: '' },
-  });
+  // Handle Firebase Login Errors
+  useEffect(() => {
+    if (error) {
+      let msg = 'Invalid credentials.';
+      if (error.code === 'auth/invalid-credential') msg = 'Invalid email or password.';
+      if (error.code === 'auth/user-not-found') msg = 'User not found.';
+      if (error.code === 'auth/wrong-password') msg = 'Incorrect password.';
+      if (error.code === 'auth/too-many-requests') msg = 'Too many failed attempts. Try again later.';
 
+      toast({
+        variant: 'destructive',
+        title: 'Login Failed',
+        description: msg,
+      });
+    }
+  }, [error, toast]);
 
-  function onLoginSubmit(values: z.infer<typeof loginFormSchema>) {
-    const { email, password, pin } = values;
-
-    if (
-      email === 'admin@rodela.com' &&
-      password === newPassword &&
-      pin === newPin
-    ) {
-      localStorage.setItem('isAuthenticated', 'true');
+  // Handle Login Success
+  useEffect(() => {
+    if (user) {
       toast({
         title: 'Login Successful',
         description: 'Welcome back!',
       });
       router.push('/admin');
+    }
+  }, [user, router, toast]);
+
+  async function onLoginSubmit(values: z.infer<typeof loginFormSchema>) {
+    const { email, password, pin } = values;
+
+    // 1. PIN Check (Local Security Layer)
+    const validPin = process.env.NEXT_PUBLIC_ADMIN_PIN || '9999';
+    if (pin !== validPin) {
+      toast({
+        variant: 'destructive',
+        title: 'Access Denied',
+        description: 'Invalid Security PIN.',
+      });
+      return;
+    }
+
+    // 2. Allowed Admin Domain/Email Check
+    // In production, use Firebase Custom Claims for true admin security.
+    if (!ALLOWED_ADMIN_EMAILS.includes(email) && !email.endsWith('@rodela.com')) {
+      toast({
+        variant: 'destructive',
+        title: 'Access Denied',
+        description: 'This email is not authorized for admin access.',
+      });
+      return;
+    }
+
+    // 3. Firebase Login
+    await signInWithEmailAndPassword(email, password);
+  }
+
+  async function onRecoveryEmailSubmit(values: z.infer<typeof recoveryEmailSchema>) {
+    const success = await sendPasswordResetEmail(values.recoveryEmail);
+    if (success) {
+      toast({
+        title: 'Reset Link Sent',
+        description: `Check ${values.recoveryEmail} for a password reset link.`,
+      });
+      setIsRecoveryOpen(false);
+      recoveryFormEmail.reset();
     } else {
       toast({
         variant: 'destructive',
-        title: 'Login Failed',
-        description: 'Invalid credentials. Please check your email, password, and PIN.',
+        title: 'Error',
+        description: resetError?.message || 'Failed to send reset email.',
       });
     }
   }
-
-  function onRecoveryEmailSubmit(values: z.infer<typeof recoveryEmailSchema>) {
-    if (values.recoveryEmail.toLowerCase() === 'admin@rodela.com') {
-      setRecoveryEmail(values.recoveryEmail);
-      const otp = Math.floor(1000 + Math.random() * 9000).toString();
-      setGeneratedOtp(otp);
-      toast({
-        title: 'Verification Code Sent',
-        description: `Your verification code is: ${otp}`,
-      });
-      setRecoveryStep(2);
-    } else {
-      toast({
-        variant: 'destructive',
-        title: 'Unknown Email',
-        description: 'This email is not registered.',
-      });
-    }
-  }
-
-  function onRecoveryOtpSubmit(values: z.infer<typeof recoveryOtpSchema>) {
-    if (values.otp === generatedOtp) {
-      setRecoveryStep(3);
-    } else {
-      recoveryFormOtp.setError('otp', {
-        type: 'manual',
-        message: 'Invalid OTP. Please try again.',
-      });
-    }
-  }
-
-  function onRecoveryNewCredsSubmit(values: z.infer<typeof recoveryNewCredsSchema>) {
-    setNewPassword(values.newPassword);
-    setNewPin(values.newPin);
-    toast({
-      title: 'Reset Successful!',
-      description: 'Your credentials have been updated. Please login.',
-    });
-    resetRecoveryFlow();
-  }
-  
-  const resetRecoveryFlow = () => {
-    setIsRecoveryOpen(false);
-    setTimeout(() => {
-        setRecoveryStep(1);
-        setRecoveryEmail('');
-        setGeneratedOtp('');
-        recoveryFormEmail.reset();
-        recoveryFormOtp.reset();
-        recoveryFormNewCreds.reset();
-    }, 300); // delay to allow dialog to close smoothly
-  };
-
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-muted/40">
@@ -185,7 +173,7 @@ export default function AdminLoginPage() {
                   <FormItem>
                     <FormLabel>Email</FormLabel>
                     <FormControl>
-                      <Input type="email" placeholder="admin@rodela.com" {...field} />
+                      <Input type="email" placeholder="admin@rodela.com" {...field} suppressHydrationWarning />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -198,7 +186,7 @@ export default function AdminLoginPage() {
                   <FormItem>
                     <FormLabel>Password</FormLabel>
                     <FormControl>
-                      <Input type="password" placeholder="••••••••" {...field} />
+                      <Input type="password" placeholder="••••••••" {...field} suppressHydrationWarning />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -211,113 +199,57 @@ export default function AdminLoginPage() {
                   <FormItem>
                     <FormLabel>Security PIN</FormLabel>
                     <FormControl>
-                      <Input type="password" placeholder="••••" maxLength={4} {...field} />
+                      <Input type="password" placeholder="••••" maxLength={4} {...field} suppressHydrationWarning />
                     </FormControl>
                     <FormMessage />
+                    <p className="text-[10px] text-muted-foreground text-right">* Check .env for PIN</p>
                   </FormItem>
                 )}
               />
-              <Button type="submit" className="w-full">
-                Login to Admin Dashboard
+              <Button type="submit" className="w-full" disabled={loading}>
+                {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                {loading ? 'Authenticating...' : 'Login to Admin Dashboard'}
               </Button>
             </form>
           </Form>
           <div className="mt-4 text-center text-sm">
             <Dialog open={isRecoveryOpen} onOpenChange={setIsRecoveryOpen}>
-                <DialogTrigger asChild>
-                    <Button variant="link" className="p-0 h-auto">Forgot Password?</Button>
-                </DialogTrigger>
-                <DialogContent onInteractOutside={(e) => e.preventDefault()}>
-                   <DialogHeader>
-                        <DialogTitle>Password & PIN Recovery</DialogTitle>
-                        <DialogDescription>
-                            {recoveryStep === 1 && "Enter your email to receive a verification code."}
-                            {recoveryStep === 2 && `We've sent a code to ${recoveryEmail}. Please enter it below.`}
-                            {recoveryStep === 3 && "You can now reset your credentials."}
-                        </DialogDescription>
-                    </DialogHeader>
+              <DialogTrigger asChild>
+                <Button variant="link" className="p-0 h-auto">Forgot Password?</Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Reset Password</DialogTitle>
+                  <DialogDescription>
+                    Enter your email to receive a password reset link.
+                  </DialogDescription>
+                </DialogHeader>
 
-                    {recoveryStep === 1 && (
-                        <Form {...recoveryFormEmail}>
-                            <form onSubmit={recoveryFormEmail.handleSubmit(onRecoveryEmailSubmit)} id="recovery-email-form" className="space-y-4 pt-4">
-                                <FormField
-                                    control={recoveryFormEmail.control}
-                                    name="recoveryEmail"
-                                    render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>Registered Email</FormLabel>
-                                        <FormControl>
-                                            <Input type="email" placeholder="admin@rodela.com" {...field} />
-                                        </FormControl>
-                                        <FormMessage />
-                                    </FormItem>
-                                    )}
-                                />
-                            </form>
-                        </Form>
-                    )}
+                <Form {...recoveryFormEmail}>
+                  <form onSubmit={recoveryFormEmail.handleSubmit(onRecoveryEmailSubmit)} id="recovery-email-form" className="space-y-4 pt-4">
+                    <FormField
+                      control={recoveryFormEmail.control}
+                      name="recoveryEmail"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Registered Email</FormLabel>
+                          <FormControl>
+                            <Input type="email" placeholder="admin@rodela.com" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </form>
+                </Form>
 
-                    {recoveryStep === 2 && (
-                         <Form {...recoveryFormOtp}>
-                            <form onSubmit={recoveryFormOtp.handleSubmit(onRecoveryOtpSubmit)} id="recovery-otp-form" className="space-y-4 pt-4">
-                                <FormField
-                                    control={recoveryFormOtp.control}
-                                    name="otp"
-                                    render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>4-Digit Verification Code</FormLabel>
-                                        <FormControl>
-                                            <Input type="text" maxLength={4} placeholder="1234" {...field} />
-                                        </FormControl>
-                                        <FormMessage />
-                                    </FormItem>
-                                    )}
-                                />
-                            </form>
-                        </Form>
-                    )}
-                    
-                    {recoveryStep === 3 && (
-                         <Form {...recoveryFormNewCreds}>
-                            <form onSubmit={recoveryFormNewCreds.handleSubmit(onRecoveryNewCredsSubmit)} id="recovery-new-creds-form" className="space-y-4 pt-4">
-                                <FormField
-                                    control={recoveryFormNewCreds.control}
-                                    name="newPassword"
-                                    render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>New Password</FormLabel>
-                                        <FormControl>
-                                            <Input type="password" {...field} />
-                                        </FormControl>
-                                        <FormMessage />
-                                    </FormItem>
-                                    )}
-                                />
-                                <FormField
-                                    control={recoveryFormNewCreds.control}
-                                    name="newPin"
-                                    render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>New 4-Digit Security PIN</FormLabel>
-                                        <FormControl>
-                                            <Input type="password" maxLength={4} {...field} />
-                                        </FormControl>
-                                        <FormMessage />
-                                    </FormItem>
-                                    )}
-                                />
-                            </form>
-                        </Form>
-                    )}
-
-
-                    <DialogFooter>
-                        <Button variant="outline" onClick={resetRecoveryFlow}>Cancel</Button>
-                        {recoveryStep === 1 && <Button type="submit" form="recovery-email-form">Send Verification Code</Button>}
-                        {recoveryStep === 2 && <Button type="submit" form="recovery-otp-form">Verify Code</Button>}
-                        {recoveryStep === 3 && <Button type="submit" form="recovery-new-creds-form">Update Credentials</Button>}
-                    </DialogFooter>
-                </DialogContent>
+                <DialogFooter>
+                  <Button variant="outline" onClick={() => setIsRecoveryOpen(false)}>Cancel</Button>
+                  <Button type="submit" form="recovery-email-form" disabled={sending}>
+                    {sending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : 'Send Reset Link'}
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
             </Dialog>
           </div>
         </CardContent>
@@ -325,5 +257,3 @@ export default function AdminLoginPage() {
     </div>
   );
 }
-
-    

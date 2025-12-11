@@ -36,7 +36,7 @@ const sendEmailFlow = ai.defineFlow(
         scopes: ['https://www.googleapis.com/auth/gmail.send'],
       });
       const authClient = await auth.getClient();
-      const gmail = google.gmail({ version: 'v1', auth: authClient });
+      const gmail = google.gmail({ version: 'v1', auth: authClient as any });
 
       const emailLines = [
         `To: ${input.to}`,
@@ -49,7 +49,7 @@ const sendEmailFlow = ai.defineFlow(
       const email = emailLines.join('\n');
 
       const encodedMessage = Buffer.from(email).toString('base64').replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
-      
+
       await gmail.users.messages.send({
         userId: 'me',
         requestBody: {

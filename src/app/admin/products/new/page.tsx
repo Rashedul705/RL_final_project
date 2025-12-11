@@ -64,7 +64,7 @@ const formSchema = z.object({
 export default function AdminNewProductPage() {
   const router = useRouter();
   const { toast } = useToast();
-  
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -76,7 +76,7 @@ export default function AdminNewProductPage() {
       category: '',
     },
   });
-  
+
   const galleryFiles = form.watch('galleryImages');
 
   function onSubmit(values: z.infer<typeof formSchema>) {
@@ -164,14 +164,14 @@ export default function AdminNewProductPage() {
                   </CardHeader>
                   <CardContent>
                     <div className="grid grid-cols-2 gap-6">
-                       <FormField
+                      <FormField
                         control={form.control}
                         name="price"
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel>Price (BDT)</FormLabel>
                             <FormControl>
-                                <Input type="number" step="0.01" {...field} />
+                              <Input type="number" step="0.01" {...field} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -207,18 +207,18 @@ export default function AdminNewProductPage() {
                       render={({ field: { onChange, value, ...rest } }) => (
                         <FormItem>
                           <FormControl>
-                            <Input 
-                                type="file" 
-                                multiple 
-                                accept="image/*"
-                                onChange={(e) => onChange(e.target.files)} 
-                                {...rest}
+                            <Input
+                              type="file"
+                              multiple
+                              accept="image/*"
+                              onChange={(e) => onChange(e.target.files)}
+                              {...rest}
                             />
                           </FormControl>
                           <FormMessage />
                           {galleryFiles && galleryFiles.length > 0 && (
                             <div className="grid grid-cols-3 gap-2 pt-4">
-                              {Array.from(galleryFiles).map((file, index) => (
+                              {Array.from(galleryFiles).map((file: any, index) => (
                                 <div key={index} className="relative aspect-square">
                                   <img
                                     src={URL.createObjectURL(file)}
@@ -280,16 +280,16 @@ export default function AdminNewProductPage() {
                       name="productImage"
                       render={({ field: { onChange, value, ...rest } }) => (
                         <FormItem>
-                            <FormLabel>Main Image</FormLabel>
-                           <FormControl>
-                             <Input 
-                                type="file" 
-                                accept="image/*"
-                                onChange={(e) => onChange(e.target.files)} 
-                                {...rest}
-                             />
-                           </FormControl>
-                           <FormMessage />
+                          <FormLabel>Main Image</FormLabel>
+                          <FormControl>
+                            <Input
+                              type="file"
+                              accept="image/*"
+                              onChange={(e) => onChange(e.target.files)}
+                              {...rest}
+                            />
+                          </FormControl>
+                          <FormMessage />
                         </FormItem>
                       )}
                     />
@@ -310,4 +310,3 @@ export default function AdminNewProductPage() {
   );
 }
 
-    
