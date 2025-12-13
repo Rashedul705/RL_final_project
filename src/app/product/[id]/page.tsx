@@ -33,7 +33,7 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
   const [api, setApi] = useState<CarouselApi>();
   const [current, setCurrent] = useState(0);
   const [quantity, setQuantity] = useState(1);
-  
+
   // Asynchronously get the slug from the params promise.
   const { id: slug } = use(params);
 
@@ -93,12 +93,12 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
       <main className="flex-1 py-12 md:py-16">
         <div className="container">
           <div className="grid md:grid-cols-2 gap-8 lg:gap-12">
-            <div>
+            <div className="w-3/4 mx-auto">
               <Carousel setApi={setApi} className="w-full">
                 <CarouselContent>
                   {galleryImages.map((img, index) => (
                     <CarouselItem key={index}>
-                      <div className="aspect-square relative rounded-lg overflow-hidden border">
+                      <div className="aspect-[3/4] relative rounded-lg overflow-hidden border">
                         <Image
                           src={img}
                           alt={`${product.name} - view ${index + 1}`}
@@ -115,11 +115,10 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
               </Carousel>
               <div className="grid grid-cols-4 gap-2 mt-4">
                 {galleryImages.map((img, index) => (
-                   <div
+                  <div
                     key={index}
-                    className={`aspect-square relative rounded-md overflow-hidden border-2 ${
-                      index === current ? 'border-primary' : 'border-transparent'
-                    } cursor-pointer`}
+                    className={`aspect-[3/4] relative rounded-md overflow-hidden border-2 ${index === current ? 'border-primary' : 'border-transparent'
+                      } cursor-pointer`}
                     onClick={() => handleThumbnailClick(index)}
                   >
                     <Image
@@ -144,84 +143,84 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
 
               {product.stock > 0 ? (
                 <div className="mt-8 space-y-4">
-                    <div className="flex items-center gap-2">
-                        <Label htmlFor="quantity" className="text-sm font-medium">Quantity:</Label>
-                        <div className="flex items-center">
-                            <Button
-                                variant="outline"
-                                size="icon"
-                                className="h-8 w-8"
-                                onClick={() => handleQuantityChange(quantity - 1)}
-                                disabled={quantity <= 1}
-                            >
-                                <Minus className="h-4 w-4" />
-                            </Button>
-                            <Input
-                                id="quantity"
-                                type="number"
-                                value={quantity}
-                                onChange={(e) => handleQuantityChange(parseInt(e.target.value) || 1)}
-                                className="h-8 w-16 text-center [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                                min={1}
-                                max={product.stock}
-                            />
-                            <Button
-                                variant="outline"
-                                size="icon"
-                                className="h-8 w-8"
-                                onClick={() => handleQuantityChange(quantity + 1)}
-                                disabled={quantity >= product.stock}
-                            >
-                                <Plus className="h-4 w-4" />
-                            </Button>
-                        </div>
-                         <p className="text-sm text-muted-foreground">(in stock)</p>
-                    </div>
-
-                    <div className="flex flex-col sm:flex-row gap-2">
-                        <AddToCartButton
-                        product={product}
-                        quantity={quantity}
+                  <div className="flex items-center gap-2">
+                    <Label htmlFor="quantity" className="text-sm font-medium">Quantity:</Label>
+                    <div className="flex items-center">
+                      <Button
                         variant="outline"
-                        className="w-full flex-1 text-lg py-6"
-                        >
-                        Add to Cart
-                        </AddToCartButton>
-                        <AddToCartButton
-                        product={product}
-                        quantity={quantity}
-                        redirectToCheckout
-                        className="w-full flex-1 bg-accent hover:bg-accent/90 text-accent-foreground text-lg py-6"
-                        >
-                        Order Now
-                        </AddToCartButton>
+                        size="icon"
+                        className="h-8 w-8"
+                        onClick={() => handleQuantityChange(quantity - 1)}
+                        disabled={quantity <= 1}
+                      >
+                        <Minus className="h-4 w-4" />
+                      </Button>
+                      <Input
+                        id="quantity"
+                        type="number"
+                        value={quantity}
+                        onChange={(e) => handleQuantityChange(parseInt(e.target.value) || 1)}
+                        className="h-8 w-16 text-center [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                        min={1}
+                        max={product.stock}
+                      />
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        className="h-8 w-8"
+                        onClick={() => handleQuantityChange(quantity + 1)}
+                        disabled={quantity >= product.stock}
+                      >
+                        <Plus className="h-4 w-4" />
+                      </Button>
                     </div>
+                    <p className="text-sm text-muted-foreground">(in stock)</p>
+                  </div>
+
+                  <div className="flex flex-col sm:flex-row gap-2">
+                    <AddToCartButton
+                      product={product}
+                      quantity={quantity}
+                      variant="outline"
+                      className="w-full flex-1 text-lg py-6"
+                    >
+                      Add to Cart
+                    </AddToCartButton>
+                    <AddToCartButton
+                      product={product}
+                      quantity={quantity}
+                      redirectToCheckout
+                      className="w-full flex-1 bg-accent hover:bg-accent/90 text-accent-foreground text-lg py-6"
+                    >
+                      Order Now
+                    </AddToCartButton>
+                  </div>
                 </div>
               ) : (
                 <div className="mt-8">
-                    <p className="font-semibold text-red-600 text-lg">Out of Stock</p>
+                  <p className="font-semibold text-red-600 text-lg">Out of Stock</p>
                 </div>
               )}
 
 
-               <div className="mt-8">
+              <div className="mt-8">
                 <h2 className="text-xl font-semibold">Product Highlights:</h2>
                 <div className="prose prose-sm max-w-none text-muted-foreground mt-2">
-                   <p>{product.description}</p>
+                  <p>{product.description}</p>
                 </div>
-             </div>
+              </div>
 
             </div>
           </div>
-          
+
           <div className="mt-16">
             <Separator />
-             <div className="py-12">
-                <h2 className="text-2xl font-bold mb-4">Product Description</h2>
-                <div className="prose prose-sm max-w-none text-muted-foreground">
-                   <p>{product.description}</p>
-                </div>
-             </div>
+            <div className="py-12">
+              <h2 className="text-2xl font-bold mb-4">Product Description</h2>
+              <div className="prose prose-sm max-w-none text-muted-foreground">
+                <p>{product.description}</p>
+              </div>
+            </div>
           </div>
 
           {relatedProducts.length > 0 && (
