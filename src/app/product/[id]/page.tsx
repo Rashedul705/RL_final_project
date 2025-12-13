@@ -93,32 +93,14 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
       <main className="flex-1 py-12 md:py-16">
         <div className="container">
           <div className="grid md:grid-cols-2 gap-8 lg:gap-12">
-            <div className="w-3/4 mx-auto">
-              <Carousel setApi={setApi} className="w-full">
-                <CarouselContent>
-                  {galleryImages.map((img, index) => (
-                    <CarouselItem key={index}>
-                      <div className="aspect-[3/4] relative rounded-lg overflow-hidden border">
-                        <Image
-                          src={img}
-                          alt={`${product.name} - view ${index + 1}`}
-                          fill
-                          className="object-cover"
-                          sizes="(max-width: 768px) 100vw, 50vw"
-                        />
-                      </div>
-                    </CarouselItem>
-                  ))}
-                </CarouselContent>
-                <CarouselPrevious className="left-2" />
-                <CarouselNext className="right-2" />
-              </Carousel>
-              <div className="grid grid-cols-4 gap-2 mt-4">
+            <div className="w-3/4 mx-auto flex gap-4">
+              {/* Thumbnails - Left Side */}
+              <div className="flex flex-col gap-2 w-[20%]">
                 {galleryImages.map((img, index) => (
                   <div
                     key={index}
                     className={`aspect-[3/4] relative rounded-md overflow-hidden border-2 ${index === current ? 'border-primary' : 'border-transparent'
-                      } cursor-pointer`}
+                      } cursor-pointer hover:opacity-80 transition-opacity`}
                     onClick={() => handleThumbnailClick(index)}
                   >
                     <Image
@@ -126,10 +108,33 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
                       alt={`Thumbnail ${index + 1}`}
                       fill
                       className="object-cover"
-                      sizes="25vw"
+                      sizes="20vw"
                     />
                   </div>
                 ))}
+              </div>
+
+              {/* Main Image - Right Side */}
+              <div className="w-[80%]">
+                <Carousel setApi={setApi} className="w-full">
+                  <CarouselContent>
+                    {galleryImages.map((img, index) => (
+                      <CarouselItem key={index}>
+                        <div className="aspect-[3/4] relative rounded-lg overflow-hidden border">
+                          <Image
+                            src={img}
+                            alt={`${product.name} - view ${index + 1}`}
+                            fill
+                            className="object-cover"
+                            sizes="(max-width: 768px) 100vw, 50vw"
+                          />
+                        </div>
+                      </CarouselItem>
+                    ))}
+                  </CarouselContent>
+                  <CarouselPrevious className="left-2" />
+                  <CarouselNext className="right-2" />
+                </Carousel>
               </div>
             </div>
             <div className="flex flex-col">
