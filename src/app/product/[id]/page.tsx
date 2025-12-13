@@ -5,6 +5,7 @@ import { products } from '@/lib/data';
 import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
 import Image from 'next/image';
+import { ZoomableImage } from '@/components/ui/zoomable-image';
 import {
   Carousel,
   CarouselContent,
@@ -114,6 +115,8 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
                 ))}
               </div>
 
+
+
               {/* Main Image - Right Side */}
               <div className="w-[80%]">
                 <Carousel setApi={setApi} className="w-full">
@@ -121,7 +124,7 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
                     {galleryImages.map((img, index) => (
                       <CarouselItem key={index}>
                         <div className="aspect-[3/4] relative rounded-lg overflow-hidden border">
-                          <Image
+                          <ZoomableImage
                             src={img}
                             alt={`${product.name} - view ${index + 1}`}
                             fill
