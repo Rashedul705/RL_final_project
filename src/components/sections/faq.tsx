@@ -10,7 +10,7 @@ export function Faq() {
   const faqs = defaultFaqs;
 
   return (
-    <section className="pt-8 pb-16 md:pt-12 md:pb-12 bg-background">
+    <section id="faq" className="pt-8 pb-16 md:pt-12 md:pb-12 bg-background scroll-mt-20">
       <div className="container max-w-4xl">
         <h2 className="text-3xl md:text-4xl mb-8 text-center">
           Frequently Asked Questions

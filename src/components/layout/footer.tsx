@@ -56,22 +56,22 @@ export function Footer() {
             <h3 className="text-sm font-bold uppercase tracking-wider">Help</h3>
             <ul className="space-y-2 text-sm">
               <li>
-                <Link href="#" className="text-muted-foreground hover:text-foreground">
+                <Link href="#contact" className="text-muted-foreground hover:text-foreground">
                   Contact Us
                 </Link>
               </li>
               <li>
-                <Link href="#" className="text-muted-foreground hover:text-foreground">
+                <Link href="#faq" className="text-muted-foreground hover:text-foreground">
                   Shipping & Returns
                 </Link>
               </li>
               <li>
-                <Link href="#" className="text-muted-foreground hover:text-foreground">
+                <Link href="#faq" className="text-muted-foreground hover:text-foreground">
                   Size Guide
                 </Link>
               </li>
               <li>
-                <Link href="#" className="text-muted-foreground hover:text-foreground">
+                <Link href="#faq" className="text-muted-foreground hover:text-foreground">
                   FAQ
                 </Link>
               </li>
@@ -91,7 +91,7 @@ export function Footer() {
               </li>
               <li className="pt-2">
                 <Link href="https://wa.me/8801776180359" target="_blank" className="inline-block hover:opacity-90 transition-opacity">
-                  <img src="/whatsapp-button.png" alt="Chat on WhatsApp" className="h-8 w-auto" />
+                  <img src="/whatsapp-button.png" alt="Chat on WhatsApp" className="h-6 w-auto" />
                 </Link>
               </li>
               <li className="flex items-center space-x-2 text-muted-foreground">
