@@ -212,20 +212,24 @@ export const products: Product[] = [
 
 export const faqs = [
   {
-    question: "What are the delivery charges?",
-    answer: "Inside Rajshahi city, the delivery charge is 60 Taka. For the rest of Bangladesh, it is 120 Taka."
+    question: "১. আপনাদের কাছে কী কী কালেকশন পাওয়া যাবে?",
+    answer: "আমাদের কাছে প্রিমিয়াম প্লাজো-খিমার সেট, শাড়ি, সালোয়ার কামিজ, কুর্তি এবং বিভিন্ন উৎসবের জন্য এক্সক্লুসিভ ডিজাইনার পোশাক পাওয়া যায়। আমাদের প্রতিটি পোশাকেই ঐতিহ্য এবং আধুনিকতার ছোঁয়া থাকে।"
   },
   {
-    question: "How long does delivery take?",
-    answer: "Deliveries inside Rajshahi are typically completed within 24-48 hours. For other locations in Bangladesh, it may take 3-5 business days."
+    question: "২. ডেলিভারি চার্জ কত?",
+    answer: "ঢাকার ভেতরে ডেলিভারি চার্জ সাধারণত ৭০-৮০ টাকা এবং ঢাকার বাইরে ১৩০-১৫০ টাকা। (অর্ডার কনফার্ম করার সময় সঠিক চার্জটি জানিয়ে দেওয়া হয়)।"
   },
   {
-    question: "What is your return policy?",
-    answer: "We offer a 7-day return policy for unused and undamaged products. Please contact our customer service to initiate a return."
+    question: "৩. পণ্য হাতে পেতে কতদিন সময় লাগে?",
+    answer: "অর্ডার কনফার্ম করার পর ঢাকার ভেতরে ২-৩ দিন এবং ঢাকার বাইরে ৩-৫ দিনের মধ্যে ডেলিভারি করা হয়।"
   },
   {
-    question: "Is Cash on Delivery (COD) available?",
-    answer: "Yes, Cash on Delivery is available for all orders across Bangladesh."
+    question: "৪. পেমেন্ট কীভাবে করা যাবে?",
+    answer: "আমরা 'ক্যাশ অন ডেলিভারি' (COD) এবং বিকাশ/নগদ বা ব্যাংক পেমেন্টের সুবিধা দিয়ে থাকি।"
+  },
+  {
+    question: "৫. পোশাকে কোনো সমস্যা থাকলে পরিবর্তন করা যাবে কি?",
+    answer: "হ্যাঁ, পণ্য হাতে পাওয়ার পর কোনো ত্রুটি থাকলে বা সাইজ না মিললে নির্দিষ্ট সময়ের মধ্যে এক্সচেঞ্জ করার সুযোগ রয়েছে। তবে সেক্ষেত্রে পণ্যটি অব্যবহৃত এবং ট্যাগসহ থাকতে হবে।"
   }
 ];
 
