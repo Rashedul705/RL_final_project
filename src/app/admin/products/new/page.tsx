@@ -95,11 +95,11 @@ export default function AdminNewProductPage() {
     const uploadTask = uploadBytesResumable(storageRef, file);
 
     return new Promise<string>((resolve, reject) => {
-      // Timeout after 60 seconds
+      // Timeout after 300 seconds (5 minutes)
       const timeoutId = setTimeout(() => {
         uploadTask.cancel();
-        reject(new Error("Upload timed out after 60 seconds. Internet may be too slow."));
-      }, 60000);
+        reject(new Error("Upload timed out after 300 seconds. Internet may be too slow."));
+      }, 300000);
 
       uploadTask.on(
         'state_changed',
@@ -309,64 +309,7 @@ export default function AdminNewProductPage() {
                     </div>
                   </CardContent>
                 </Card>
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Product Gallery</CardTitle>
-                    <CardDescription>
-                      Add additional images for the product. (Optional)
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <FormField
-                      control={form.control}
-                      name="galleryImages"
-                      render={({ field: { onChange, value, ...rest } }) => (
-                        <FormItem>
-                          <FormControl>
-                            <Input
-                              type="file"
-                              multiple
-                              accept="image/*"
-                              onChange={(e) => {
-                                if (e.target.files) {
-                                  onChange(Array.from(e.target.files));
-                                }
-                              }}
-                              {...rest}
-                              value={undefined}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                          {value && Array.from(value).length > 0 && (
-                            <div className="grid grid-cols-3 gap-2 pt-4">
-                              {Array.from(value).map((file: any, index: number) => (
-                                <div key={index} className="relative aspect-square group">
-                                  <img
-                                    src={URL.createObjectURL(file)}
-                                    alt={`preview ${index}`}
-                                    className="w-full h-full object-cover rounded-md"
-                                  />
-                                  <Button
-                                    type="button"
-                                    variant="destructive"
-                                    size="icon"
-                                    className="absolute top-1 right-1 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
-                                    onClick={() => {
-                                      const newFiles = Array.from(value).filter((_, i) => i !== index);
-                                      onChange(newFiles);
-                                    }}
-                                  >
-                                    <Trash2 className="h-3 w-3" />
-                                  </Button>
-                                </div>
-                              ))}
-                            </div>
-                          )}
-                        </FormItem>
-                      )}
-                    />
-                  </CardContent>
-                </Card>
+
               </div>
               <div className="grid auto-rows-max items-start gap-4 lg:gap-8">
                 <Card>
@@ -444,6 +387,64 @@ export default function AdminNewProductPage() {
                               >
                                 <Trash2 className="h-3 w-3" />
                               </Button>
+                            </div>
+                          )}
+                        </FormItem>
+                      )}
+                    />
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Product Gallery</CardTitle>
+                    <CardDescription>
+                      Add additional images for the product. (Optional)
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <FormField
+                      control={form.control}
+                      name="galleryImages"
+                      render={({ field: { onChange, value, ...rest } }) => (
+                        <FormItem>
+                          <FormControl>
+                            <Input
+                              type="file"
+                              multiple
+                              accept="image/*"
+                              onChange={(e) => {
+                                if (e.target.files) {
+                                  onChange(Array.from(e.target.files));
+                                }
+                              }}
+                              {...rest}
+                              value={undefined}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                          {value && Array.from(value).length > 0 && (
+                            <div className="grid grid-cols-3 gap-2 pt-4">
+                              {Array.from(value).map((file: any, index: number) => (
+                                <div key={index} className="relative aspect-square group">
+                                  <img
+                                    src={URL.createObjectURL(file)}
+                                    alt={`preview ${index}`}
+                                    className="w-full h-full object-cover rounded-md"
+                                  />
+                                  <Button
+                                    type="button"
+                                    variant="destructive"
+                                    size="icon"
+                                    className="absolute top-1 right-1 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                                    onClick={() => {
+                                      const newFiles = Array.from(value).filter((_, i) => i !== index);
+                                      onChange(newFiles);
+                                    }}
+                                  >
+                                    <Trash2 className="h-3 w-3" />
+                                  </Button>
+                                </div>
+                              ))}
                             </div>
                           )}
                         </FormItem>
