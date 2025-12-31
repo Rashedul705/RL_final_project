@@ -1,7 +1,6 @@
-
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import {
   Card,
   CardContent,
@@ -26,7 +25,6 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { recentOrders } from '@/lib/data';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -36,59 +34,92 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { MoreHorizontal, Search } from 'lucide-react';
+import { MoreHorizontal, Search, Loader2 } from 'lucide-react';
+import { apiClient } from '@/lib/api-client';
 
 type Customer = {
   name: string;
   phone: string;
   totalOrders: number;
   totalSpent: number;
+  email?: string;
+};
+
+type Order = {
+  id: string;
+  customer: string;
+  phone: string;
+  email?: string;
+  amount: string;
+  status: string;
+  products: any[];
+  date: string;
 };
 
 export default function AdminCustomersPage() {
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const fetchedOrders = await apiClient.get<Order[]>('/orders');
+        if (fetchedOrders) {
+          setOrders(fetchedOrders);
+        }
+      } catch (error) {
+        console.error("Failed to fetch orders", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
 
   const customers = useMemo(() => {
     const customerMap = new Map<string, Customer>();
 
-    recentOrders.forEach((order) => {
-      const customerKey = `${order.customer}-${order.phone}`;
+    orders.forEach((order) => {
+      // Create a unique key based on phone (primary) or email or name
+      const customerKey = `${order.phone}-${order.customer}`;
       const existingCustomer = customerMap.get(customerKey);
+
+      const orderAmount = parseFloat(order.amount) || 0;
 
       if (existingCustomer) {
         existingCustomer.totalOrders += 1;
-        existingCustomer.totalSpent += parseFloat(order.amount);
+        existingCustomer.totalSpent += orderAmount;
       } else {
         customerMap.set(customerKey, {
           name: order.customer,
           phone: order.phone,
+          email: order.email,
           totalOrders: 1,
-          totalSpent: parseFloat(order.amount),
+          totalSpent: orderAmount,
         });
       }
     });
 
     return Array.from(customerMap.values())
       .filter((customer) =>
-        customer.phone.includes(searchQuery)
+        customer.phone.includes(searchQuery) || customer.name.toLowerCase().includes(searchQuery.toLowerCase())
       )
       .sort(
         (a, b) => b.totalSpent - a.totalSpent
       );
-  }, [searchQuery]);
+  }, [orders, searchQuery]);
 
   const getCustomerOrders = (customer: Customer) => {
-    return recentOrders.filter(
+    return orders.filter(
       (order) =>
-        order.customer === customer.name && order.phone === customer.phone
+        (order.phone === customer.phone) && (order.customer === customer.name)
     );
   };
 
   const handleViewDetails = (customer: Customer) => {
-    // Add a small delay to ensure the DropdownMenu closes properly before opening the Dialog.
-    // This prevents focus and pointer-event conflicts that can freeze the UI.
     setTimeout(() => {
       setSelectedCustomer(customer);
       setIsDialogOpen(true);
@@ -104,7 +135,7 @@ export default function AdminCustomersPage() {
         <CardHeader>
           <CardTitle>Customer Management</CardTitle>
           <CardDescription>
-            View and manage your customer data.
+            View and manage your customer data (aggregated from Orders).
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -112,66 +143,75 @@ export default function AdminCustomersPage() {
             <div className="relative flex-1">
               <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Search by phone number..."
+                placeholder="Search by phone/name..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-8"
               />
             </div>
-            <Button variant="outline" size="icon">
-              <Search className="h-4 w-4" />
-            </Button>
           </div>
           <div className="relative w-full overflow-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Customer</TableHead>
-                  <TableHead>Phone</TableHead>
-                  <TableHead className="text-center">Orders</TableHead>
-                  <TableHead className="text-right">Total Spent</TableHead>
-                  <TableHead>
-                    <span className="sr-only">Actions</span>
-                  </TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {customers.map((customer) => (
-                  <TableRow key={`${customer.name}-${customer.phone}`}>
-                    <TableCell>
-                      <div className="font-medium">{customer.name}</div>
-                    </TableCell>
-                    <TableCell>{customer.phone}</TableCell>
-                    <TableCell className="text-center">
-                      {customer.totalOrders}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      BDT {customer.totalSpent.toLocaleString()}
-                    </TableCell>
-                    <TableCell>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button
-                            aria-haspopup="true"
-                            size="icon"
-                            variant="ghost"
-                          >
-                            <MoreHorizontal className="h-4 w-4" />
-                            <span className="sr-only">Toggle menu</span>
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                          <DropdownMenuItem onClick={() => handleViewDetails(customer)}>
-                            View Details
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
+            {loading ? (
+              <div className="flex justify-center p-4">
+                <Loader2 className="h-6 w-6 animate-spin" />
+              </div>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Customer</TableHead>
+                    <TableHead>Phone</TableHead>
+                    <TableHead className="text-center">Orders</TableHead>
+                    <TableHead className="text-right">Total Spent</TableHead>
+                    <TableHead>
+                      <span className="sr-only">Actions</span>
+                    </TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {customers.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={5} className="text-center">No customers found.</TableCell>
+                    </TableRow>
+                  ) : (
+                    customers.map((customer) => (
+                      <TableRow key={`${customer.name}-${customer.phone}`}>
+                        <TableCell>
+                          <div className="font-medium">{customer.name}</div>
+                          {customer.email && <div className="text-xs text-muted-foreground">{customer.email}</div>}
+                        </TableCell>
+                        <TableCell>{customer.phone}</TableCell>
+                        <TableCell className="text-center">
+                          {customer.totalOrders}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          BDT {customer.totalSpent.toLocaleString()}
+                        </TableCell>
+                        <TableCell>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button
+                                aria-haspopup="true"
+                                size="icon"
+                                variant="ghost"
+                              >
+                                <MoreHorizontal className="h-4 w-4" />
+                                <span className="sr-only">Toggle menu</span>
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                              <DropdownMenuItem onClick={() => handleViewDetails(customer)}>
+                                View Details
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </TableCell>
+                      </TableRow>
+                    )))}
+                </TableBody>
+              </Table>
+            )}
           </div>
         </CardContent>
       </Card>

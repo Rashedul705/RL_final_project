@@ -1,6 +1,5 @@
+
 import { NextRequest, NextResponse } from 'next/server';
-import { writeFile } from 'fs/promises';
-import { join } from 'path';
 import { ApiResponse } from '@/lib/api-response';
 
 export async function POST(request: NextRequest) {
@@ -9,27 +8,41 @@ export async function POST(request: NextRequest) {
         const file = formData.get('file') as File;
 
         if (!file) {
-            return ApiResponse.error('No file uploaded', 400);
+            return ApiResponse.error('No file found', 400);
         }
 
-        const bytes = await file.arrayBuffer();
-        const buffer = Buffer.from(bytes);
+        const apiKey = process.env.IMGBB_API_KEY;
+        if (!apiKey) {
+            console.error('IMGBB_API_KEY is not defined');
+            return ApiResponse.error('Server configuration error: IMGBB_API_KEY missing', 500);
+        }
 
-        // Create a unique filename
-        const filename = `${Date.now()}-${file.name.replace(/\s/g, '-')}`;
-        const uploadDir = join(process.cwd(), 'public', 'uploads');
+        // Convert file to Blob/Buffer for ImgBB
+        const buffer = await file.arrayBuffer();
+        const base64Image = Buffer.from(buffer).toString('base64');
 
-        // Ensure dir exists (simplified, assuming public exists, or we might need fs.mkdir)
-        const { mkdir } = require('fs/promises');
-        await mkdir(uploadDir, { recursive: true });
+        const imgbbFormData = new FormData();
+        imgbbFormData.append('image', base64Image);
 
-        const filepath = join(uploadDir, filename);
-        await writeFile(filepath, buffer);
+        // Upload to ImgBB
+        const response = await fetch(`https://api.imgbb.com/1/upload?key=${apiKey}`, {
+            method: 'POST',
+            body: imgbbFormData,
+        });
 
-        const url = `/uploads/${filename}`;
-        return ApiResponse.success({ url });
+        const data = await response.json();
+
+        if (!data.success) {
+            console.error('ImgBB Upload Error:', data);
+            return ApiResponse.error(`ImgBB Upload Failed: ${data.error?.message || 'Unknown error'}`, 502);
+        }
+
+        // Return the URL
+        // data.data.url is the direct link (or data.data.display_url)
+        return ApiResponse.success({ url: data.data.url });
+
     } catch (error: any) {
         console.error('Upload error:', error);
-        return ApiResponse.error('Upload failed', 500);
+        return ApiResponse.error('Internal server error during upload', 500);
     }
 }

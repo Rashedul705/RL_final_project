@@ -79,7 +79,7 @@ $orderData = @{
     address  = "Master Address"
     amount   = 5000
     date     = (Get-Date).ToString("yyyy-MM-dd")
-    products = @(@{ name = "Master Verification Product"; quantity = 1; price = 5000 })
+    products = @(@{ productId = $productId; name = "Master Verification Product"; quantity = 1; price = 5000 })
 } | ConvertTo-Json
 
 try {
@@ -106,7 +106,7 @@ try {
     else {
         Write-Host "   FAILURE: Order not found in profile." -ForegroundColor Red
     }
-}
+}      
 catch {
     Write-Host "   ERROR: $_" -ForegroundColor Red
 }
@@ -119,7 +119,7 @@ try {
     
     if ($foundUser) {
         Write-Host "   SUCCESS: Admin can see new user." -ForegroundColor Green
-    }
+    }   
     else {
         Write-Host "   FAILURE: User not found in Admin User List." -ForegroundColor Red
     }

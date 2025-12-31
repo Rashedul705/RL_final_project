@@ -40,6 +40,12 @@ const nextConfig: NextConfig = {
         port: '',
         pathname: '/**',
       },
+      {
+        protocol: 'https',
+        hostname: 'i.ibb.co',
+        port: '',
+        pathname: '/**',
+      },
     ],
   },
   serverExternalPackages: ['google-auth-library', 'googleapis', 'gtoken', 'jws', 'jwa', 'buffer-equal-constant-time', 'genkit', '@genkit-ai/google-genai'],

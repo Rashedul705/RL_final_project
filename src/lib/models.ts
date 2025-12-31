@@ -41,7 +41,7 @@ export interface IOrder extends Document {
     address: string;
     amount: string;
     status: 'Delivered' | 'Shipped' | 'Processing' | 'Pending' | 'Cancelled';
-    products: { name: string; quantity: number; price: number }[];
+    products: { productId: string; name: string; quantity: number; price: number, image?: string }[];
     date: string; // ISO String
 }
 
@@ -58,9 +58,11 @@ const OrderSchema: Schema = new Schema({
         default: 'Pending'
     },
     products: [{
+        productId: { type: String, required: true },
         name: { type: String, required: true },
         quantity: { type: Number, required: true },
-        price: { type: Number, required: true }
+        price: { type: Number, required: true },
+        image: { type: String }
     }],
     date: { type: String, required: true }
 }, { timestamps: true });
@@ -81,6 +83,41 @@ const CategorySchema: Schema = new Schema({
 }, { timestamps: true });
 
 
+
+// --- Shipping Method Schema ---
+export interface IShippingMethod extends Document {
+    name: string;
+    cost: number;
+    estimatedTime: string;
+    status: 'active' | 'inactive';
+}
+
+const ShippingMethodSchema: Schema = new Schema({
+    name: { type: String, required: true },
+    cost: { type: Number, required: true },
+    estimatedTime: { type: String, required: true },
+    status: { type: String, enum: ['active', 'inactive'], default: 'active' }
+}, { timestamps: true });
+
+// --- Inquiry Schema ---
+export interface IInquiry extends Document {
+    name: string;
+    email: string;
+    phone?: string;
+    subject?: string;
+    message: string;
+    status: 'new' | 'read' | 'replied';
+}
+
+const InquirySchema: Schema = new Schema({
+    name: { type: String, required: true },
+    email: { type: String, required: true },
+    phone: { type: String },
+    subject: { type: String },
+    message: { type: String, required: true },
+    status: { type: String, enum: ['new', 'read', 'replied'], default: 'new' }
+}, { timestamps: true });
+
 // Prevent localized model recompilation error in Next.js
 // AND force schema updates in dev mode by deleting old models if they exist
 if (process.env.NODE_ENV !== 'production') {
@@ -88,11 +125,15 @@ if (process.env.NODE_ENV !== 'production') {
     if (mongoose.models.Order) delete mongoose.models.Order;
     if (mongoose.models.Category) delete mongoose.models.Category;
     if (mongoose.models.User) delete mongoose.models.User;
+    if (mongoose.models.ShippingMethod) delete mongoose.models.ShippingMethod;
+    if (mongoose.models.Inquiry) delete mongoose.models.Inquiry;
 }
 
 export const Product: Model<IProduct> = mongoose.models.Product || mongoose.model<IProduct>('Product', ProductSchema);
 export const Order: Model<IOrder> = mongoose.models.Order || mongoose.model<IOrder>('Order', OrderSchema);
 export const Category: Model<ICategory> = mongoose.models.Category || mongoose.model<ICategory>('Category', CategorySchema);
+export const ShippingMethod: Model<IShippingMethod> = mongoose.models.ShippingMethod || mongoose.model<IShippingMethod>('ShippingMethod', ShippingMethodSchema);
+export const Inquiry: Model<IInquiry> = mongoose.models.Inquiry || mongoose.model<IInquiry>('Inquiry', InquirySchema);
 
 // --- User Schema ---
 export interface IUser extends Document {

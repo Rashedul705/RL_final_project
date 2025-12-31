@@ -1,3 +1,4 @@
+
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -21,6 +22,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { useCart } from '@/components/cart/cart-context';
@@ -30,7 +32,7 @@ import { Footer } from '@/components/layout/footer';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { Plus, Minus } from 'lucide-react';
+import { Plus, Minus, Truck } from 'lucide-react';
 import { bangladeshDistricts } from '@/lib/data';
 import { useAuth } from '@/components/providers/auth-provider';
 import { apiClient } from '@/lib/api-client';
@@ -40,21 +42,31 @@ const formSchema = z.object({
     phoneNumber: z.string().regex(/^01[0-9]{9}$/, 'Please enter a valid 11-digit phone number starting with 01.'),
     city: z.string().min(1, 'Please select a district.'),
     fullAddress: z.string().min(10, 'Full address must be at least 10 characters.'),
+    shippingMethodId: z.string().min(1, 'Please select a shipping method.'),
 });
+
+type ShippingMethod = {
+    _id: string;
+    name: string;
+    cost: number;
+    estimatedTime: string;
+    status: 'active' | 'inactive';
+};
 
 export default function CheckoutPage() {
     const { cart, clearCart, updateQuantity } = useCart();
     const { user } = useAuth();
     const { toast } = useToast();
     const router = useRouter();
-    const [shippingCharge, setShippingCharge] = useState<number | null>(null);
+    const [shippingMethods, setShippingMethods] = useState<ShippingMethod[]>([]);
+    const [selectedMethod, setSelectedMethod] = useState<ShippingMethod | null>(null);
 
     const subtotal = cart.reduce(
         (acc, item) => acc + item.product.price * item.quantity,
         0
     );
 
-    const total = subtotal + (shippingCharge ?? 0);
+    const total = subtotal + (selectedMethod?.cost ?? 0);
 
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
@@ -63,23 +75,32 @@ export default function CheckoutPage() {
             phoneNumber: '',
             city: '',
             fullAddress: '',
+            shippingMethodId: '',
         },
     });
 
-    const selectedCity = form.watch('city');
+    useEffect(() => {
+        const fetchShipping = async () => {
+            try {
+                const methods = await apiClient.get<ShippingMethod[]>('/shipping');
+                if (methods) {
+                    setShippingMethods(methods.filter(m => m.status === 'active'));
+                }
+            } catch (error) {
+                console.error("Failed to load shipping methods", error);
+            }
+        };
+        fetchShipping();
+    }, []);
+
+    const watchedMethodId = form.watch('shippingMethodId');
 
     useEffect(() => {
-        if (selectedCity === 'Rajshahi') {
-            setShippingCharge(60);
-        } else if (selectedCity === 'Dhaka') {
-            setShippingCharge(90);
-        } else if (selectedCity) {
-            setShippingCharge(120);
-        } else {
-            setShippingCharge(null);
+        if (watchedMethodId) {
+            const method = shippingMethods.find(m => m._id === watchedMethodId);
+            setSelectedMethod(method || null);
         }
-    }, [selectedCity]);
-
+    }, [watchedMethodId, shippingMethods]);
 
     async function onSubmit(values: z.infer<typeof formSchema>) {
         const orderId = `ORD${Math.floor(1000 + Math.random() * 9000)}`;
@@ -87,21 +108,26 @@ export default function CheckoutPage() {
         const orderData = {
             id: orderId,
             customer: values.fullName,
-            email: user?.email, // Attach user email
+            email: user?.email,
             phone: values.phoneNumber,
             address: `${values.fullAddress}, ${values.city}`,
             amount: total.toString(),
             status: 'Pending',
             products: cart.map(item => ({
+                productId: item.product.id,
                 name: item.product.name,
                 quantity: item.quantity,
                 price: item.product.price,
                 image: item.product.image
             })),
             date: new Date().toISOString(),
-            shippingInfo: values,
+            shippingInfo: {
+                ...values,
+                methodName: selectedMethod?.name,
+                estimatedTime: selectedMethod?.estimatedTime,
+            },
             subtotal,
-            shippingCharge
+            shippingCharge: selectedMethod?.cost
         };
 
         try {
@@ -227,6 +253,46 @@ export default function CheckoutPage() {
                                                     </FormItem>
                                                 )}
                                             />
+
+                                            <FormField
+                                                control={form.control}
+                                                name="shippingMethodId"
+                                                render={({ field }) => (
+                                                    <FormItem className="space-y-3">
+                                                        <FormLabel>Shipping Method</FormLabel>
+                                                        <FormControl>
+                                                            <RadioGroup
+                                                                onValueChange={field.onChange}
+                                                                defaultValue={field.value}
+                                                                className="flex flex-col space-y-1"
+                                                            >
+                                                                {shippingMethods.map((method) => (
+                                                                    <FormItem key={method._id} className="flex items-center space-x-3 space-y-0 rounded-md border p-4">
+                                                                        <FormControl>
+                                                                            <RadioGroupItem value={method._id} />
+                                                                        </FormControl>
+                                                                        <div className="flex-1 flex items-center justify-between">
+                                                                            <div className="space-y-1">
+                                                                                <FormLabel className="font-medium">
+                                                                                    {method.name}
+                                                                                </FormLabel>
+                                                                                <div className="text-sm text-muted-foreground">
+                                                                                    Est. {method.estimatedTime}
+                                                                                </div>
+                                                                            </div>
+                                                                            <div className="font-semibold">
+                                                                                BDT {method.cost}
+                                                                            </div>
+                                                                        </div>
+                                                                        <Truck className="h-4 w-4 text-muted-foreground" />
+                                                                    </FormItem>
+                                                                ))}
+                                                            </RadioGroup>
+                                                        </FormControl>
+                                                        <FormMessage />
+                                                    </FormItem>
+                                                )}
+                                            />
                                         </form>
                                     </Form>
                                 </CardContent>
@@ -278,7 +344,7 @@ export default function CheckoutPage() {
                                                             size="icon"
                                                             className="h-6 w-6 text-[#00846E] hover:bg-[#00846E] hover:text-white"
                                                             onClick={() => updateQuantity(item.product.id, item.quantity + 1)}
-                                                            disabled={item.quantity >= item.product.stock}
+                                                            disabled={item.product.stock !== undefined && item.quantity >= item.product.stock}
                                                         >
                                                             <Plus className="h-3 w-3" />
                                                         </Button>
@@ -296,10 +362,10 @@ export default function CheckoutPage() {
                                             <span>Subtotal</span>
                                             <span>BDT {subtotal.toLocaleString()}</span>
                                         </div>
-                                        {shippingCharge !== null && (
+                                        {selectedMethod && (
                                             <div className="flex justify-between">
-                                                <span>Shipping</span>
-                                                <span>BDT {shippingCharge.toLocaleString()}</span>
+                                                <span>Shipping ({selectedMethod.name})</span>
+                                                <span>BDT {selectedMethod.cost.toLocaleString()}</span>
                                             </div>
                                         )}
                                     </div>

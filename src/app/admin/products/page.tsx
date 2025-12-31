@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useMemo, useEffect } from 'react';
@@ -40,21 +39,13 @@ import { Label } from '@/components/ui/label';
 import Link from 'next/link';
 import { apiClient } from '@/lib/api-client';
 import { useToast } from '@/hooks/use-toast';
-import { IProduct } from '@/lib/models'; // Use Interface from models
+import { IProduct } from '@/lib/models';
 
-// Simplified Product type for frontend if needed, or use IProduct but cast appropriately
-// For now, let's just use IProduct props we need
 type Product = IProduct;
-
-const categories = [
-  { id: 'men', name: 'Men' },
-  { id: 'women', name: 'Women' },
-  { id: 'kids', name: 'Kids' },
-  { id: 'accessories', name: 'Accessories' }
-];
 
 export default function AdminProductsPage() {
   const [allProducts, setAllProducts] = useState<Product[]>([]);
+  const [categories, setCategories] = useState<{ id: string, name: string }[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedProductIds, setSelectedProductIds] = useState<string[]>([]);
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
@@ -65,7 +56,7 @@ export default function AdminProductsPage() {
     try {
       setLoading(true);
       const data = await apiClient.get<Product[]>('/products');
-      setAllProducts(data);
+      if (data) setAllProducts(data);
     } catch (error) {
       toast({
         variant: 'destructive',
@@ -77,8 +68,18 @@ export default function AdminProductsPage() {
     }
   };
 
+  const fetchCategories = async () => {
+    try {
+      const data = await apiClient.get<{ id: string, name: string }[]>('/categories');
+      if (data) setCategories(data);
+    } catch (error) {
+      console.error("Failed to fetch categories");
+    }
+  }
+
   useEffect(() => {
     fetchProducts();
+    fetchCategories();
   }, []);
 
   const filteredProducts = useMemo(() => {
@@ -96,12 +97,7 @@ export default function AdminProductsPage() {
 
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
-      // Use _id or custom id? Model has 'id' and '_id'.
-      // If using Mongoose, '_id' is default. But our model has 'id'.
-      // The API returns what is in DB.
-      // Let's use 'id' field if available, fallback to '_id'. 
-      // Assuming 'id' is the custom ID we want to use for admin selection if consistent.
-      setSelectedProductIds(filteredProducts.map((p) => (p as any).id || (p as any)._id));
+      setSelectedProductIds(filteredProducts.map((p) => p.id));
     } else {
       setSelectedProductIds([]);
     }
@@ -128,7 +124,6 @@ export default function AdminProductsPage() {
 
   const handleDeleteSelected = async () => {
     if (!confirm(`Delete ${selectedProductIds.length} products?`)) return;
-    // Sequential delete for simplicity, or parallel
     for (const id of selectedProductIds) {
       try {
         await apiClient.delete(`/products/${id}`);
@@ -251,68 +246,73 @@ export default function AdminProductsPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredProducts.map((product) => (
-                  <TableRow
-                    key={(product as any).id || (product as any)._id}
-                    data-state={
-                      selectedProductIds.includes((product as any).id || (product as any)._id) && 'selected'
-                    }
-                  >
-                    <TableCell>
-                      <Checkbox
-                        checked={selectedProductIds.includes((product as any).id || (product as any)._id)}
-                        onCheckedChange={(checked) =>
-                          handleSelectRow((product as any).id || (product as any)._id, checked as boolean)
-                        }
-                        aria-label="Select row"
-                      />
-                    </TableCell>
-                    <TableCell className="hidden sm:table-cell">
-                      <Image
-                        alt={product.name}
-                        className="aspect-square rounded-md object-cover"
-                        height="64"
-                        src={product.image || '/placeholder.svg'}
-                        width="64"
-                      />
-                    </TableCell>
-                    <TableCell className="font-medium">{product.name}</TableCell>
-                    <TableCell>
-                      <Badge variant={(product.stock || 0) > 0 ? ((product.stock || 0) <= 5 ? 'secondary' : 'default') : 'destructive'}>
-                        {(product.stock || 0) > 0 ? ((product.stock || 0) <= 5 ? 'Low Stock' : 'In Stock') : 'Out of Stock'}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      BDT {product.price.toLocaleString()}
-                    </TableCell>
-                    <TableCell className="hidden md:table-cell">
-                      {product.stock || 0}
-                    </TableCell>
-                    <TableCell>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button
-                            aria-haspopup="true"
-                            size="icon"
-                            variant="ghost"
-                          >
-                            <MoreHorizontal className="h-4 w-4" />
-                            <span className="sr-only">Toggle menu</span>
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                          <DropdownMenuItem asChild>
-                            <Link href={`/admin/products/edit/${(product as any).id}`}>Edit</Link>
-                          </DropdownMenuItem>
-                          <DropdownMenuItem className="text-red-500" onClick={() => handleDelete((product as any).id)}>
-                            Delete
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
+                {filteredProducts.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={7} className="text-center h-24">No products found.</TableCell>
                   </TableRow>
-                ))}
+                ) : (
+                  filteredProducts.map((product) => (
+                    <TableRow
+                      key={product.id}
+                      data-state={
+                        selectedProductIds.includes(product.id) && 'selected'
+                      }
+                    >
+                      <TableCell>
+                        <Checkbox
+                          checked={selectedProductIds.includes(product.id)}
+                          onCheckedChange={(checked) =>
+                            handleSelectRow(product.id, checked as boolean)
+                          }
+                          aria-label="Select row"
+                        />
+                      </TableCell>
+                      <TableCell className="hidden sm:table-cell">
+                        <Image
+                          alt={product.name}
+                          className="aspect-square rounded-md object-cover"
+                          height="64"
+                          src={product.image || '/placeholder.svg'}
+                          width="64"
+                        />
+                      </TableCell>
+                      <TableCell className="font-medium">{product.name}</TableCell>
+                      <TableCell>
+                        <Badge variant={(product.stock || 0) > 0 ? ((product.stock || 0) <= 5 ? 'secondary' : 'default') : 'destructive'}>
+                          {(product.stock || 0) > 0 ? ((product.stock || 0) <= 5 ? 'Low Stock' : 'In Stock') : 'Out of Stock'}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        BDT {product.price.toLocaleString()}
+                      </TableCell>
+                      <TableCell className="hidden md:table-cell">
+                        {product.stock || 0}
+                      </TableCell>
+                      <TableCell>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button
+                              aria-haspopup="true"
+                              size="icon"
+                              variant="ghost"
+                            >
+                              <MoreHorizontal className="h-4 w-4" />
+                              <span className="sr-only">Toggle menu</span>
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                            <DropdownMenuItem asChild>
+                              <Link href={`/admin/products/edit/${product.id}`}>Edit</Link>
+                            </DropdownMenuItem>
+                            <DropdownMenuItem className="text-red-500" onClick={() => handleDelete(product.id)}>
+                              Delete
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
+                    </TableRow>
+                  )))}
               </TableBody>
             </Table>
           </div>

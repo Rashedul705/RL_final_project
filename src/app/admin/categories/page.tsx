@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
@@ -7,6 +6,7 @@ import {
   MoreHorizontal,
   PlusCircle,
   Search,
+  Loader2
 } from 'lucide-react';
 import {
   Card,
@@ -37,7 +37,6 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from '@/components/ui/dialog';
 import {
   AlertDialog,
@@ -53,37 +52,49 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { categories as initialCategories, products } from '@/lib/data';
 import { useToast } from '@/hooks/use-toast';
+import { apiClient } from '@/lib/api-client';
 
 type Category = {
-  id: string;
+  id: string; // The slug-like ID
   name: string;
   description?: string;
   image?: string;
+  _id?: string; // Mongoose ID
 };
 
+// Helper for slug generation
 const slugify = (text: string) => {
   return text.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]+/g, '');
 }
 
 export default function AdminCategoriesPage() {
-  const [categories, setCategories] = useState(initialCategories);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
   const [categoryToDelete, setCategoryToDelete] = useState<Category | null>(null);
+  const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
-  const productCounts = useMemo(() => {
-    const counts = new Map<string, number>();
-    products.forEach(product => {
-      counts.set(product.category, (counts.get(product.category) || 0) + 1);
-    });
-    return counts;
-  }, [products]);
+  useEffect(() => {
+    fetchCategories();
+  }, []);
+
+  const fetchCategories = async () => {
+    try {
+      const data = await apiClient.get<Category[]>('/categories');
+      if (data) setCategories(data);
+    } catch (error) {
+      console.error("Failed to fetch categories", error);
+      toast({ variant: 'destructive', title: 'Error', description: 'Failed to load categories.' });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const filteredCategories = useMemo(() => {
+    if (!searchQuery) return categories;
     return categories.filter(category =>
       category.name.toLowerCase().includes(searchQuery.toLowerCase())
     );
@@ -99,43 +110,65 @@ export default function AdminCategoriesPage() {
     setIsFormOpen(false);
   };
 
-  const handleSaveCategory = (formData: FormData) => {
+  const uploadFile = async (file: File) => {
+    if (!file) return null;
+    const formData = new FormData();
+    formData.append('file', file);
+    const response = await fetch('/api/upload', {
+      method: 'POST',
+      body: formData,
+    });
+    const result = await response.json();
+    if (!response.ok) throw new Error(result.error || 'Upload failed');
+    return result.data.url;
+  }
+
+  const handleSaveCategory = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const formData = new FormData(event.currentTarget);
     const name = formData.get('name') as string;
     const description = formData.get('description') as string;
-    let slug = formData.get('slug') as string;
+    const imageFile = formData.get('image') as File;
 
     if (!name) {
       toast({ variant: 'destructive', title: 'Error', description: 'Category name is required.' });
       return;
     }
 
-    if (!slug) {
-      slug = slugify(name);
-    }
-
-    if (editingCategory) {
-      // Update existing category
-      setCategories(categories.map(c =>
-        c.id === editingCategory.id ? { ...c, name, id: slug, description } : c
-      ));
-      toast({ title: 'Success', description: 'Category updated successfully.' });
-    } else {
-      // Add new category
-      if (categories.some(c => c.id === slug)) {
-        toast({ variant: 'destructive', title: 'Error', description: 'Slug must be unique.' });
-        return;
+    try {
+      let imageUrl = editingCategory?.image;
+      if (imageFile && imageFile.size > 0) {
+        toast({ title: 'Uploading...', description: 'Uploading category image...' });
+        imageUrl = await uploadFile(imageFile);
       }
-      setCategories([...categories, { id: slug, name, description }]);
-      toast({ title: 'Success', description: 'Category added successfully.' });
-    }
 
-    handleCloseForm();
+      if (editingCategory) {
+        // Update
+        const updated = await apiClient.put<Category>(`/categories/${editingCategory.id}`, { name, description, image: imageUrl });
+        setCategories(categories.map(c => c.id === editingCategory.id ? updated : c));
+        toast({ title: 'Success', description: 'Category updated successfully.' });
+      } else {
+        // Create
+        const newCat = await apiClient.post<Category>('/categories', { name, description, image: imageUrl });
+        setCategories([...categories, newCat]);
+        toast({ title: 'Success', description: 'Category added successfully.' });
+      }
+      handleCloseForm();
+    } catch (error: any) {
+      toast({ variant: 'destructive', title: 'Error', description: error.message || 'Operation failed' });
+    }
   };
 
-  const handleDeleteCategory = (categoryId: string) => {
-    setCategories(categories.filter(c => c.id !== categoryId));
-    setCategoryToDelete(null);
-    toast({ variant: 'destructive', title: 'Deleted', description: 'Category has been deleted.' });
+  const handleDeleteCategory = async (categoryId: string) => {
+    try {
+      await apiClient.delete(`/categories/${categoryId}`);
+      setCategories(categories.filter(c => c.id !== categoryId));
+      toast({ variant: 'destructive', title: 'Deleted', description: 'Category has been deleted.' });
+    } catch (error: any) {
+      toast({ variant: 'destructive', title: 'Error', description: 'Failed to delete category.' });
+    } finally {
+      setCategoryToDelete(null);
+    }
   }
 
   return (
@@ -165,69 +198,82 @@ export default function AdminCategoriesPage() {
           </div>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="hidden w-[100px] sm:table-cell">
-                  <span className="sr-only">Image</span>
-                </TableHead>
-                <TableHead>Name</TableHead>
-                <TableHead>Slug</TableHead>
-                <TableHead className="hidden md:table-cell text-center">
-                  Products
-                </TableHead>
-                <TableHead>
-                  <span className="sr-only">Actions</span>
-                </TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredCategories.map(category => (
-                <TableRow key={category.id}>
-                  <TableCell className="hidden sm:table-cell">
-                    <Image
-                      alt="Category image"
-                      className="aspect-square rounded-md object-cover"
-                      height="64"
-                      src={`https://picsum.photos/seed/${category.id}/64/64`}
-                      width="64"
-                    />
-                  </TableCell>
-                  <TableCell className="font-medium">{category.name}</TableCell>
-                  <TableCell>{category.id}</TableCell>
-                  <TableCell className="hidden md:table-cell text-center">
-                    {productCounts.get(category.id) || 0}
-                  </TableCell>
-                  <TableCell>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button aria-haspopup="true" size="icon" variant="ghost">
-                          <MoreHorizontal className="h-4 w-4" />
-                          <span className="sr-only">Toggle menu</span>
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                        <DropdownMenuItem onSelect={() => setTimeout(() => handleOpenForm(category), 100)}>
-                          Edit
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onSelect={() => setCategoryToDelete(category)} className="text-red-600">
-                          Delete
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+          <div className="relative w-full overflow-auto">
+            {loading ? (
+              <div className="flex justify-center p-8">
+                <Loader2 className="h-8 w-8 animate-spin" />
+              </div>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="hidden w-[100px] sm:table-cell">
+                      <span className="sr-only">Image</span>
+                    </TableHead>
+                    <TableHead>Name</TableHead>
+                    <TableHead>Slug (ID)</TableHead>
+                    <TableHead>
+                      <span className="sr-only">Actions</span>
+                    </TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredCategories.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={4} className="text-center">No categories found.</TableCell>
+                    </TableRow>
+                  ) : (
+                    filteredCategories.map(category => (
+                      <TableRow key={category.id}>
+                        <TableCell className="hidden sm:table-cell">
+                          {category.image ? (
+                            <Image
+                              alt={category.name}
+                              className="aspect-square rounded-md object-cover"
+                              height="64"
+                              src={category.image}
+                              width="64"
+                            />
+                          ) : (
+                            <div className="w-16 h-16 bg-muted rounded-md flex items-center justify-center text-xs text-muted-foreground">
+                              No Img
+                            </div>
+                          )}
+                        </TableCell>
+                        <TableCell className="font-medium">{category.name}</TableCell>
+                        <TableCell>{category.id}</TableCell>
+                        <TableCell>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button aria-haspopup="true" size="icon" variant="ghost">
+                                <MoreHorizontal className="h-4 w-4" />
+                                <span className="sr-only">Toggle menu</span>
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                              <DropdownMenuItem onSelect={() => setTimeout(() => handleOpenForm(category), 100)}>
+                                Edit
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onSelect={() => setCategoryToDelete(category)} className="text-red-600">
+                                Delete
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </TableCell>
+                      </TableRow>
+                    )))}
+                </TableBody>
+              </Table>
+            )}
+          </div>
         </CardContent>
       </Card>
 
       {/* Add/Edit Dialog */}
       <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
         <DialogContent className="sm:max-w-[425px]">
-          <form action={handleSaveCategory}>
+          <form onSubmit={handleSaveCategory}>
             <DialogHeader>
               <DialogTitle>{editingCategory ? 'Edit Category' : 'Add New Category'}</DialogTitle>
               <DialogDescription>
@@ -241,17 +287,19 @@ export default function AdminCategoriesPage() {
                 </Label>
                 <Input id="name" name="name" defaultValue={editingCategory?.name} className="col-span-3" required />
               </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="slug" className="text-right">
-                  Slug
-                </Label>
-                <Input id="slug" name="slug" defaultValue={editingCategory?.id} className="col-span-3" disabled={!!editingCategory} />
-              </div>
+
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="image" className="text-right">
                   Image
                 </Label>
-                <Input id="image" name="image" type="file" className="col-span-3" />
+                <div className="col-span-3">
+                  {editingCategory?.image && (
+                    <div className="mb-2">
+                      <img src={editingCategory.image} alt="Current" className="h-16 w-16 object-cover rounded-md" />
+                    </div>
+                  )}
+                  <Input id="image" name="image" type="file" accept="image/*" />
+                </div>
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="description" className="text-right">

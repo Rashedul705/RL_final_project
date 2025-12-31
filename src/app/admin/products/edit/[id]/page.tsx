@@ -17,7 +17,6 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { categories } from '@/lib/data';
 import Link from 'next/link';
 import { useRouter, notFound, useParams } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
@@ -59,6 +58,7 @@ export default function AdminEditProductPage() {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [product, setProduct] = useState<IProduct | null>(null);
+  const [categories, setCategories] = useState<{ id: string, name: string }[]>([]);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -75,34 +75,40 @@ export default function AdminEditProductPage() {
   });
 
   useEffect(() => {
-    async function fetchProduct() {
+    async function fetchData() {
       try {
         setLoading(true);
-        const data = await apiClient.get<IProduct>(`/products/${id}`);
-        setProduct(data);
-        form.reset({
-          name: data.name,
-          description: data.description,
-          highlights: data.highlights || '', // Assuming field exists in interface
-          price: data.price,
-          stock: data.stock,
-          category: data.category,
-          size: data.size || '', // Assuming field exists
-          sizeGuide: data.sizeGuide || '', // Assuming field exists
-        });
+        // Fetch categories first or parallel
+        const cats = await apiClient.get<{ id: string, name: string }[]>('/categories');
+        if (cats) setCategories(cats);
+
+        // Fetch product
+        if (id) {
+          const data = await apiClient.get<IProduct>(`/products/${id}`);
+          setProduct(data);
+          form.reset({
+            name: data.name,
+            description: data.description,
+            highlights: data.highlights || '',
+            price: data.price,
+            stock: data.stock,
+            category: data.category,
+            size: data.size || '',
+            sizeGuide: data.sizeGuide || '',
+          });
+        }
       } catch (error) {
-        console.error("Failed to fetch product", error);
+        console.error("Failed to fetch data", error);
         toast({
           variant: "destructive",
           title: "Error",
           description: "Product not found or failed to load.",
         });
-        // router.push('/admin/products'); // Optional: redirect back 
       } finally {
         setLoading(false);
       }
     }
-    if (id) fetchProduct();
+    fetchData();
   }, [id, form, toast]);
 
   async function uploadFile(file: File) {
@@ -130,12 +136,6 @@ export default function AdminEditProductPage() {
 
       let galleryImageUrls = product?.images || [];
       if (values.galleryImages && values.galleryImages.length > 0) {
-        // New uploads append to existing? Or replace? 
-        // Logic: usually replace or append. Let's just append new ones for now, OR if simpler: 
-        // The form control keeps 'files' which are new uploads. 
-        // Existing images are in 'product.images'.
-        // If we want to remove existing, we need a UI for that. 
-        // For this Edit Page MVP, let's just append new uploads to existing list.
         for (const file of Array.from(values.galleryImages)) {
           const url = await uploadFile(file as File);
           if (url) galleryImageUrls.push(url);
@@ -312,12 +312,93 @@ export default function AdminEditProductPage() {
                     </div>
                   </CardContent>
                 </Card>
+              </div>
+              <div className="grid auto-rows-max items-start gap-4 lg:gap-8">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Product Category</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <FormField
+                      control={form.control}
+                      name="category"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Category</FormLabel>
+                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select category" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {categories.length > 0 ? (
+                                categories.map((cat) => (
+                                  <SelectItem key={cat.id} value={cat.id}>
+                                    {cat.name}
+                                  </SelectItem>
+                                ))
+                              ) : (
+                                <SelectItem value="none" disabled>No categories found</SelectItem>
+                              )}
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </CardContent>
+                </Card>
+                <Card className="overflow-hidden">
+                  <CardHeader>
+                    <CardTitle>Product Image</CardTitle>
+                    <CardDescription>
+                      Update the main image for the product.
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    {product.image && !form.watch('productImage')?.[0] && (
+                      <div className="relative aspect-square w-full mb-4">
+                        <img src={product.image} alt={product.name} className="object-cover rounded-md w-full h-full bg-gray-100" />
+                      </div>
+                    )}
+                    <FormField
+                      control={form.control}
+                      name="productImage"
+                      render={({ field: { onChange, value, ...rest } }) => (
+                        <FormItem>
+                          <FormLabel>Main Image</FormLabel>
+                          <FormControl>
+                            <Input
+                              type="file"
+                              accept="image/*"
+                              onChange={(e) => {
+                                if (e.target.files) {
+                                  onChange(Array.from(e.target.files));
+                                }
+                              }}
+                              {...rest}
+                              value={undefined}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                          {value && value.length > 0 && (
+                            <div className="relative aspect-square w-full mt-4 group">
+                              <img
+                                src={URL.createObjectURL(value[0])}
+                                alt="Main preview"
+                                className="w-full h-full object-cover rounded-md"
+                              />
+                            </div>
+                          )}
+                        </FormItem>
+                      )}
+                    />
+                  </CardContent>
+                </Card>
                 <Card>
                   <CardHeader>
                     <CardTitle>Product Gallery</CardTitle>
-                    <CardDescription>
-                      Add images for the product. Existing images are preserved unless deleted (TODO: Delete UI).
-                    </CardDescription>
                   </CardHeader>
                   <CardContent>
                     {product.images && product.images.length > 0 && (
@@ -347,85 +428,6 @@ export default function AdminEditProductPage() {
                             />
                           </FormControl>
                           <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </CardContent>
-                </Card>
-              </div>
-              <div className="grid auto-rows-max items-start gap-4 lg:gap-8">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Product Category</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <FormField
-                      control={form.control}
-                      name="category"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Category</FormLabel>
-                          <Select onValueChange={field.onChange} defaultValue={field.value}>
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select category" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              {categories.map((cat) => (
-                                <SelectItem key={cat.id} value={cat.id}>
-                                  {cat.name}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </CardContent>
-                </Card>
-                <Card className="overflow-hidden">
-                  <CardHeader>
-                    <CardTitle>Product Image</CardTitle>
-                    <CardDescription>
-                      Update the main image for the product.
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    {product.image && !form.watch('productImage')?.[0] && (
-                      <div className="relative aspect-square w-full mb-4">
-                        <img src={product.image} alt={product.name} className="object-cover rounded-md w-full h-full bg-gray-100" />
-                      </div>
-                    )}
-                    <FormField
-                      control={form.control}
-                      name="productImage"
-                      render={({ field: { onChange, value, ...rest } }) => (
-                        <FormItem>
-                          <FormControl>
-                            <Input
-                              type="file"
-                              accept="image/*"
-                              onChange={(e) => {
-                                if (e.target.files) {
-                                  onChange(Array.from(e.target.files));
-                                }
-                              }}
-                              {...rest}
-                              value={undefined}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                          {value && value.length > 0 && (
-                            <div className="relative aspect-square w-full mt-4 group">
-                              <img
-                                src={URL.createObjectURL(value[0])}
-                                alt="Main preview"
-                                className="w-full h-full object-cover rounded-md"
-                              />
-                            </div>
-                          )}
                         </FormItem>
                       )}
                     />

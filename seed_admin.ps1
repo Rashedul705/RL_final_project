@@ -40,7 +40,8 @@ try {
             Write-Host "`n3. Promoting to Admin..."
             $promoteData = @{
                 userId = $userId
-                action = "make_admin"
+                action = "update_role"
+                role   = "admin"
             } | ConvertTo-Json
             
             try {

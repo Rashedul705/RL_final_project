@@ -17,12 +17,11 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { categories } from '@/lib/data'; // We can keep using static categories or fetch them too
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
 import { Trash2, Loader2 } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -54,8 +53,21 @@ const formSchema = z.object({
 export default function AdminNewProductPage() {
   const router = useRouter();
   const { toast } = useToast();
-  const { user } = useAuth(); // We might not strictly need user object if handled by cookie/backend, but helpful
+  const { user } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
+  const [categories, setCategories] = useState<{ id: string, name: string }[]>([]);
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const data = await apiClient.get<{ id: string, name: string }[]>('/categories');
+        if (data) setCategories(data);
+      } catch (error) {
+        console.error("Failed to fetch categories");
+      }
+    };
+    fetchCategories();
+  }, []);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -109,16 +121,11 @@ export default function AdminNewProductPage() {
       // 3. Save Product
       const productData = {
         ...values,
-        image: mainImageUrl, // Backend expects 'image'
-        images: galleryImageUrls, // Backend expects 'images' (plural)? Review Schema.
+        image: mainImageUrl, // ImgBB URL
+        images: galleryImageUrls, // ImgBB URLs
         price: Number(values.price),
         stock: Number(values.stock),
       };
-
-      // Check Schema in models.ts!
-      // IProduct has: image: string, images: string[], imageHint: string
-      // So map properly using 'images' for gallery. 
-      // Form values are separate, we construct the payload.
 
       await apiClient.post('/products', productData);
 
@@ -295,11 +302,15 @@ export default function AdminNewProductPage() {
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
-                              {categories.map((cat) => (
-                                <SelectItem key={cat.id} value={cat.id}>
-                                  {cat.name}
-                                </SelectItem>
-                              ))}
+                              {categories.length > 0 ? (
+                                categories.map((cat) => (
+                                  <SelectItem key={cat.id} value={cat.id}>
+                                    {cat.name}
+                                  </SelectItem>
+                                ))
+                              ) : (
+                                <SelectItem value="none" disabled>No categories found</SelectItem>
+                              )}
                             </SelectContent>
                           </Select>
                           <FormMessage />
@@ -397,4 +408,3 @@ export default function AdminNewProductPage() {
     </>
   );
 }
-
