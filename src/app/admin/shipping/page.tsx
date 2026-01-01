@@ -243,7 +243,7 @@ export default function AdminShippingPage() {
                   Is Active
                 </Label>
                 <div className="col-span-3">
-                  <Switch id="isActive" name="isActive" defaultChecked={editingMethod?.status === 'active' ?? true} />
+                  <Switch id="isActive" name="isActive" defaultChecked={editingMethod ? editingMethod.status === 'active' : true} />
                 </div>
               </div>
             </div>
