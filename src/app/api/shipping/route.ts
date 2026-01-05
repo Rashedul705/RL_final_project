@@ -3,12 +3,14 @@ import { NextRequest } from 'next/server';
 import { ShippingMethod } from '@/lib/models';
 import dbConnect from '@/lib/db';
 import { ApiResponse } from '@/lib/api-response';
+
+export const dynamic = 'force-dynamic';
 import { z } from 'zod';
 
 const shippingSchema = z.object({
     name: z.string().min(2),
     cost: z.number().min(0),
-    estimatedTime: z.string().min(2),
+    estimatedTime: z.string().optional(),
     status: z.enum(['active', 'inactive']).optional(),
 });
 

@@ -74,19 +74,48 @@ export default function CheckoutPage() {
     const watchedCity = form.watch('city');
     const [shippingCost, setShippingCost] = useState(0);
 
-    useEffect(() => {
-        if (watchedCity) {
-            const isDhaka = watchedCity.toLowerCase() === 'dhaka';
-            const cost = isDhaka ? 80 : 150;
-            setShippingCost(cost);
+    // Dynamic Shipping State
+    const [rates, setRates] = useState<{ dhaka: number, rajshahi: number, outside: number, free: boolean }>({ dhaka: 80, rajshahi: 60, outside: 110, free: false });
 
-            // Auto-select a method if not selected, or update the cost display conceptually
-            // For this requirement, we override the cost.
-            // Ideally we should have "Standard Delivery" method and just update price.
+    useEffect(() => {
+        const fetchShippingRates = async () => {
+            try {
+                const methods = await apiClient.get<ShippingMethod[]>('/shipping');
+                if (methods) {
+                    const dhaka = methods.find(m => m.name === 'Inside Dhaka')?.cost || 80;
+                    const rajshahi = methods.find(m => m.name === 'Inside Rajshahi')?.cost || 60;
+                    const outside = methods.find(m => m.name === 'Outside Dhaka')?.cost || 110;
+                    const freeMethod = methods.find(m => m.name === 'Free Shipping');
+                    const isFree = freeMethod?.status === 'active';
+
+                    setRates({ dhaka, rajshahi, outside, free: isFree });
+                }
+            } catch (error) {
+                console.error("Failed to fetch shipping rates", error);
+            }
+        };
+        fetchShippingRates();
+    }, []);
+
+    useEffect(() => {
+        if (rates.free) {
+            setShippingCost(0);
+            return;
+        }
+
+        if (watchedCity) {
+            const city = watchedCity.toLowerCase();
+            if (city === 'dhaka') {
+                setShippingCost(rates.dhaka);
+            } else if (city === 'rajshahi') {
+                setShippingCost(rates.rajshahi);
+            } else {
+                setShippingCost(rates.outside);
+            }
         } else {
             setShippingCost(0);
         }
-    }, [watchedCity]);
+    }, [watchedCity, rates]);
 
     const subtotal = cart.reduce(
         (acc, item) => acc + item.product.price * item.quantity,
@@ -253,7 +282,7 @@ export default function CheckoutPage() {
                                                 <p className="text-sm font-medium">Shipping Charge</p>
                                                 <p className="text-2xl font-bold text-primary">BDT {shippingCost}</p>
                                                 <p className="text-xs text-muted-foreground mt-1">
-                                                    {watchedCity ? (watchedCity.toLowerCase() === 'dhaka' ? 'Inside Dhaka Rate' : 'Outside Dhaka Rate') : 'Select a city to calculate'}
+                                                    {rates.free ? 'Free Shipping Applied' : (watchedCity ? (watchedCity.toLowerCase() === 'dhaka' ? 'Inside Dhaka Rate' : (watchedCity.toLowerCase() === 'rajshahi' ? 'Inside Rajshahi Rate' : 'Outside Dhaka Rate')) : 'Select a city to calculate')}
                                                 </p>
                                             </div>
                                         </form>
@@ -326,7 +355,7 @@ export default function CheckoutPage() {
                                             <span>BDT {subtotal.toLocaleString()}</span>
                                         </div>
                                         <div className="flex justify-between">
-                                            <span>Shipping {watchedCity ? (watchedCity.toLowerCase() === 'dhaka' ? '(Inside Dhaka)' : '(Outside Dhaka)') : ''}</span>
+                                            <span>Shipping {watchedCity ? (watchedCity.toLowerCase() === 'dhaka' ? '(Inside Dhaka)' : (watchedCity.toLowerCase() === 'rajshahi' ? '(Inside Rajshahi)' : '(Outside Dhaka)')) : ''}</span>
                                             <span>BDT {shippingCost.toLocaleString()}</span>
                                         </div>
                                     </div>

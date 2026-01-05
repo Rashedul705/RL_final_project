@@ -95,7 +95,12 @@ export default function LoginPage() {
         if (err) {
             let msg = err.message;
             if ((err as any).code === 'auth/invalid-credential') msg = 'Invalid credentials.';
-            toast({ variant: 'destructive', title: 'Error', description: msg });
+            if ((err as any).code === 'auth/operation-not-allowed') msg = 'Sign-in method not enabled. Contact admin.';
+            // Show code for debugging if it's not a common one
+            if ((err as any).code && (err as any).code !== 'auth/invalid-credential') {
+                msg = `${msg} (Code: ${(err as any).code})`;
+            }
+            toast({ variant: 'destructive', title: 'Login Error', description: msg });
         }
     }, [error, gError, resetError, toast]);
 

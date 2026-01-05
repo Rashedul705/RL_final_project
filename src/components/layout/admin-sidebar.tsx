@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 import { signOut } from "firebase/auth";
 import { auth } from "@/lib/firebase";
+import { useAuth } from "@/components/providers/auth-provider";
 
 const adminNavItems = [
   { href: "/admin", label: "Dashboard", icon: <LayoutDashboard /> },
@@ -21,7 +22,7 @@ const adminNavItems = [
   { href: "/admin/categories", label: "Categories", icon: <Shapes /> },
   { href: "/admin/customers", label: "Customers", icon: <Users /> },
   { href: "/admin/users", label: "Users", icon: <UserCog /> },
-  { href: "/admin/shipping", label: "Shipping", icon: <Truck /> },
+  { href: "/admin/shipping", label: "Shipping Charge Management", icon: <Truck /> },
   { href: "/admin/inquiries", label: "Inquiries", icon: <MessageSquareQuote /> },
   { href: "/admin/settings", label: "Settings", icon: <Settings /> },
   { href: "/admin/profile", label: "Profile", icon: <User /> },
@@ -29,12 +30,14 @@ const adminNavItems = [
 
 function AdminNavLinks() {
   const pathname = usePathname();
+  const { logout } = useAuth();
   const router = useRouter();
 
   const handleLogout = async () => {
     try {
       await signOut(auth);
-      router.push('/admin/login');
+      logout();
+      // router.push('/admin/login'); // logout() handles redirect
     } catch (error) {
       console.error("Logout failed", error);
     }
@@ -66,6 +69,8 @@ function AdminNavLinks() {
       <SidebarClose asChild>
         <Link
           href="/"
+          target="_blank"
+          rel="noopener noreferrer"
           className="flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary"
         >
           <Home className="h-4 w-4" />

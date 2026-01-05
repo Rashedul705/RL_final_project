@@ -95,7 +95,7 @@ export interface IShippingMethod extends Document {
 const ShippingMethodSchema: Schema = new Schema({
     name: { type: String, required: true },
     cost: { type: Number, required: true },
-    estimatedTime: { type: String, required: true },
+    estimatedTime: { type: String },
     status: { type: String, enum: ['active', 'inactive'], default: 'active' }
 }, { timestamps: true });
 
