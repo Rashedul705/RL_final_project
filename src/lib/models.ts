@@ -15,11 +15,13 @@ export interface IProduct extends Document {
     sizeGuide?: string;
     size?: string;
     highlights?: string;
+    slug: string;
 }
 
 const ProductSchema: Schema = new Schema({
     id: { type: String, required: true, unique: true },
     name: { type: String, required: true },
+    slug: { type: String }, // Should be unique in practice
     description: { type: String, required: true },
     price: { type: Number, required: true },
     image: { type: String, required: true },
@@ -38,9 +40,10 @@ export interface IOrder extends Document {
     customer: string;
     email?: string; // Link to user account
     phone: string;
-    address: string;
-    amount: string;
-    status: 'Delivered' | 'Shipped' | 'Processing' | 'Pending' | 'Cancelled';
+    address: string; // Full address string including city
+    amount: string; // Grand Total
+    shippingCharge: number;
+    status: 'Pending' | 'Packaging' | 'Handed Over to Courier' | 'Delivered' | 'Cancelled' | 'Returned';
     products: { productId: string; name: string; quantity: number; price: number, image?: string }[];
     date: string; // ISO String
 }
@@ -52,9 +55,10 @@ const OrderSchema: Schema = new Schema({
     phone: { type: String, required: true },
     address: { type: String, required: true },
     amount: { type: String, required: true },
+    shippingCharge: { type: Number, default: 0 },
     status: {
         type: String,
-        enum: ['Delivered', 'Shipped', 'Processing', 'Pending', 'Cancelled'],
+        enum: ['Pending', 'Packaging', 'Handed Over to Courier', 'Delivered', 'Cancelled', 'Returned'],
         default: 'Pending'
     },
     products: [{

@@ -12,7 +12,7 @@ interface ProductCardProps {
 }
 
 export function ProductCard({ product }: ProductCardProps) {
-  const productSlug = product.name.toLowerCase().replace(/\s+/g, '-');
+  const productSlug = product.slug || product.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
   return (
     <Card className="overflow-hidden flex flex-col transition-all hover:shadow-lg">
       <CardHeader className="p-0">
@@ -24,6 +24,7 @@ export function ProductCard({ product }: ProductCardProps) {
             className="object-cover"
             data-ai-hint={product.imageHint}
             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+            unoptimized
           />
           {product.stock === 0 && (
             <div className="absolute inset-0 bg-black/50 flex items-center justify-center">

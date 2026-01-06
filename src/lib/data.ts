@@ -18,6 +18,8 @@ export type Product = {
   stock: number;
   sizeGuide?: string;
   size?: string;
+  highlights?: string;
+  slug?: string;
 };
 
 export type Category = {

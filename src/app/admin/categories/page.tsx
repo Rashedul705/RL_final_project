@@ -160,14 +160,24 @@ export default function AdminCategoriesPage() {
   };
 
   const handleDeleteCategory = async (categoryId: string) => {
+    // Prevent focus trap by moving focus to a stable element
+    document.getElementById('add-category-btn')?.focus();
+
+    // Close the dialog immediately
+    setCategoryToDelete(null);
+
+    // Wait for the dialog to fully close
+    await new Promise(resolve => setTimeout(resolve, 500));
+
     try {
       await apiClient.delete(`/categories/${categoryId}`);
-      setCategories(categories.filter(c => c.id !== categoryId));
+      setCategories(prev => prev.filter(c => c.id !== categoryId));
       toast({ variant: 'destructive', title: 'Deleted', description: 'Category has been deleted.' });
     } catch (error: any) {
+      console.error("Delete failed", error);
       toast({ variant: 'destructive', title: 'Error', description: 'Failed to delete category.' });
-    } finally {
-      setCategoryToDelete(null);
+      // Refresh to ensure UI is in sync
+      fetchCategories();
     }
   }
 
@@ -175,7 +185,7 @@ export default function AdminCategoriesPage() {
     <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-semibold tracking-tight">Category Management</h1>
-        <Button onClick={() => handleOpenForm()}>
+        <Button id="add-category-btn" onClick={() => handleOpenForm()}>
           <PlusCircle className="mr-2 h-4 w-4" />
           Add New Category
         </Button>
@@ -318,7 +328,7 @@ export default function AdminCategoriesPage() {
 
       {/* Delete Confirmation */}
       <AlertDialog open={!!categoryToDelete} onOpenChange={() => setCategoryToDelete(null)}>
-        <AlertDialogContent>
+        <AlertDialogContent onCloseAutoFocus={(e) => e.preventDefault()}>
           <AlertDialogHeader>
             <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
             <AlertDialogDescription>

@@ -58,7 +58,8 @@ import { apiClient } from '@/lib/api-client';
 import { useToast } from '@/hooks/use-toast';
 import { IOrder } from '@/lib/models'; // Use Interface
 
-type Order = IOrder;
+// Update type definition to handle undefined shippingCharge for legacy orders
+type Order = IOrder & { shippingCharge?: number };
 
 export default function AdminOrdersPage() {
   const [orders, setOrders] = useState<Order[]>([]);
@@ -96,7 +97,7 @@ export default function AdminOrdersPage() {
     });
   }, [orders, statusFilter, searchQuery]);
 
-  const handleStatusChange = async (orderId: string, newStatus: string) => { // Type string is fine as enum in model
+  const handleStatusChange = async (orderId: string, newStatus: string) => {
     // Optimistic update
     const originalOrders = [...orders];
     setOrders(current => current.map(o => o.id === orderId ? { ...o, status: newStatus as any } as any : o));
@@ -107,6 +108,17 @@ export default function AdminOrdersPage() {
     } catch (error) {
       setOrders(originalOrders); // Revert
       toast({ variant: 'destructive', title: 'Error', description: 'Failed to update status' });
+    }
+  };
+
+  const handleUpdateOrderDetails = async (orderId: string, updates: Partial<Order>) => {
+    try {
+      const updatedOrder = await apiClient.put<Order>(`/orders/${orderId}`, updates);
+      setOrders(current => current.map(o => o.id === orderId ? updatedOrder : o));
+      setSelectedOrder(updatedOrder); // Update the modal view
+      toast({ title: 'Success', description: 'Order details updated.' });
+    } catch (error) {
+      toast({ variant: 'destructive', title: 'Error', description: 'Failed to update order details.' });
     }
   };
 
@@ -124,10 +136,10 @@ export default function AdminOrdersPage() {
   const handlePrintInvoice = (order: Order) => {
     const printWindow = window.open('', '_blank', 'width=800,height=600');
     if (printWindow) {
-      const isInsideDhaka = order.address.toLowerCase().includes('dhaka');
-      const shippingCharge = isInsideDhaka ? 60 : 120;
-      const subTotal = parseInt(order.amount);
-      const grandTotal = (subTotal + shippingCharge).toLocaleString();
+      // Use stored shipping charge
+      const shippingCharge = order.shippingCharge || 0;
+      const subTotal = parseInt(order.amount) - shippingCharge; // Assuming amount is Grand Total
+      const grandTotal = parseInt(order.amount).toLocaleString();
       const formattedSubTotal = subTotal.toLocaleString();
       const orderDate = new Date(order.date).toLocaleDateString();
 
@@ -265,10 +277,11 @@ export default function AdminOrdersPage() {
                 <SelectContent>
                   <SelectItem value="all">All Statuses</SelectItem>
                   <SelectItem value="Pending">Pending</SelectItem>
-                  <SelectItem value="Processing">Processing</SelectItem>
-                  <SelectItem value="Shipped">Shipped</SelectItem>
+                  <SelectItem value="Packaging">Packaging</SelectItem>
+                  <SelectItem value="Handed Over to Courier">Handed Over to Courier</SelectItem>
                   <SelectItem value="Delivered">Delivered</SelectItem>
                   <SelectItem value="Cancelled">Cancelled</SelectItem>
+                  <SelectItem value="Returned">Returned</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -302,10 +315,11 @@ export default function AdminOrdersPage() {
                           </SelectTrigger>
                           <SelectContent>
                             <SelectItem value="Pending">Pending</SelectItem>
-                            <SelectItem value="Processing">Processing</SelectItem>
-                            <SelectItem value="Shipped">Shipped</SelectItem>
+                            <SelectItem value="Packaging">Packaging</SelectItem>
+                            <SelectItem value="Handed Over to Courier">Handed Over to Courier</SelectItem>
                             <SelectItem value="Delivered">Delivered</SelectItem>
                             <SelectItem value="Cancelled">Cancelled</SelectItem>
+                            <SelectItem value="Returned">Returned</SelectItem>
                           </SelectContent>
                         </Select>
                       </TableCell>
@@ -388,7 +402,41 @@ export default function AdminOrdersPage() {
                   </ul>
                 </div>
                 <Separator />
-                <div className="flex justify-between font-bold text-base">
+                <div className="space-y-4 pt-4 border-t">
+                  <div className="flex items-end gap-4">
+                    <div className="grid w-full items-center gap-1.5">
+                      <Label htmlFor="shippingCharge">Shipping Charge (BDT)</Label>
+                      <Input
+                        id="shippingCharge"
+                        type="number"
+                        defaultValue={selectedOrder.shippingCharge || 0}
+                        onChange={(e) => {
+                          const val = parseInt(e.target.value);
+                          if (!isNaN(val)) {
+                            // Update local state is tricky without a form state, relying on onBlur or Save button
+                          }
+                        }}
+                        onBlur={(e) => {
+                          // Calculate new Total
+                          const newShipping = parseInt(e.target.value) || 0;
+                          const oldShipping = selectedOrder.shippingCharge || 0;
+                          const oldTotal = parseInt(selectedOrder.amount);
+                          // Logic: Amount = Subtotal + Shipping. Subtotal = Amount - OldShipping
+                          const subtotal = oldTotal - oldShipping;
+                          const newTotal = subtotal + newShipping;
+
+                          handleUpdateOrderDetails(selectedOrder.id, {
+                            shippingCharge: newShipping,
+                            amount: newTotal.toString()
+                          });
+                        }}
+                      />
+                      <p className="text-xs text-muted-foreground">Change value to update Order Total automatically.</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex justify-between font-bold text-base mt-4">
                   <span>Total Amount</span>
                   <span>BDT {parseInt(selectedOrder.amount).toLocaleString()}</span>
                 </div>

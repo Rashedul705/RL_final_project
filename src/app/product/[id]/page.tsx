@@ -53,7 +53,7 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
   const { id: slug } = use(params);
 
   // First try static products
-  const staticProduct = staticProducts.find((p) => p.name.toLowerCase().replace(/\s+/g, '-') === slug);
+  const staticProduct = staticProducts.find((p) => (p.slug || p.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '')) === slug);
   const product = staticProduct || fetchedProduct;
 
   useEffect(() => {
@@ -68,7 +68,7 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
         // Note: Ideally API should support slug lookup
         const allProducts = await apiClient.get<IProduct[]>('/products');
         const found = allProducts.find((p: IProduct) =>
-          p.name.toLowerCase().replace(/\s+/g, '-') === slug
+          (p.slug === slug) || (!p.slug && p.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '') === slug)
         );
 
         if (found) {
@@ -168,6 +168,7 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
                         fill
                         className="object-cover"
                         sizes="20vw"
+                        unoptimized
                       />
                     </div>
                   ))}
@@ -189,6 +190,7 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
                             fill
                             className="object-cover"
                             sizes="(max-width: 768px) 100vw, 50vw"
+                            unoptimized
                           />
                         </div>
                       </CarouselItem>
@@ -307,7 +309,7 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
               <div className="mt-8">
                 <h2 className="text-xl font-semibold">Product Highlights:</h2>
                 <div className="prose prose-sm max-w-none text-muted-foreground mt-2">
-                  <p>{product.description}</p>
+                  <p className="whitespace-pre-line">{product.highlights}</p>
                 </div>
               </div>
 
