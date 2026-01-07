@@ -163,8 +163,17 @@ export default function CheckoutPage() {
             clearCart();
             router.push(`/thank-you?orderId=${orderId}`);
 
-        } catch (error) {
+        } catch (error: any) {
+
+            if (error.message && error.message.includes('blocked')) {
+                // Redirect to specialized assistance page instead of showing toast
+                router.push('/order-assistance');
+                return;
+            }
+
             console.error("Order failed:", error);
+
+
             // Fallback: Save to Local Storage
             const offlineOrders = JSON.parse(localStorage.getItem('offline_orders') || '[]');
             const offlineOrder = { ...orderData, isOffline: true };

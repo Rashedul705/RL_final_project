@@ -26,9 +26,9 @@ export async function POST(request: NextRequest) {
         }
         const order = await OrderService.createOrder(body);
         return ApiResponse.success(order);
-    } catch (error) {
+    } catch (error: any) {
         // console.log(error);
-        return ApiResponse.error('Failed to create order', 500);
+        return ApiResponse.error(error.message || 'Failed to create order', 500);
     }
 }
 

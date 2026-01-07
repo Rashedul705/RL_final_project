@@ -126,6 +126,17 @@ const InquirySchema: Schema = new Schema({
     repliedAt: { type: Date }
 }, { timestamps: true });
 
+// --- Blacklist Schema ---
+export interface IBlacklist extends Document {
+    phone: string;
+    reason?: string;
+}
+
+const BlacklistSchema: Schema = new Schema({
+    phone: { type: String, required: true, unique: true },
+    reason: { type: String }
+}, { timestamps: true });
+
 // Prevent localized model recompilation error in Next.js
 // AND force schema updates in dev mode by deleting old models if they exist
 if (process.env.NODE_ENV !== 'production') {
@@ -135,6 +146,7 @@ if (process.env.NODE_ENV !== 'production') {
     if (mongoose.models.User) delete mongoose.models.User;
     if (mongoose.models.ShippingMethod) delete mongoose.models.ShippingMethod;
     if (mongoose.models.Inquiry) delete mongoose.models.Inquiry;
+    if (mongoose.models.Blacklist) delete mongoose.models.Blacklist;
 }
 
 export const Product: Model<IProduct> = mongoose.models.Product || mongoose.model<IProduct>('Product', ProductSchema);
@@ -142,6 +154,7 @@ export const Order: Model<IOrder> = mongoose.models.Order || mongoose.model<IOrd
 export const Category: Model<ICategory> = mongoose.models.Category || mongoose.model<ICategory>('Category', CategorySchema);
 export const ShippingMethod: Model<IShippingMethod> = mongoose.models.ShippingMethod || mongoose.model<IShippingMethod>('ShippingMethod', ShippingMethodSchema);
 export const Inquiry: Model<IInquiry> = mongoose.models.Inquiry || mongoose.model<IInquiry>('Inquiry', InquirySchema);
+export const Blacklist: Model<IBlacklist> = mongoose.models.Blacklist || mongoose.model<IBlacklist>('Blacklist', BlacklistSchema);
 
 // --- Customer Schema ---
 export interface ICustomer extends Document {

@@ -1,5 +1,5 @@
 
-import { Order, IOrder, Product } from '@/lib/models';
+import { Order, IOrder, Product, Blacklist } from '@/lib/models';
 import dbConnect from '@/lib/db';
 
 import { CustomerService } from './customer.service';
@@ -19,6 +19,15 @@ export class OrderService {
 
     static async createOrder(data: Partial<IOrder>) {
         await dbConnect();
+
+        // Check Blacklist
+        if (data.phone) {
+            const blacklisted = await Blacklist.findOne({ phone: data.phone });
+            if (blacklisted) {
+                // Formatting the error message for the frontend to catch
+                throw new Error(`Order blocked: This phone number is blacklisted. Reason: ${blacklisted.reason || 'N/A'}`);
+            }
+        }
 
         // Stock Check & Decrease
         if (data.products && data.products.length > 0) {

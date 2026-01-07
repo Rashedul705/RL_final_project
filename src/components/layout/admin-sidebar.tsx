@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import React from "react";
 import Image from "next/image";
-import { LayoutDashboard, ShoppingCart, Package, Users, Pencil, Home, Menu, Bot, Shapes, AreaChart, MessageSquareQuote, Truck, LogOut, User, Settings, UserCog } from "lucide-react";
+import { LayoutDashboard, ShoppingCart, Package, Users, Pencil, Home, Menu, Bot, Shapes, AreaChart, MessageSquareQuote, Truck, LogOut, User, Settings, UserCog, Ban } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { useSidebar, SidebarTrigger, SidebarClose } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
@@ -23,6 +23,7 @@ const adminNavItems = [
   { href: "/admin/customers", label: "Customers", icon: <Users /> },
   { href: "/admin/users", label: "Users", icon: <UserCog /> },
   { href: "/admin/shipping", label: "Shipping Charge Management", icon: <Truck /> },
+  { href: "/admin/blacklist", label: "Blacklist", icon: <Ban /> },
   { href: "/admin/inquiries", label: "Inquiries", icon: <MessageSquareQuote /> },
   { href: "/admin/settings", label: "Settings", icon: <Settings /> },
   { href: "/admin/profile", label: "Profile", icon: <User /> },
