@@ -36,10 +36,11 @@ import { IOrder, IProduct } from '@/lib/models';
 type DashboardData = {
   orders: IOrder[];
   products: IProduct[];
+  newInquiriesCount: number;
 };
 
 export default function AdminDashboardPage() {
-  const [data, setData] = useState<DashboardData>({ orders: [], products: [] });
+  const [data, setData] = useState<DashboardData>({ orders: [], products: [], newInquiriesCount: 0 });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -77,9 +78,9 @@ export default function AdminDashboardPage() {
       todaysOrdersCount: todaysOrders.length,
       monthlyOrdersCount: monthlyOrders.length,
       totalRevenue: totalRevenue,
-      newInquiries: 5, // Placeholder
+      newInquiries: data.newInquiriesCount,
     };
-  }, [data.orders]);
+  }, [data.orders, data.newInquiriesCount]);
 
   const lastFiveOrders = useMemo(() => {
     return [...data.orders]

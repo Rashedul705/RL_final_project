@@ -1,6 +1,6 @@
 
 import { NextRequest } from 'next/server';
-import { Order, Product } from '@/lib/models';
+import { Order, Product, Inquiry } from '@/lib/models';
 import dbConnect from '@/lib/db';
 import { ApiResponse } from '@/lib/api-response';
 
@@ -15,10 +15,12 @@ export async function GET(request: NextRequest) {
         // but to match the current frontend implementation which expects arrays:
         const orders = await Order.find({}).sort({ date: -1 });
         const products = await Product.find({});
+        const newInquiriesCount = await Inquiry.countDocuments({ status: 'new' });
 
         return ApiResponse.success({
             orders,
-            products
+            products,
+            newInquiriesCount
         });
     } catch (error) {
         return ApiResponse.error('Failed to fetch dashboard data', 500);
