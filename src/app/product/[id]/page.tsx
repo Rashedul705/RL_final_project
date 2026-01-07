@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect, use } from 'react';
-import { products as staticProducts } from '@/lib/data';
 import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
 import Image from 'next/image';
@@ -52,27 +51,26 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
   // Asynchronously get the slug from the params promise.
   const { id: slug } = use(params);
 
-  // First try static products
-  const staticProduct = staticProducts.find((p) => (p.slug || p.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '')) === slug);
-  const product = staticProduct || fetchedProduct;
+  // Use state for product and related products instead of derived static/fetched mix
+  const [product, setProduct] = useState<any>(null);
+  const [relatedProducts, setRelatedProducts] = useState<any[]>([]);
 
   useEffect(() => {
     const loadProduct = async () => {
-      if (staticProduct) {
-        setIsLoading(false);
-        return;
-      }
-
       try {
-        // Fallback: Fetch all products and find by slug
-        // Note: Ideally API should support slug lookup
+        // Always fetch from API
         const allProducts = await apiClient.get<IProduct[]>('/products');
         const found = allProducts.find((p: IProduct) =>
           (p.slug === slug) || (!p.slug && p.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '') === slug)
         );
 
         if (found) {
-          setFetchedProduct(found);
+          setProduct(found);
+          // Filter related products from the same API list
+          const related = allProducts
+            .filter((p: IProduct) => p.category === found.category && (p.id !== found.id && p._id !== found._id))
+            .slice(0, 4);
+          setRelatedProducts(related);
         }
       } catch (error) {
         console.error("Failed to fetch product from API", error);
@@ -82,8 +80,7 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
     };
 
     loadProduct();
-  }, [slug, staticProduct]);
-
+  }, [slug]);
 
   useEffect(() => {
     if (!api) {
@@ -124,16 +121,6 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
       setQuantity(newQuantity);
     }
   };
-
-  // For related products, we can mix static and dynamic if needed, 
-  // but for now let's use static products as related items fallback or fetch from API if we want full dynamic
-  // Keeping simple: use static products + fetched product category matching if possible
-  // If product is from API, we might not readily have all other API products here unless we keep them.
-  // We'll proceed with static related products for now for simplicity, or filter from the same API list if we cached it.
-  // To match original behavior:
-  const relatedProducts = staticProducts
-    .filter((p) => p.category === product.category && p.id !== product.id)
-    .slice(0, 4);
 
   // Ensure the main image is always first in the gallery
   const galleryImages = [

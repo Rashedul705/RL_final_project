@@ -111,6 +111,8 @@ export interface IInquiry extends Document {
     subject?: string;
     message: string;
     status: 'new' | 'read' | 'replied';
+    reply?: string;
+    repliedAt?: Date;
 }
 
 const InquirySchema: Schema = new Schema({
@@ -119,7 +121,9 @@ const InquirySchema: Schema = new Schema({
     phone: { type: String },
     subject: { type: String },
     message: { type: String, required: true },
-    status: { type: String, enum: ['new', 'read', 'replied'], default: 'new' }
+    status: { type: String, enum: ['new', 'read', 'replied'], default: 'new' },
+    reply: { type: String },
+    repliedAt: { type: Date }
 }, { timestamps: true });
 
 // Prevent localized model recompilation error in Next.js

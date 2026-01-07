@@ -58,6 +58,8 @@ type Inquiry = {
   message: string;
   status: 'new' | 'read' | 'replied'; // Matching Mongoose Schema
   createdAt: string;
+  reply?: string;
+  repliedAt?: string;
 };
 
 export default function AdminInquiriesPage() {
@@ -115,17 +117,54 @@ export default function AdminInquiriesPage() {
     }
   };
 
-  const handleSendReply = () => {
-    toast({
-      title: 'Reply Sent!',
-      description: 'Your reply has been successfully sent to the customer.'
-    });
-    // Optimistically update to replied
+  const [replyMessage, setReplyMessage] = useState('');
+  const [sendingReply, setSendingReply] = useState(false);
+
+  useEffect(() => {
     if (selectedInquiry) {
-      handleStatusChange(selectedInquiry._id, 'replied');
+      setReplyMessage(selectedInquiry.reply || '');
+    } else {
+      setReplyMessage('');
     }
-    setSelectedInquiry(null);
+  }, [selectedInquiry]);
+
+  const handleSendReply = async () => {
+    if (!selectedInquiry || !replyMessage.trim()) return;
+
+    setSendingReply(true);
+    try {
+      const updatedInquiry = await apiClient.post<Inquiry>(`/inquiries/${selectedInquiry._id}/reply`, {
+        message: replyMessage
+      });
+
+      if (updatedInquiry) {
+        toast({
+          title: 'Reply Sent!',
+          description: 'Your reply has been successfully saved and sent.'
+        });
+
+        // Update local state
+        setInquiries(current =>
+          current.map(inq =>
+            inq._id === selectedInquiry._id ? updatedInquiry : inq
+          )
+        );
+        setSelectedInquiry(null);
+      }
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to send reply."
+      });
+    } finally {
+      setSendingReply(false);
+    }
   }
+
+  // ... (getStatusVariant function)
+
+
 
   const getStatusVariant = (status: string) => {
     switch (status) {
@@ -241,7 +280,19 @@ export default function AdminInquiriesPage() {
 
                   <div className="space-y-2">
                     <Label htmlFor="reply" className="font-semibold">Write a reply</Label>
-                    <Textarea id="reply" placeholder="Type your response here..." rows={6} />
+                    <Textarea
+                      id="reply"
+                      placeholder="Type your response here..."
+                      rows={6}
+                      value={replyMessage}
+                      onChange={(e) => setReplyMessage(e.target.value)}
+                      disabled={!!selectedInquiry.reply}
+                    />
+                    {selectedInquiry.repliedAt && (
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Replied {formatDistanceToNow(new Date(selectedInquiry.repliedAt), { addSuffix: true })}
+                      </p>
+                    )}
                   </div>
 
                   <div className="space-y-2">
@@ -266,7 +317,10 @@ export default function AdminInquiriesPage() {
                 <SheetClose asChild>
                   <Button variant="outline">Cancel</Button>
                 </SheetClose>
-                <Button onClick={handleSendReply}>Send Reply</Button>
+                <Button onClick={handleSendReply} disabled={sendingReply || !replyMessage.trim()}>
+                  {sendingReply ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                  {selectedInquiry.reply ? 'Update Reply' : 'Send Reply'}
+                </Button>
               </SheetFooter>
             </>
           )}
