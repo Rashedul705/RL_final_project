@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -11,6 +10,16 @@ import { Label } from "@/components/ui/label";
 import { Ban, Trash2, Plus, Search, AlertTriangle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { formatDate } from "date-fns";
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface BlacklistEntry {
     _id: string;
@@ -29,6 +38,9 @@ export default function BlacklistPage() {
     const [phone, setPhone] = useState('');
     const [reason, setReason] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
+
+    // Delete State
+    const [deleteId, setDeleteId] = useState<string | null>(null);
 
     const { toast } = useToast();
 
@@ -82,11 +94,15 @@ export default function BlacklistPage() {
         }
     };
 
-    const handleDelete = async (id: string) => {
-        if (!confirm("Are you sure you want to remove this number from the blacklist?")) return;
+    const handleDeleteClick = (id: string) => {
+        setDeleteId(id);
+    };
+
+    const confirmDelete = async () => {
+        if (!deleteId) return;
 
         try {
-            const res = await fetch(`/api/blacklist/${id}`, {
+            const res = await fetch(`/api/blacklist/${deleteId}`, {
                 method: 'DELETE',
             });
             const data = await res.json();
@@ -99,6 +115,8 @@ export default function BlacklistPage() {
             }
         } catch (error) {
             toast({ title: "Error", description: "Something went wrong", variant: "destructive" });
+        } finally {
+            setDeleteId(null);
         }
     };
 
@@ -199,7 +217,7 @@ export default function BlacklistPage() {
                                         <TableCell>{item.reason || <span className="text-muted-foreground italic">None</span>}</TableCell>
                                         <TableCell>{new Date(item.createdAt).toLocaleDateString()}</TableCell>
                                         <TableCell className="text-right">
-                                            <Button variant="ghost" size="icon" onClick={() => handleDelete(item._id)} className="text-destructive hover:text-destructive/90">
+                                            <Button variant="ghost" size="icon" onClick={() => handleDeleteClick(item._id)} className="text-destructive hover:text-destructive/90">
                                                 <Trash2 className="h-4 w-4" />
                                             </Button>
                                         </TableCell>
@@ -221,6 +239,23 @@ export default function BlacklistPage() {
                     </p>
                 </div>
             </div>
+
+            <AlertDialog open={!!deleteId} onOpenChange={(open) => !open && setDeleteId(null)}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            This action cannot be undone. This will convert the customer back to a regular customer.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={confirmDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                            Delete
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </div>
     );
 }
