@@ -4,7 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { Search, ShoppingCart, Menu, LogOut, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Sheet, SheetContent, SheetTrigger, SheetClose } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetTrigger, SheetClose, SheetTitle } from "@/components/ui/sheet";
 import { useCart } from "@/components/cart/cart-context";
 import { CartSheet } from "@/components/cart/cart-sheet";
 import { SearchDialog } from "@/components/search-dialog";
@@ -150,6 +150,7 @@ export function Header() {
                 </Button>
               </SheetTrigger>
               <SheetContent side="left">
+                <SheetTitle className="sr-only">Mobile Menu</SheetTitle>
                 <div className="flex flex-col gap-4 p-4">
                   <SheetClose asChild>
                     <Link href="/" className="text-lg font-bold flex items-center gap-2">
@@ -185,9 +186,7 @@ export function Header() {
                         </SheetClose>
                       </>
                     )}
-                    <SheetClose asChild>
-                      <Link href="/admin" className="text-muted-foreground hover:text-foreground">Admin</Link>
-                    </SheetClose>
+
                   </nav>
                   <div className="mt-auto flex flex-col gap-4">
                     <CartSheet>
