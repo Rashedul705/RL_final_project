@@ -139,6 +139,37 @@ export const Category: Model<ICategory> = mongoose.models.Category || mongoose.m
 export const ShippingMethod: Model<IShippingMethod> = mongoose.models.ShippingMethod || mongoose.model<IShippingMethod>('ShippingMethod', ShippingMethodSchema);
 export const Inquiry: Model<IInquiry> = mongoose.models.Inquiry || mongoose.model<IInquiry>('Inquiry', InquirySchema);
 
+// --- Customer Schema ---
+export interface ICustomer extends Document {
+    id: string; // Unique ID (e.g., phone number or generated)
+    name: string;
+    phone: string;
+    email?: string;
+    address?: string;
+    totalOrders: number;
+    totalSpent: number;
+    lastOrderDate: Date;
+    joinedAt: Date;
+}
+
+const CustomerSchema: Schema = new Schema({
+    id: { type: String, required: true, unique: true }, // We will use phone number as ID usually, or UUID
+    name: { type: String, required: true },
+    phone: { type: String, required: true, unique: true },
+    email: { type: String },
+    address: { type: String },
+    totalOrders: { type: Number, default: 0 },
+    totalSpent: { type: Number, default: 0 },
+    lastOrderDate: { type: Date },
+    joinedAt: { type: Date, default: Date.now }
+}, { timestamps: true });
+
+if (process.env.NODE_ENV !== 'production') {
+    if (mongoose.models.Customer) delete mongoose.models.Customer;
+}
+
+export const Customer: Model<ICustomer> = mongoose.models.Customer || mongoose.model<ICustomer>('Customer', CustomerSchema);
+
 // --- User Schema ---
 export interface IUser extends Document {
     name: string;

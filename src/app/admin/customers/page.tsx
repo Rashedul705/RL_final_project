@@ -34,16 +34,20 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { MoreHorizontal, Search, Loader2 } from 'lucide-react';
+import { MoreHorizontal, Search, Loader2, RefreshCw } from 'lucide-react';
 import { apiClient } from '@/lib/api-client';
+import { useToast } from '@/hooks/use-toast';
 
 type Customer = {
+  _id: string; // Mongoose ID
+  id: string;
   name: string;
   phone: string;
+  email?: string;
   totalOrders: number;
   totalSpent: number;
-  email?: string;
-  latestOrderDate: Date;
+  lastOrderDate: string; // Date string from JSON
+  joinedAt: string;
 };
 
 type Order = {
@@ -58,90 +62,97 @@ type Order = {
 };
 
 export default function AdminCustomersPage() {
+  const { toast } = useToast();
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [orders, setOrders] = useState<Order[]>([]);
+
+  const [customers, setCustomers] = useState<Customer[]>([]);
+  const [orders, setOrders] = useState<Order[]>([]); // Keep orders for details view
+
   const [loading, setLoading] = useState(true);
+  const [syncing, setSyncing] = useState(false);
+
+  const fetchCustomers = async () => {
+    try {
+      const data = await apiClient.get<Customer[]>('/customers');
+      if (data) setCustomers(data);
+    } catch (error) {
+      console.error("Failed to fetch customers");
+    }
+  };
+
+  const fetchOrders = async () => {
+    try {
+      const data = await apiClient.get<Order[]>('/orders');
+      if (data) setOrders(data);
+    } catch (error) {
+      console.error("Failed to fetch orders");
+    }
+  };
+
+  const loadAllData = async () => {
+    setLoading(true);
+    await Promise.all([fetchCustomers(), fetchOrders()]);
+    setLoading(false);
+  };
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const fetchedOrders = await apiClient.get<Order[]>('/orders');
-        if (fetchedOrders) {
-          setOrders(fetchedOrders);
-        }
-      } catch (error) {
-        console.error("Failed to fetch orders", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchData();
+    loadAllData();
   }, []);
 
-  const customers = useMemo(() => {
-    const customerMap = new Map<string, Customer>();
+  const handleSync = async () => {
+    setSyncing(true);
+    try {
+      await apiClient.post('/customers/sync', {});
+      toast({
+        title: "Success",
+        description: "Customer database synced with orders successfully."
+      });
+      fetchCustomers(); // Refresh list
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to sync database."
+      });
+    } finally {
+      setSyncing(false);
+    }
+  };
 
-    orders.forEach((order) => {
-      // Create a unique key based on phone (primary) or email or name
-      const customerKey = `${order.phone}-${order.customer}`;
-      const existingCustomer = customerMap.get(customerKey);
-
-      const orderAmount = parseFloat(order.amount) || 0;
-
-      if (existingCustomer) {
-        existingCustomer.totalOrders += 1;
-        existingCustomer.totalSpent += orderAmount;
-        const orderDate = new Date(order.date);
-        if (orderDate > existingCustomer.latestOrderDate) {
-          existingCustomer.latestOrderDate = orderDate;
-        }
-      } else {
-        customerMap.set(customerKey, {
-          name: order.customer,
-          phone: order.phone,
-          email: order.email,
-          totalOrders: 1,
-          totalSpent: orderAmount,
-          latestOrderDate: new Date(order.date),
-        });
-      }
-    });
-
-    return Array.from(customerMap.values())
-      .filter((customer) =>
-        customer.phone.includes(searchQuery) || customer.name.toLowerCase().includes(searchQuery.toLowerCase())
-      )
-      .sort(
-        (a, b) => b.latestOrderDate.getTime() - a.latestOrderDate.getTime()
-      );
-  }, [orders, searchQuery]);
+  const filteredCustomers = useMemo(() => {
+    return customers.filter((customer) =>
+      customer.phone.includes(searchQuery) || customer.name.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  }, [customers, searchQuery]);
 
   const getCustomerOrders = (customer: Customer) => {
     return orders.filter(
       (order) =>
-        (order.phone === customer.phone) && (order.customer === customer.name)
+        (order.phone === customer.phone)
     );
   };
 
   const handleViewDetails = (customer: Customer) => {
-    setTimeout(() => {
-      setSelectedCustomer(customer);
-      setIsDialogOpen(true);
-    }, 100);
+    setSelectedCustomer(customer);
+    setIsDialogOpen(true);
   };
 
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-semibold tracking-tight">Customers</h1>
+        <Button onClick={handleSync} disabled={syncing} variant="outline">
+          <RefreshCw className={`mr-2 h-4 w-4 ${syncing ? 'animate-spin' : ''}`} />
+          Sync Database
+        </Button>
       </div>
       <Card>
         <CardHeader>
           <CardTitle>Customer Management</CardTitle>
           <CardDescription>
-            View and manage your customer data (aggregated from Orders).
+            View and manage your customer data (stored in dedicated database).
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -175,13 +186,13 @@ export default function AdminCustomersPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {customers.length === 0 ? (
+                  {filteredCustomers.length === 0 ? (
                     <TableRow>
                       <TableCell colSpan={5} className="text-center">No customers found.</TableCell>
                     </TableRow>
                   ) : (
-                    customers.map((customer) => (
-                      <TableRow key={`${customer.name}-${customer.phone}`}>
+                    filteredCustomers.map((customer) => (
+                      <TableRow key={customer._id || customer.id}>
                         <TableCell>
                           <div className="font-medium">{customer.name}</div>
                           {customer.email && <div className="text-xs text-muted-foreground">{customer.email}</div>}

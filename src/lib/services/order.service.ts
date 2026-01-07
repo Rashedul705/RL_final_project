@@ -2,6 +2,8 @@
 import { Order, IOrder, Product } from '@/lib/models';
 import dbConnect from '@/lib/db';
 
+import { CustomerService } from './customer.service';
+
 export class OrderService {
     static async getOrders(filter: any = {}) {
         await dbConnect();
@@ -33,6 +35,15 @@ export class OrderService {
         }
 
         const order = await Order.create(data);
+
+        // Sync with Customer Database
+        try {
+            await CustomerService.syncCustomerFromOrder(order);
+        } catch (error) {
+            console.error("Failed to sync customer data:", error);
+            // Don't fail the order if customer sync fails, just log it
+        }
+
         return order;
     }
 
