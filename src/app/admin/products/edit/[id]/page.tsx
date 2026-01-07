@@ -59,6 +59,7 @@ export default function AdminEditProductPage() {
   const [submitting, setSubmitting] = useState(false);
   const [product, setProduct] = useState<IProduct | null>(null);
   const [categories, setCategories] = useState<{ id: string, name: string }[]>([]);
+  const [deletedImages, setDeletedImages] = useState<string[]>([]);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -130,11 +131,17 @@ export default function AdminEditProductPage() {
     setSubmitting(true);
     try {
       let mainImageUrl = product?.image;
+      if (deletedImages.includes(product?.image || '')) {
+        mainImageUrl = '';
+      }
       if (values.productImage && values.productImage.length > 0) {
         mainImageUrl = await uploadFile(values.productImage[0]);
       }
 
       let galleryImageUrls = product?.images || [];
+      // Filter out deleted existing images
+      galleryImageUrls = galleryImageUrls.filter(url => !deletedImages.includes(url));
+
       if (values.galleryImages && values.galleryImages.length > 0) {
         for (const file of Array.from(values.galleryImages)) {
           const url = await uploadFile(file as File);
@@ -357,9 +364,18 @@ export default function AdminEditProductPage() {
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
-                    {product.image && !form.watch('productImage')?.[0] && (
-                      <div className="relative aspect-square w-full mb-4">
+                    {product.image && !form.watch('productImage')?.[0] && !deletedImages.includes(product.image) && (
+                      <div className="relative aspect-square w-full mb-4 group">
                         <img src={product.image} alt={product.name} className="object-cover rounded-md w-full h-full bg-gray-100" />
+                        <Button
+                          type="button"
+                          variant="destructive"
+                          size="icon"
+                          className="absolute top-2 right-2 h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity"
+                          onClick={() => setDeletedImages(prev => [...prev, product.image as string])}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
                       </div>
                     )}
                     <FormField
@@ -389,6 +405,15 @@ export default function AdminEditProductPage() {
                                 alt="Main preview"
                                 className="w-full h-full object-cover rounded-md"
                               />
+                              <Button
+                                type="button"
+                                variant="destructive"
+                                size="icon"
+                                className="absolute top-2 right-2 h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity"
+                                onClick={() => onChange([])}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
                             </div>
                           )}
                         </FormItem>
@@ -403,8 +428,19 @@ export default function AdminEditProductPage() {
                   <CardContent>
                     {product.images && product.images.length > 0 && (
                       <div className="grid grid-cols-3 gap-2 mb-4">
-                        {product.images.map((img, i) => (
-                          <img key={i} src={img} alt={`Gallery ${i}`} className="aspect-square object-cover rounded-md bg-gray-100" />
+                        {product.images.filter(img => !deletedImages.includes(img)).map((img, i) => (
+                          <div key={i} className="relative aspect-square group">
+                            <img src={img} alt={`Gallery ${i}`} className="w-full h-full aspect-square object-cover rounded-md bg-gray-100" />
+                            <Button
+                              type="button"
+                              variant="destructive"
+                              size="icon"
+                              className="absolute top-1 right-1 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                              onClick={() => setDeletedImages(prev => [...prev, img])}
+                            >
+                              <Trash2 className="h-3 w-3" />
+                            </Button>
+                          </div>
                         ))}
                       </div>
                     )}
@@ -428,6 +464,32 @@ export default function AdminEditProductPage() {
                             />
                           </FormControl>
                           <FormMessage />
+                          {value && value.length > 0 && (
+                            <div className="grid grid-cols-3 gap-2 mt-4">
+                              {Array.from(value as File[]).map((file, index) => (
+                                <div key={index} className="relative aspect-square group">
+                                  <img
+                                    src={URL.createObjectURL(file)}
+                                    alt={`Gallery preview ${index}`}
+                                    className="w-full h-full object-cover rounded-md"
+                                  />
+                                  <Button
+                                    type="button"
+                                    variant="destructive"
+                                    size="icon"
+                                    className="absolute top-1 right-1 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                                    onClick={() => {
+                                      const newFiles = [...value];
+                                      newFiles.splice(index, 1);
+                                      onChange(newFiles);
+                                    }}
+                                  >
+                                    <Trash2 className="h-3 w-3" />
+                                  </Button>
+                                </div>
+                              ))}
+                            </div>
+                          )}
                         </FormItem>
                       )}
                     />
