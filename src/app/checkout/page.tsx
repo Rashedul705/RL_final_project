@@ -37,6 +37,7 @@ import { bangladeshDistricts } from '@/lib/data';
 import { useAuth } from '@/components/providers/auth-provider';
 import { apiClient } from '@/lib/api-client';
 
+
 const formSchema = z.object({
     fullName: z.string().min(2, 'Full name must be at least 2 characters.'),
     phoneNumber: z.string().regex(/^01[0-9]{9}$/, 'Please enter a valid 11-digit phone number starting with 01.'),
@@ -60,6 +61,8 @@ export default function CheckoutPage() {
     const router = useRouter();
     const [shippingMethods, setShippingMethods] = useState<ShippingMethod[]>([]);
     const [selectedMethod, setSelectedMethod] = useState<ShippingMethod | null>(null);
+
+
 
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
@@ -117,6 +120,8 @@ export default function CheckoutPage() {
         }
     }, [watchedCity, rates]);
 
+
+
     const subtotal = cart.reduce(
         (acc, item) => acc + item.product.price * item.quantity,
         0
@@ -126,6 +131,8 @@ export default function CheckoutPage() {
 
     async function onSubmit(values: z.infer<typeof formSchema>) {
         const orderId = `ORD${Math.floor(1000 + Math.random() * 9000)}`;
+
+
 
         const orderData = {
             id: orderId,

@@ -34,6 +34,7 @@ export async function POST(request: NextRequest) {
         // Validate request body
         const parseResult = createProductSchema.safeParse(body);
         if (!parseResult.success) {
+            console.error('Validation Error:', JSON.stringify(parseResult.error.format(), null, 2));
             return ApiResponse.error('Invalid input', 400, parseResult.error.format());
         }
 
@@ -44,8 +45,12 @@ export async function POST(request: NextRequest) {
 
         const product = await ProductService.createProduct(productData);
         return ApiResponse.success(product, 201);
-    } catch (error) {
+    } catch (error: any) {
         console.error('Error creating product:', error);
-        return ApiResponse.error('Failed to create product');
+        // Check for specific Mongoose/MongoDB errors
+        if (error.code === 11000) {
+            return ApiResponse.error('Product with this name/slug already exists', 409);
+        }
+        return ApiResponse.error(`Failed to create product: ${error.message}`);
     }
 }

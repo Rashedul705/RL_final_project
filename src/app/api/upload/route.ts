@@ -30,11 +30,18 @@ export async function POST(request: NextRequest) {
             body: imgbbFormData,
         });
 
-        const data = await response.json();
+        const responseText = await response.text();
+        let data;
+        try {
+            data = JSON.parse(responseText);
+        } catch (e) {
+            console.error('ImgBB Non-JSON Response:', responseText);
+            return ApiResponse.error(`ImgBB Upload Failed: Invalid response from server. Status: ${response.status}`, 502);
+        }
 
         if (!data.success) {
-            console.error('ImgBB Upload Error:', data);
-            return ApiResponse.error(`ImgBB Upload Failed: ${data.error?.message || 'Unknown error'}`, 502);
+            console.error('ImgBB Upload Error:', JSON.stringify(data, null, 2));
+            return ApiResponse.error(`ImgBB Upload Failed: ${data.error?.message || 'Unknown error'} (Status: ${response.status})`, 502);
         }
 
         // Return the URL
