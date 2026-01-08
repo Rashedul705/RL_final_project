@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server';
 import { OrderService } from '@/lib/services/order.service';
 import { ApiResponse } from '@/lib/api-response';
+import { sendMail } from '@/lib/mail';
 
 export async function GET(request: NextRequest) {
     try {
@@ -25,6 +26,26 @@ export async function POST(request: NextRequest) {
             body.date = new Date().toISOString();
         }
         const order = await OrderService.createOrder(body);
+
+        // Send Email Notification to Admin
+        try {
+            await sendMail({
+                to: "rashedul.afl@gmail.com",
+                subject: `New Order Received - ${body.id}`,
+                body: `
+                    <p>A new order has been placed on Rodelas lifestyle.</p>
+                    <p><strong>Order ID:</strong> ${body.id}</p>
+                    <p><strong>Customer:</strong> ${body.customer}</p>
+                    <p><strong>Amount:</strong> BDT ${body.amount}</p>
+                    <p><strong>Phone:</strong> ${body.phone}</p>
+                    <br/>
+                    <a href="${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/admin/orders">View Order</a>
+                `,
+            });
+        } catch (emailError) {
+            console.error("Failed to send admin order notification:", emailError);
+        }
+
         return ApiResponse.success(order);
     } catch (error: any) {
         // console.log(error);
