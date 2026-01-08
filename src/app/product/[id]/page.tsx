@@ -61,7 +61,7 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
         // Always fetch from API
         const allProducts = await apiClient.get<IProduct[]>('/products');
         const found = allProducts.find((p: IProduct) =>
-          (p.slug === slug) || (!p.slug && p.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '') === slug)
+          (p.id === slug) || (p.slug === slug) || (!p.slug && p.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '') === slug)
         );
 
         if (found) {

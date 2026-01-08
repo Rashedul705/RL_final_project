@@ -389,7 +389,7 @@ export default function AdminOrdersPage() {
                   <h4 className="font-semibold">Ordered Items</h4>
                   <ul className="space-y-2 text-sm">
                     {selectedOrder.products.map((product, index) => {
-                      const productSlug = product.name.toLowerCase().replace(/\s+/g, '-');
+                      const productSlug = product.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
                       return (
                         <li key={index} className="flex justify-between items-center">
                           <Link href={`/product/${productSlug}`} className="hover:underline" target="_blank" rel="noopener noreferrer">
