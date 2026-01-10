@@ -9,6 +9,10 @@ export const metadata: Metadata = {
   description: "A premium online boutique for lifestyle products.",
 };
 
+import { AnalyticsTracker } from "@/components/analytics-tracker";
+
+// ... existing imports
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -24,6 +28,7 @@ export default function RootLayout({
       <body className="font-sans antialiased" suppressHydrationWarning>
         <AuthProvider>
           <CartProvider>
+            <AnalyticsTracker />
             {children}
             <Toaster />
           </CartProvider>

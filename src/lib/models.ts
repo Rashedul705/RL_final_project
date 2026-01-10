@@ -187,6 +187,61 @@ if (process.env.NODE_ENV !== 'production') {
 
 export const Customer: Model<ICustomer> = mongoose.models.Customer || mongoose.model<ICustomer>('Customer', CustomerSchema);
 
+// --- Analytics Schema ---
+export interface IAnalytics extends Document {
+    date: Date; // Normalized to start of day
+    visitors: number; // Unique visitors count
+    pageViews: {
+        page: string;
+        views: number;
+        uniqueVisitors: number;
+        avgTimeOnPage: number; // in seconds
+    }[];
+    trafficSources: {
+        source: string; // e.g., 'Google', 'Facebook', 'Direct'
+        count: number;
+    }[];
+    locations: {
+        city: string;
+        country: string;
+        count: number;
+    }[];
+    deviceStats: {
+        device: string; // 'Mobile', 'Desktop', 'Tablet'
+        count: number;
+    }[];
+}
+
+const AnalyticsSchema: Schema = new Schema({
+    date: { type: Date, required: true, unique: true },
+    visitors: { type: Number, default: 0 },
+    pageViews: [{
+        page: { type: String, required: true },
+        views: { type: Number, default: 0 },
+        uniqueVisitors: { type: Number, default: 0 },
+        avgTimeOnPage: { type: Number, default: 0 }
+    }],
+    trafficSources: [{
+        source: { type: String, required: true },
+        count: { type: Number, default: 0 }
+    }],
+    locations: [{
+        city: { type: String, required: true },
+        country: { type: String, required: true },
+        count: { type: Number, default: 0 }
+    }],
+    deviceStats: [{
+        device: { type: String, required: true },
+        count: { type: Number, default: 0 }
+    }]
+}, { timestamps: true });
+
+if (process.env.NODE_ENV !== 'production') {
+    if (mongoose.models.Analytics) delete mongoose.models.Analytics;
+}
+
+export const Analytics: Model<IAnalytics> = mongoose.models.Analytics || mongoose.model<IAnalytics>('Analytics', AnalyticsSchema);
+
 // --- User Schema ---
 export interface IUser extends Document {
     name: string;
