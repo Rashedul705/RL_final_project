@@ -20,10 +20,8 @@ const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 
 // Initialize services
 const auth = getAuth(app);
-const db = initializeFirestore(app, {
-    experimentalForceLongPolling: true,
-});
-const storage = getStorage(app);
+const db = getFirestore(app);
+// Storage removed as unused
 const googleProvider = new GoogleAuthProvider();
 
 // Analytics (only on client side)
@@ -36,4 +34,4 @@ if (typeof window !== "undefined") {
     });
 }
 
-export { app, auth, db, storage, googleProvider, analytics };
+export { app, auth, db, googleProvider, analytics };

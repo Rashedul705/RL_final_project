@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Suspense } from 'react';
 import { Toaster } from "@/components/ui/toaster";
 import { CartProvider } from "@/components/cart/cart-context";
 import { AuthProvider } from "@/components/providers/auth-provider";
@@ -28,7 +29,9 @@ export default function RootLayout({
       <body className="font-sans antialiased" suppressHydrationWarning>
         <AuthProvider>
           <CartProvider>
-            <AnalyticsTracker />
+            <Suspense fallback={null}>
+              <AnalyticsTracker />
+            </Suspense>
             {children}
             <Toaster />
           </CartProvider>

@@ -31,7 +31,7 @@ import { Badge } from '@/components/ui/badge';
 import { useMemo, useState, useEffect } from 'react';
 import { Separator } from '@/components/ui/separator';
 import { apiClient } from '@/lib/api-client';
-import { IOrder, IProduct } from '@/lib/models';
+import type { IOrder, IProduct } from '@/lib/models';
 
 type DashboardData = {
   orders: IOrder[];

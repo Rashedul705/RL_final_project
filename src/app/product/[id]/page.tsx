@@ -31,7 +31,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { apiClient } from '@/lib/api-client';
-import { IProduct } from '@/lib/models'; // Assuming IProduct is compatible or we map it
+import type { IProduct } from '@/lib/models'; // Assuming IProduct is compatible or we map it
 
 // Even in a client component, params can be a promise.
 // We can use `React.use` to unwrap it.

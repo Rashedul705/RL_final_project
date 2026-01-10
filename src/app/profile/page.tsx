@@ -7,7 +7,7 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { format } from 'date-fns';
-import { IUser } from '@/lib/models'; // Import type for frontend usage if needed, or define local
+import type { IUser } from '@/lib/models'; // Import type for frontend usage if needed, or define local
 import Image from 'next/image';
 
 interface Order {

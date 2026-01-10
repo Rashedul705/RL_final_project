@@ -56,7 +56,7 @@ import Link from 'next/link';
 import { Input } from '@/components/ui/input';
 import { apiClient } from '@/lib/api-client';
 import { useToast } from '@/hooks/use-toast';
-import { IOrder } from '@/lib/models'; // Use Interface
+import type { IOrder } from '@/lib/models'; // Use Interface
 
 // Update type definition to handle undefined shippingCharge for legacy orders
 type Order = IOrder & { shippingCharge?: number };

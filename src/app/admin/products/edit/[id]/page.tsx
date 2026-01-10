@@ -35,7 +35,7 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { apiClient } from '@/lib/api-client';
-import { IProduct } from '@/lib/models';
+import type { IProduct } from '@/lib/models';
 
 const formSchema = z.object({
   name: z.string().min(1, 'Product name is required.'),

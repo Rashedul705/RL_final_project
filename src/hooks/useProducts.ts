@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { apiClient } from '@/lib/api-client';
-import { IProduct } from '@/lib/models';
+import type { IProduct } from '@/lib/models';
 
 export function useProducts() {
     const [products, setProducts] = useState<IProduct[]>([]);

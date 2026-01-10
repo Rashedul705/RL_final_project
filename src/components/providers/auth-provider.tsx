@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
-import { IUser } from '@/lib/models'; // We can use the interface type on frontend safely if it's just type def
+import type { IUser } from '@/lib/models'; // We can use the interface type on frontend safely if it's just type def
 
 // Simplified User Type for Frontend
 type User = {

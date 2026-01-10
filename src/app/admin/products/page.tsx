@@ -39,7 +39,7 @@ import { Label } from '@/components/ui/label';
 import Link from 'next/link';
 import { apiClient } from '@/lib/api-client';
 import { useToast } from '@/hooks/use-toast';
-import { IProduct } from '@/lib/models';
+import type { IProduct } from '@/lib/models';
 
 type Product = IProduct;
 
