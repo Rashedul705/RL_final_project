@@ -7,9 +7,16 @@ import { Product } from "@/lib/data";
 import { useState, useEffect } from "react";
 import { apiClient } from "@/lib/api-client";
 
-export function ProductCatalog() {
-  const { products, loading, error } = useProducts();
+export function ProductCatalog({ initialProducts }: { initialProducts?: Product[] }) {
+  const { products: fetchedProducts, loading, error } = useProducts();
   const [categories, setCategories] = useState<{ id: string, name: string }[]>([]);
+
+  // Prefer initialProducts if available, otherwise fall back to fetchedProducts
+  const products = initialProducts || fetchedProducts;
+  const isUsingSSR = !!initialProducts;
+
+  // If we have initial products, we are not loading (unless we want to re-fetch, but for now let's assume SSR is enough)
+  const displayLoading = isUsingSSR ? false : loading;
 
   useEffect(() => {
     const fetchCategories = async () => {
@@ -23,7 +30,7 @@ export function ProductCatalog() {
     fetchCategories();
   }, []);
 
-  if (loading) {
+  if (displayLoading) {
     return (
       <div className="flex justify-center items-center py-32">
         <Loader2 className="h-10 w-10 animate-spin text-primary" />
@@ -31,7 +38,7 @@ export function ProductCatalog() {
     );
   }
 
-  if (error) {
+  if (error && !products.length) {
     return (
       <div className="flex flex-col items-center justify-center py-20 text-destructive gap-2">
         <AlertCircle className="h-8 w-8" />

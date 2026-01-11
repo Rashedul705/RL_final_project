@@ -24,7 +24,6 @@ export function ProductCard({ product }: ProductCardProps) {
             className="object-cover"
             data-ai-hint={product.imageHint}
             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-            unoptimized
           />
           {product.stock === 0 && (
             <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
