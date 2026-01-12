@@ -50,8 +50,8 @@ export function Header() {
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/60">
-      <div className="container flex h-16 items-center justify-between">
-        <div className="flex items-center gap-6 md:gap-10">
+      <div className="container flex h-16 items-center justify-between gap-4">
+        <div className="flex items-center gap-6 lg:gap-10">
           <Link href="/" className="flex items-center gap-2">
             <div className="relative h-10 w-10">
               <Image src="/logo.png" alt="Rodelas Lifestyle" fill className="object-contain" />
@@ -60,7 +60,7 @@ export function Header() {
           </Link>
         </div>
 
-        <nav className="hidden md:flex items-center gap-6">
+        <nav className="hidden lg:flex items-center gap-6">
           {navLinks.map((link) => (
             <Link key={link.href} href={link.href} className="text-lg font-bold text-muted-foreground transition-colors hover:text-foreground">
               {link.label}
@@ -69,11 +69,11 @@ export function Header() {
         </nav>
 
         <div className="flex items-center gap-4">
-          <div className="hidden md:flex items-center gap-2">
+          <div className="hidden lg:flex items-center gap-2">
             <Button variant="ghost" asChild className="text-accent-foreground bg-accent hover:bg-accent/90 text-lg font-bold">
               <Link href="https://wa.me/8801776180359" target="_blank">
                 <WhatsAppIcon className="h-5 w-5 mr-2" />
-                01776180359
+                <span className="hidden xl:inline">01776180359</span>
               </Link>
             </Button>
             <SearchDialog>
@@ -135,13 +135,13 @@ export function Header() {
                 </DropdownMenuContent>
               </DropdownMenu>
             ) : (
-              <Button asChild variant="default" size="sm" className="hidden md:flex">
+              <Button asChild variant="default" size="sm" className="hidden lg:flex">
                 <Link href="/login">Login</Link>
               </Button>
             )
           )}
 
-          <div className="md:hidden">
+          <div className="lg:hidden">
             <Sheet>
               <SheetTrigger asChild>
                 <Button variant="ghost" size="icon">

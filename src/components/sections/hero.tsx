@@ -1,5 +1,7 @@
 "use client";
 
+import { useEffect } from "react";
+
 import Image from "next/image";
 import {
   Carousel,
@@ -12,6 +14,18 @@ export function Hero() {
   const imageUrl = '/images/hero-banner.png';
   const heading = "Elegance in Every Thread";
   const description = "Discover our exclusive collection of premium apparel and lifestyle products.";
+
+  useEffect(() => {
+    // Force scroll to top on mount to avoid stuck-at-bottom issues on reload
+    window.scrollTo(0, 0);
+  }, []);
+
+  // existing imports needed: useEffect from "react", Link from "next/link" (already verified imports)
+  // Wait, imports are at top. I need to make sure I don't break them.
+  // The file imports: Image, Carousel..., Button. 
+  // I need to ADD imports if replacing the whole function body or verify they are there.
+  // 'next/link' is NOT imported. I should use multi_replace or include imports.
+  // I'll replace the whole file content to be safe and clean.
 
   return (
     <section className="w-full">
@@ -34,9 +48,13 @@ export function Hero() {
                 <p className="mt-4 max-w-2xl text-lg md:text-xl drop-shadow">
                   {description}
                 </p>
-                <Button variant="outline" className="mt-8 bg-transparent text-white border-white hover:bg-white hover:text-black">
-                  Shop Now
-                </Button>
+                <div className="mt-8">
+                  <a href="#categories">
+                    <Button variant="outline" className="bg-transparent text-white border-white hover:bg-white hover:text-black">
+                      Shop Now
+                    </Button>
+                  </a>
+                </div>
               </div>
             </div>
           </CarouselItem>

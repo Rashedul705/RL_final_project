@@ -11,9 +11,9 @@ export function ProductCatalog({ initialProducts }: { initialProducts?: Product[
   const { products: fetchedProducts, loading, error } = useProducts();
   const [categories, setCategories] = useState<{ id: string, name: string }[]>([]);
 
-  // Prefer initialProducts if available, otherwise fall back to fetchedProducts
-  const products = initialProducts || fetchedProducts;
-  const isUsingSSR = !!initialProducts;
+  // Prefer initialProducts if available and has items, otherwise fall back to fetchedProducts
+  const products = (initialProducts && initialProducts.length > 0) ? initialProducts : fetchedProducts;
+  const isUsingSSR = !!(initialProducts && initialProducts.length > 0);
 
   // If we have initial products, we are not loading (unless we want to re-fetch, but for now let's assume SSR is enough)
   const displayLoading = isUsingSSR ? false : loading;
