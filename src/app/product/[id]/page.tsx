@@ -56,21 +56,24 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
   const [relatedProducts, setRelatedProducts] = useState<any[]>([]);
 
   useEffect(() => {
-    const loadProduct = async () => {
+    const loadData = async () => {
       try {
-        // Always fetch from API
-        const allProducts = await apiClient.get<IProduct[]>('/products');
-        const found = allProducts.find((p: IProduct) =>
-          (p.id === slug) || (p.slug === slug) || (!p.slug && p.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '') === slug)
-        );
+        setIsLoading(true);
+        // 1. Fetch the specific product
+        const productData = await apiClient.get<IProduct>(`/products/${slug}`);
 
-        if (found) {
-          setProduct(found);
-          // Filter related products from the same API list
-          const related = allProducts
-            .filter((p: IProduct) => p.category === found.category && (p.id !== found.id && p._id !== found._id))
-            .slice(0, 4);
-          setRelatedProducts(related);
+        if (productData) {
+          setProduct(productData);
+
+          // 2. Fetch related products separately
+          if (productData.category) {
+            try {
+              const related = await apiClient.get<IProduct[]>(`/products?category=${encodeURIComponent(productData.category)}&limit=4&exclude=${slug}`);
+              setRelatedProducts(related || []);
+            } catch (relatedError) {
+              console.warn("Failed to fetch related products", relatedError);
+            }
+          }
         }
       } catch (error) {
         console.error("Failed to fetch product from API", error);
@@ -79,7 +82,9 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
       }
     };
 
-    loadProduct();
+    if (slug) {
+      loadData();
+    }
   }, [slug]);
 
   useEffect(() => {

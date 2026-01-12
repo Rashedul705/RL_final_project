@@ -17,9 +17,38 @@ const createProductSchema = z.object({
     sizeGuide: z.string().optional(),
 });
 
-export async function GET() {
+export async function GET(request: NextRequest) {
     try {
-        const products = await ProductService.getProducts();
+        const searchParams = request.nextUrl.searchParams;
+        const category = searchParams.get('category');
+        const limit = searchParams.get('limit') ? parseInt(searchParams.get('limit')!) : undefined;
+        const exclude = searchParams.get('exclude');
+
+        const filter: any = {};
+        if (category) {
+            filter.category = category;
+        }
+        if (exclude) {
+            // Need to handle exclude logic. 
+            // Since ProductService.getProducts takes a direct mongoose filter,
+            // we can add {_id: {$ne: exclude}} or {id: {$ne: exclude}}
+            // But let's verify ProductService implementation first.
+            // For now, let's just pass the category filter and handle limit/exclude in the service or here.
+        }
+
+        // Ideally, we should refactor ProductService.getProducts to accept an options object
+        // But for minimal disturbance, let's just use the filter for category.
+
+        let products = await ProductService.getProducts(filter);
+
+        if (exclude) {
+            products = products.filter((p: any) => p.id !== exclude && p.slug !== exclude && p._id.toString() !== exclude);
+        }
+
+        if (limit && limit > 0) {
+            products = products.slice(0, limit);
+        }
+
         return ApiResponse.success(products);
     } catch (error) {
         console.error('Error fetching products:', error);

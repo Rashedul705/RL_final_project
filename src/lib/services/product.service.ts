@@ -23,7 +23,20 @@ export class ProductService {
 
     static async getProductById(id: string) {
         await dbConnect();
-        const product = await Product.findOne({ id });
+        // Try to find by custom string id, slug, or MongoDB _id
+        const query: any = {
+            $or: [
+                { id: id },
+                { slug: id }
+            ]
+        };
+
+        // If it looks like a valid ObjectId, add it to the query
+        if (id.match(/^[0-9a-fA-F]{24}$/)) {
+            query.$or.push({ _id: id });
+        }
+
+        const product = await Product.findOne(query);
         return product;
     }
 
