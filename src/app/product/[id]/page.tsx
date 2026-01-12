@@ -308,7 +308,7 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
             <div className="py-12">
               <h2 className="text-2xl font-bold mb-4">Product Description</h2>
               <div className="prose prose-sm max-w-none text-muted-foreground">
-                <p>{product.description}</p>
+                <p className="whitespace-pre-wrap">{product.description}</p>
               </div>
             </div>
           </div>
