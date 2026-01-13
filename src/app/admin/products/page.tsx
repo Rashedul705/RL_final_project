@@ -30,6 +30,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { MoreHorizontal, Loader2 } from 'lucide-react';
@@ -48,6 +58,7 @@ export default function AdminProductsPage() {
   const [categories, setCategories] = useState<{ id: string, name: string }[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedProductIds, setSelectedProductIds] = useState<string[]>([]);
+  const [deleteProduct, setDeleteProduct] = useState<string | null>(null);
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [stockFilter, setStockFilter] = useState<string>('all');
   const { toast } = useToast();
@@ -111,14 +122,16 @@ export default function AdminProductsPage() {
     }
   };
 
-  const handleDelete = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this product?')) return;
+  const confirmDelete = async () => {
+    if (!deleteProduct) return;
     try {
-      await apiClient.delete(`/products/${id}`);
+      await apiClient.delete(`/products/${deleteProduct}`);
       toast({ title: 'Success', description: 'Product deleted' });
       fetchProducts();
     } catch (error) {
       toast({ variant: 'destructive', title: 'Error', description: 'Failed to delete' });
+    } finally {
+      setDeleteProduct(null);
     }
   };
 
@@ -305,7 +318,7 @@ export default function AdminProductsPage() {
                             <DropdownMenuItem asChild>
                               <Link href={`/admin/products/edit/${product.id}`}>Edit</Link>
                             </DropdownMenuItem>
-                            <DropdownMenuItem className="text-red-500" onClick={() => handleDelete(product.id)}>
+                            <DropdownMenuItem className="text-red-500" onSelect={() => setDeleteProduct(product.id)}>
                               Delete
                             </DropdownMenuItem>
                           </DropdownMenuContent>
@@ -318,6 +331,23 @@ export default function AdminProductsPage() {
           </div>
         </CardContent>
       </Card>
+
+      <AlertDialog open={!!deleteProduct} onOpenChange={(open) => !open && setDeleteProduct(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete the product.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDelete} className="bg-red-600 hover:bg-red-700">
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

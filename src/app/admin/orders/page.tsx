@@ -61,6 +61,34 @@ import type { IOrder } from '@/lib/models'; // Use Interface
 // Update type definition to handle undefined shippingCharge for legacy orders
 type Order = IOrder & { shippingCharge?: number };
 
+const ProductLink = ({ productId, name, quantity }: { productId: string, name: string, quantity: number }) => {
+  const [slug, setSlug] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchSlug = async () => {
+      try {
+        const product = await apiClient.get<any>(`/products/${productId}`);
+        if (product && product.slug) {
+          setSlug(product.slug);
+        }
+      } catch (e) {
+        // Fallback or silence
+      }
+    };
+    if (productId) fetchSlug();
+  }, [productId]);
+
+  if (!slug) {
+    return <span>{name} (x{quantity})</span>;
+  }
+
+  return (
+    <Link href={`/product/${slug}`} className="hover:underline" target="_blank" rel="noopener noreferrer">
+      <span>{name} (x{quantity})</span>
+    </Link>
+  );
+};
+
 export default function AdminOrdersPage() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
@@ -388,13 +416,11 @@ export default function AdminOrdersPage() {
                 <div className="space-y-2">
                   <h4 className="font-semibold">Ordered Items</h4>
                   <ul className="space-y-2 text-sm">
+
                     {selectedOrder.products.map((product, index) => {
-                      const productSlug = product.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
                       return (
                         <li key={index} className="flex justify-between items-center">
-                          <Link href={`/product/${productSlug}`} className="hover:underline" target="_blank" rel="noopener noreferrer">
-                            <span>{product.name} (x{product.quantity})</span>
-                          </Link>
+                          <ProductLink productId={product.productId} name={product.name} quantity={product.quantity} />
                           <span className="font-medium">BDT {(product.price * product.quantity).toLocaleString()}</span>
                         </li>
                       )
