@@ -1,39 +1,43 @@
 # Netlify Deployment Guide
 
-Your site was likely seeing a `500 Internal Server Error` because the database connection code was crashing immediately when environment variables were missing.
+✅ **Project Build Status: PASSED**
 
-**We have fixed the code** to be more resilient, but you **MUST** still configure your Netlify environment for the live site to actually work.
+Your project is ready for deployment! We have verified that the project builds successfully locally.
 
-## 1. Required Environment Variables
+To deploy to Netlify, follow these steps:
+
+## 1. Environment Variables (CRITICAL)
+
+The most common cause of deployment failure or runtime errors (500 Internal Server Error) is missing environment variables.
 
 Go to your Netlify Dashboard:
 **Site configuration > Environment variables**
 
-Add the following variables (copy values from your local `.env` file):
+Add the following variables exactly as they appear in your local `.env` file:
 
-| Key | Description |
+| Key | Value Description |
 | :--- | :--- |
-| `MONGODB_URI` | **CRITICAL**. Your MongoDB connection string. |
-| `NEXT_PUBLIC_API_URL` | Set this to your live site URL (e.g., `https://your-site-name.netlify.app`) or leave as `/` if using relative paths. |
-| `IMGBB_API_KEY` | Required for image uploads. |
-| `EMAIL_USER` | Gmail address for sending emails. |
-| `EMAIL_PASS` | Gmail App Password (not your login password). |
+| `MONGODB_URI` | **CRITICAL**. Copy your full MongoDB connection string. |
+| `NEXT_PUBLIC_API_URL` | Set to your Netlify site URL (e.g., `https://your-site.netlify.app`) or `/` if connecting to same-origin APIs. Do NOT use localhost. |
+| `IMGBB_API_KEY` | Required for image uploads. Copy from `.env`. |
+| `EMAIL_USER` | Gmail address for notifications. |
+| `EMAIL_PASS` | Gmail App Password. |
 | `EMAIL_HOST` | `smtp.gmail.com` |
 | `EMAIL_PORT` | `587` |
 | `EMAIL_SECURE` | `false` |
 
-## 2. Verify Build Settings
+## 2. Deploy Configuration
 
-Ensure your **Build settings** in Netlify are correct:
+We have configured `netlify.toml` for you. Netlify should automatically detect the settings:
 
-- **Base directory**: `.` (root)
 - **Build command**: `npm run build`
 - **Publish directory**: `.next`
 
-## 3. Redeploy
+## 3. Deployment Steps
 
-Once you added the variables:
-1. Go to the **Deploys** tab.
-2. Click **Trigger deploy** > **Clear cache and deploy site**.
+1. Push your latest code to GitHub.
+2. Link your repository in Netlify (if not already linked).
+3. **Trigger a deploy**.
+4. If you see a "Page Not Found" or 404 on assets, ensure your Build Settings in Netlify match the above.
 
-This should resolve the 500 error and make your site fully functional!
+> **Note**: If you encounter build errors related to "PageNotFoundError" or caching, try "Clear cache and deploy site" in the Netlify Deploys tab.
