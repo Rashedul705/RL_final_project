@@ -18,7 +18,7 @@ Add the following variables exactly as they appear in your local `.env` file:
 | Key | Value Description |
 | :--- | :--- |
 | `MONGODB_URI` | **CRITICAL**. Copy your full MongoDB connection string. |
-| `NEXT_PUBLIC_API_URL` | Set to your Netlify site URL (e.g., `https://your-site.netlify.app`) or `/` if connecting to same-origin APIs. Do NOT use localhost. |
+| `NEXT_PUBLIC_APP_URL` | Set to your Netlify site URL (e.g., `https://your-site.netlify.app`). This is used for email link generation. |
 | `IMGBB_API_KEY` | Required for image uploads. Copy from `.env`. |
 | `EMAIL_USER` | Gmail address for notifications. |
 | `EMAIL_PASS` | Gmail App Password. |

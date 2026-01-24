@@ -1,16 +1,45 @@
 'use client';
 
-import React, { Suspense } from 'react';
+import React, { Suspense, useEffect, useState } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { CheckCircle } from 'lucide-react';
 import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
+import { apiClient } from '@/lib/api-client';
 
 function ThankYouContent() {
     const searchParams = useSearchParams();
     const router = useRouter();
     const orderId = searchParams.get('orderId');
+    const [order, setOrder] = useState<any>(null);
+
+    useEffect(() => {
+        if (orderId) {
+            const fetchOrder = async () => {
+                try {
+                    const orderData = await apiClient.get<any>(`/orders/${orderId}`);
+                    if (orderData) {
+                        setOrder(orderData);
+
+                        // Facebook Pixel Purchase
+                        // @ts-ignore
+                        if (typeof window !== 'undefined' && window.fbq) {
+                            // @ts-ignore
+                            window.fbq('track', 'Purchase', {
+                                value: orderData.totalAmount || orderData.total, // Adjust field name based on API response
+                                currency: 'BDT',
+                                order_id: orderId, // unique order ID
+                            });
+                        }
+                    }
+                } catch (error) {
+                    console.error('Failed to fetch order for pixel tracking', error);
+                }
+            };
+            fetchOrder();
+        }
+    }, [orderId]);
 
     return (
         <div className="flex flex-col items-center justify-center py-16 md:py-24 text-center px-4">

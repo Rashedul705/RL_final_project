@@ -87,6 +87,23 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
     }
   }, [slug]);
 
+  // Facebook Pixel ViewContent
+  useEffect(() => {
+    if (product) {
+      // @ts-ignore
+      if (typeof window !== 'undefined' && window.fbq) {
+        // @ts-ignore
+        window.fbq('track', 'ViewContent', {
+          content_name: product.name,
+          content_ids: [product._id || product.id],
+          content_type: 'product',
+          value: product.price,
+          currency: 'BDT',
+        });
+      }
+    }
+  }, [product]);
+
   useEffect(() => {
     if (!api) {
       return;

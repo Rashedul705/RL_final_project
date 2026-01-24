@@ -22,6 +22,20 @@ export function AddToCartButton({ product, quantity = 1, redirectToCheckout = fa
   const handleClick = () => {
     if (isOutOfStock) return;
     addToCart(product, quantity);
+
+    // Facebook Pixel AddToCart
+    // @ts-ignore
+    if (typeof window !== 'undefined' && window.fbq) {
+      // @ts-ignore
+      window.fbq('track', 'AddToCart', {
+        content_name: product.name,
+        content_id: product.id,
+        content_type: 'product',
+        value: product.price * quantity,
+        currency: 'BDT',
+      });
+    }
+
     if (redirectToCheckout) {
       router.push('/checkout');
     }
