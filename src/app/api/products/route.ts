@@ -1,3 +1,4 @@
+export const runtime = 'nodejs';
 import { NextRequest } from 'next/server';
 import { ProductService } from '@/lib/services/product.service';
 import { ApiResponse } from '@/lib/api-response';

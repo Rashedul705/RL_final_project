@@ -2,6 +2,8 @@ import { Product, IProduct } from '@/lib/models';
 import dbConnect from '@/lib/db';
 // import { FilterQuery } from 'mongoose'; // causing issues
 
+export const runtime = 'nodejs';
+
 export class ProductService {
     static async getProducts(filter: any = {}) {
         await dbConnect();
