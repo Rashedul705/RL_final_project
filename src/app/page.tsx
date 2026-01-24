@@ -19,10 +19,10 @@ export default async function Home() {
   let products: IProduct[] = [];
   try {
     const rawProducts = await ProductService.getProducts();
-    // Serialize to plain JSON to avoid "Only plain objects can be passed to Client Components" error
-    products = JSON.parse(JSON.stringify(rawProducts));
+    products = rawProducts as unknown as IProduct[];
   } catch (error) {
     console.error("Failed to fetch initial products", error);
+    // Products remains [] so the page will load with empty catalog instead of 500
   }
 
   return (

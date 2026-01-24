@@ -7,8 +7,11 @@ export const runtime = 'nodejs';
 export class ProductService {
     static async getProducts(filter: any = {}) {
         await dbConnect();
-        const products = await Product.find(filter).sort({ createdAt: -1 });
-        return products;
+        const products = await Product.find(filter).sort({ createdAt: -1 }).lean();
+        // Convert _id to string manually if needed, or rely on frontend to handle both.
+        // Mongoose lean returns _id as ObjectId, need to make sure we serialize it safely or rely on nextjs to not choke.
+        // Actually, best is to map it.
+        return JSON.parse(JSON.stringify(products));
     }
 
     static async createProduct(data: Partial<IProduct>) {
