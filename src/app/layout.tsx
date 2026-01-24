@@ -1,3 +1,4 @@
+export const runtime = 'nodejs';
 import type { Metadata } from "next";
 import Script from "next/script";
 import { Suspense } from 'react';

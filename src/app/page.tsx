@@ -11,6 +11,7 @@ import { ProductService } from "@/lib/services/product.service";
 import { IProduct } from "@/lib/models";
 // import type { Product } from "@/lib/data"; // Use IProduct from models which matches what ProductService returns
 
+export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 export default async function Home() {
