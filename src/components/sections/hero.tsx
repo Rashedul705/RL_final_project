@@ -50,7 +50,7 @@ export function Hero() {
                 </p>
                 <div className="mt-8">
                   <a href="#categories">
-                    <Button variant="outline" className="bg-transparent text-white border-white hover:bg-white hover:text-black">
+                    <Button variant="outline" className="bg-transparent text-white border-[#FE45A0] hover:bg-[#FE45A0] hover:text-white hover:border-[#FE45A0] rounded-none px-8 py-6 text-lg tracking-wider">
                       Shop Now
                     </Button>
                   </a>

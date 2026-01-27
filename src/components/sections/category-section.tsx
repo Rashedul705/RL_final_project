@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Product, Category } from "@/lib/data";
 import { ProductCard } from "./product-card";
 import { Button } from "@/components/ui/button";
+import Link from "next/link";
 
 interface CategorySectionProps {
     category: Category;
@@ -18,7 +19,11 @@ export function CategorySection({ category, products }: CategorySectionProps) {
 
     return (
         <section id={category.id} className="scroll-mt-20">
-            <h2 className="text-3xl md:text-4xl mb-8 text-center">{category.name}</h2>
+            <h2 className="text-3xl md:text-4xl mb-8 text-center hover:text-primary transition-colors">
+                <Link href={`/category/${category.id}`}>
+                    {category.name}
+                </Link>
+            </h2>
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 md:gap-4">
                 {displayedProducts.map((product) => (
                     <ProductCard key={product.id} product={product} />
@@ -26,7 +31,7 @@ export function CategorySection({ category, products }: CategorySectionProps) {
             </div>
             {hasMore && !showAll && (
                 <div className="mt-8 flex justify-center">
-                    <Button onClick={() => setShowAll(true)} variant="outline" size="lg">
+                    <Button onClick={() => setShowAll(true)} size="lg">
                         Load More
                     </Button>
                 </div>

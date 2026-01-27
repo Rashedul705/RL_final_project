@@ -48,12 +48,12 @@ export function CartSheet({ children }: { children?: React.ReactNode }) {
                   <span>BDT {subtotal.toLocaleString()}</span>
                 </div>
                 <div className="flex gap-2">
-                    <Button variant="outline" className="w-full" onClick={clearCart}>
-                        Clear Cart
-                    </Button>
-                    <Button asChild className="w-full bg-accent hover:bg-accent/90 text-accent-foreground">
-                        <Link href="/checkout">Checkout</Link>
-                    </Button>
+                  <Button variant="outline" className="w-full" onClick={clearCart}>
+                    Clear Cart
+                  </Button>
+                  <Button asChild className="w-full bg-primary hover:bg-primary/90 text-primary-foreground">
+                    <Link href="/checkout">Checkout</Link>
+                  </Button>
                 </div>
               </div>
             </SheetFooter>
@@ -70,4 +70,3 @@ export function CartSheet({ children }: { children?: React.ReactNode }) {
   );
 }
 
-    

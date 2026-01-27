@@ -3,17 +3,17 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 const trustPoints = [
   {
-    icon: <Truck className="h-8 w-8 text-accent" />,
+    icon: <Truck className="h-8 w-8 text-primary" />,
     title: "Shipping & Returns",
     description: "Fast shipping and easy returns on all orders.",
   },
   {
-    icon: <ShieldCheck className="h-8 w-8 text-accent" />,
+    icon: <ShieldCheck className="h-8 w-8 text-primary" />,
     title: "Shop with Confidence",
     description: "Your security and privacy are our priority.",
   },
   {
-    icon: <Banknote className="h-8 w-8 text-accent" />,
+    icon: <Banknote className="h-8 w-8 text-primary" />,
     title: "COD Available",
     description: "Pay with cash upon delivery, nationwide.",
   },

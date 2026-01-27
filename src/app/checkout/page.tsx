@@ -331,7 +331,7 @@ export default function CheckoutPage() {
                                                         <Button
                                                             variant="outline"
                                                             size="icon"
-                                                            className="h-6 w-6 text-red-500 hover:bg-red-500 hover:text-white"
+                                                            className="h-6 w-6 text-primary hover:bg-primary hover:text-primary-foreground"
                                                             onClick={() => updateQuantity(item.product.id, item.quantity - 1)}
                                                         >
                                                             <Minus className="h-3 w-3" />
@@ -350,7 +350,7 @@ export default function CheckoutPage() {
                                                         <Button
                                                             variant="outline"
                                                             size="icon"
-                                                            className="h-6 w-6 text-[#00846E] hover:bg-[#00846E] hover:text-white"
+                                                            className="h-6 w-6 text-primary hover:bg-primary hover:text-primary-foreground"
                                                             onClick={() => updateQuantity(item.product.id, item.quantity + 1)}
                                                             disabled={item.product.stock !== undefined && item.quantity >= item.product.stock}
                                                         >
@@ -391,7 +391,7 @@ export default function CheckoutPage() {
                                 <CardFooter>
                                     <Button
                                         type="button"
-                                        className="w-full bg-accent hover:bg-accent/90 text-accent-foreground"
+                                        className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
                                         onClick={(e) => {
                                             form.handleSubmit(onSubmit)(e);
                                         }}
