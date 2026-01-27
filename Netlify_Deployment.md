@@ -1,8 +1,8 @@
 # Netlify Deployment Guide
 
-✅ **Project Build Status: PASSED**
+✅ **Project Build Status: PASSED** (Verified locally)
 
-Your project is ready for deployment! We have verified that the project builds successfully locally.
+Your project is ready for deployment!
 
 To deploy to Netlify, follow these steps:
 
@@ -19,6 +19,7 @@ Add the following variables exactly as they appear in your local `.env` file:
 | :--- | :--- |
 | `MONGODB_URI` | **CRITICAL**. Copy your full MongoDB connection string. |
 | `NEXT_PUBLIC_APP_URL` | Set to your Netlify site URL (e.g., `https://your-site.netlify.app`). This is used for email link generation. |
+| `NEXT_PUBLIC_API_URL` | Set to your Netlify site URL (e.g., `https://your-site.netlify.app`). |
 | `IMGBB_API_KEY` | Required for image uploads. Copy from `.env`. |
 | `EMAIL_USER` | Gmail address for notifications. |
 | `EMAIL_PASS` | Gmail App Password. |
