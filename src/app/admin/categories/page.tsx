@@ -75,6 +75,7 @@ export default function AdminCategoriesPage() {
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
   const [categoryToDelete, setCategoryToDelete] = useState<Category | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isDeleting, setIsDeleting] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -160,24 +161,17 @@ export default function AdminCategoriesPage() {
   };
 
   const handleDeleteCategory = async (categoryId: string) => {
-    // Prevent focus trap by moving focus to a stable element
-    document.getElementById('add-category-btn')?.focus();
-
-    // Close the dialog immediately
-    setCategoryToDelete(null);
-
-    // Wait for the dialog to fully close
-    await new Promise(resolve => setTimeout(resolve, 500));
-
+    setIsDeleting(true);
     try {
       await apiClient.delete(`/categories/${categoryId}`);
       setCategories(prev => prev.filter(c => c.id !== categoryId));
       toast({ variant: 'destructive', title: 'Deleted', description: 'Category has been deleted.' });
+      setCategoryToDelete(null); // Close dialog on success
     } catch (error: any) {
       console.error("Delete failed", error);
       toast({ variant: 'destructive', title: 'Error', description: 'Failed to delete category.' });
-      // Refresh to ensure UI is in sync
-      fetchCategories();
+    } finally {
+      setIsDeleting(false);
     }
   }
 
@@ -348,9 +342,20 @@ export default function AdminCategoriesPage() {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel onClick={() => setCategoryToDelete(null)}>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={() => categoryToDelete && handleDeleteCategory(categoryToDelete.id)}>
-              Yes, delete
-            </AlertDialogAction>
+            <Button
+              variant="destructive"
+              onClick={() => categoryToDelete && handleDeleteCategory(categoryToDelete.id)}
+              disabled={isDeleting}
+            >
+              {isDeleting ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Deleting...
+                </>
+              ) : (
+                'Yes, delete'
+              )}
+            </Button>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

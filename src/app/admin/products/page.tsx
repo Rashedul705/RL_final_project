@@ -61,6 +61,7 @@ export default function AdminProductsPage() {
   const [deleteProduct, setDeleteProduct] = useState<string | null>(null);
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [stockFilter, setStockFilter] = useState<string>('all');
+  const [isDeleting, setIsDeleting] = useState(false);
   const { toast } = useToast();
 
   const fetchProducts = async () => {
@@ -124,14 +125,16 @@ export default function AdminProductsPage() {
 
   const confirmDelete = async () => {
     if (!deleteProduct) return;
+    setIsDeleting(true);
     try {
       await apiClient.delete(`/products/${deleteProduct}`);
       toast({ title: 'Success', description: 'Product deleted' });
       fetchProducts();
+      setDeleteProduct(null); // Close dialog on success
     } catch (error) {
       toast({ variant: 'destructive', title: 'Error', description: 'Failed to delete' });
     } finally {
-      setDeleteProduct(null);
+      setIsDeleting(false);
     }
   };
 
@@ -342,9 +345,20 @@ export default function AdminProductsPage() {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={confirmDelete} className="bg-red-600 hover:bg-red-700">
-              Delete
-            </AlertDialogAction>
+            <Button
+              variant="destructive"
+              onClick={confirmDelete}
+              disabled={isDeleting}
+            >
+              {isDeleting ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Deleting...
+                </>
+              ) : (
+                'Delete'
+              )}
+            </Button>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

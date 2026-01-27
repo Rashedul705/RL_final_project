@@ -96,6 +96,7 @@ export default function AdminOrdersPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [orderToDelete, setOrderToDelete] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
   const { toast } = useToast();
 
   const fetchOrders = async () => {
@@ -151,13 +152,16 @@ export default function AdminOrdersPage() {
   };
 
   const handleDeleteOrder = async (orderId: string) => {
+    setIsDeleting(true);
     try {
       await apiClient.delete(`/orders/${orderId}`);
       toast({ title: 'Success', description: 'Order deleted' });
       setOrders(current => current.filter(o => o.id !== orderId));
-      setOrderToDelete(null);
+      setOrderToDelete(null); // Close dialog on success
     } catch (error) {
       toast({ variant: 'destructive', title: 'Error', description: 'Failed to delete order' });
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -490,10 +494,21 @@ export default function AdminOrdersPage() {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={() => orderToDelete && handleDeleteOrder(orderToDelete)}>
-              Yes, delete order
-            </AlertDialogAction>
+            <AlertDialogCancel onClick={() => setOrderToDelete(null)}>Cancel</AlertDialogCancel>
+            <Button
+              variant="destructive"
+              onClick={() => orderToDelete && handleDeleteOrder(orderToDelete)}
+              disabled={isDeleting}
+            >
+              {isDeleting ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Deleting...
+                </>
+              ) : (
+                'Yes, delete order'
+              )}
+            </Button>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

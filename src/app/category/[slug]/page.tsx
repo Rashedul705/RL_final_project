@@ -29,6 +29,13 @@ export default async function CategoryPage({ params }: PageProps) {
     const rawProducts = await ProductService.getProducts({ category: slug });
     const products: IProduct[] = JSON.parse(JSON.stringify(rawProducts));
 
+    // Sort: In-stock first
+    products.sort((a, b) => {
+        const aStock = a.stock > 0 ? 1 : 0;
+        const bStock = b.stock > 0 ? 1 : 0;
+        return bStock - aStock; // Descending order of availability (1 before 0)
+    });
+
     return (
         <div className="flex flex-col min-h-screen">
             <Header />
