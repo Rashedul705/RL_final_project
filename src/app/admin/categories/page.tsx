@@ -251,7 +251,17 @@ export default function AdminCategoriesPage() {
                           )}
                         </TableCell>
                         <TableCell className="font-medium">{category.name}</TableCell>
-                        <TableCell>{category.id}</TableCell>
+                        <TableCell>
+                          <a
+                            href={`/category/${category.id}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-blue-600 hover:underline flex items-center gap-1"
+                          >
+                            {category.id}
+                            <Search className="h-3 w-3" />
+                          </a>
+                        </TableCell>
                         <TableCell>
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>

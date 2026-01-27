@@ -208,7 +208,7 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
 
               {product.size && (
                 <div className="mt-4">
-                  <Badge variant="secondary" className="text-base px-3 py-1">
+                  <Badge className="text-base px-3 py-1 font-normal bg-[#ff3399] text-white hover:bg-[#ff3399]/90">
                     Size: {product.size}
                   </Badge>
                 </div>
@@ -277,7 +277,7 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
                       product={product}
                       quantity={quantity}
                       variant="outline"
-                      className="w-full flex-1 text-lg py-6"
+                      className="w-full flex-1 text-lg py-6 border-primary text-primary hover:bg-primary hover:text-primary-foreground"
                     >
                       Add to Cart
                     </AddToCartButton>
@@ -285,7 +285,7 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
                       product={product}
                       quantity={quantity}
                       redirectToCheckout
-                      className="w-full flex-1 bg-accent hover:bg-accent/90 text-accent-foreground text-lg py-6"
+                      className="w-full flex-1 bg-primary hover:bg-primary/90 text-primary-foreground text-lg py-6"
                     >
                       Order Now
                     </AddToCartButton>

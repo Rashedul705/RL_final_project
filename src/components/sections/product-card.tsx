@@ -33,15 +33,15 @@ export function ProductCard({ product }: ProductCardProps) {
         </Link>
       </CardHeader>
       <CardContent className="p-4 flex-1">
-        <CardTitle className="text-lg font-bold leading-tight tracking-normal">
-          <Link href={`/product/${productSlug}`} className="hover:underline">
+        <CardTitle className="text-lg font-bold leading-tight tracking-normal line-clamp-2 min-h-[3rem]">
+          <Link href={`/product/${productSlug}`} className="hover:underline" title={product.name}>
             {product.name}
           </Link>
         </CardTitle>
         <p className="mt-2 text-lg font-semibold text-primary">BDT {product.price.toLocaleString()}</p>
         {product.size && (
           <div className="mt-2">
-            <Badge variant="secondary" className="font-normal text-xs">
+            <Badge className="font-normal text-xs bg-[#ff3399] text-white hover:bg-[#ff3399]/90">
               Size: {product.size}
             </Badge>
           </div>
@@ -49,10 +49,10 @@ export function ProductCard({ product }: ProductCardProps) {
       </CardContent>
 
       <CardFooter className="p-4 pt-0 flex flex-col sm:flex-row gap-2 justify-center">
-        <AddToCartButton product={product} variant="outline" className="w-full flex-1">
+        <AddToCartButton product={product} variant="outline" className="w-full flex-1 border-primary text-primary hover:bg-primary hover:text-primary-foreground">
           Add to Cart
         </AddToCartButton>
-        <AddToCartButton product={product} redirectToCheckout className="w-full flex-1 bg-accent hover:bg-accent/90 text-accent-foreground">
+        <AddToCartButton product={product} redirectToCheckout className="w-full flex-1">
           Order Now
         </AddToCartButton>
       </CardFooter>

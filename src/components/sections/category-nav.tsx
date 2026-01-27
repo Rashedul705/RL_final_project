@@ -27,7 +27,7 @@ export function CategoryNav() {
       <div className="container">
         <div className="flex flex-wrap items-center justify-center gap-4">
           {categories.map((category) => (
-            <Button asChild key={category.id} variant="outline" size="lg" className="text-lg">
+            <Button asChild key={category.id} variant="outline" size="lg" className="text-lg border-primary text-primary hover:bg-primary hover:text-primary-foreground">
               <Link href={`#${category.id}`}>{category.name}</Link>
             </Button>
           ))}
