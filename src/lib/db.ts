@@ -26,11 +26,12 @@ if (!cached) {
   cached = global.mongoose = { conn: null, promise: null };
 }
 
+export default dbConnect;
+
 async function dbConnect() {
-  if (!MONGODB_URI) {
-    throw new Error(
-      'Please define the MONGODB_URI environment variable inside .env.local'
-    );
+  if (!process.env.MONGODB_URI) {
+    console.error('MONGODB_URI is not defined');
+    return null;
   }
 
   if (cached.conn) {
@@ -42,7 +43,7 @@ async function dbConnect() {
       bufferCommands: false,
     };
 
-    cached.promise = mongoose.connect(MONGODB_URI!, opts).then((mongoose) => {
+    cached.promise = mongoose.connect(process.env.MONGODB_URI!, opts).then((mongoose) => {
       return mongoose.connection;
     });
   }
@@ -51,10 +52,9 @@ async function dbConnect() {
     cached.conn = await cached.promise;
   } catch (e) {
     cached.promise = null;
-    throw e;
+    console.error('MongoDB connection error:', e);
+    return null;
   }
 
   return cached.conn;
 }
-
-export default dbConnect;
