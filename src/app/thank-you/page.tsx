@@ -7,6 +7,7 @@ import { CheckCircle } from 'lucide-react';
 import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
 import { apiClient } from '@/lib/api-client';
+import type { IOrder } from '@/lib/models';
 
 function ThankYouContent() {
     const searchParams = useSearchParams();
@@ -18,20 +19,59 @@ function ThankYouContent() {
         if (orderId) {
             const fetchOrder = async () => {
                 try {
-                    const orderData = await apiClient.get<any>(`/orders/${orderId}`);
+                    const orderData = await apiClient.get<IOrder>(`/orders/${orderId}`);
                     if (orderData) {
                         setOrder(orderData);
 
-                        // Facebook Pixel Purchase
+                        // Helper to split name
+                        const nameParts = (orderData.customer || '').split(' ');
+                        const firstName = nameParts[0] || '';
+                        const lastName = nameParts.slice(1).join(' ') || '';
+
+                        // Google Analytics 4 (GA4) Purchase
                         // @ts-ignore
-                        if (typeof window !== 'undefined' && window.fbq) {
-                            // @ts-ignore
-                            window.fbq('track', 'Purchase', {
-                                value: orderData.totalAmount || orderData.total, // Adjust field name based on API response
-                                currency: 'BDT',
-                                order_id: orderId, // unique order ID
-                            });
-                        }
+                        window.dataLayer = window.dataLayer || [];
+                        // @ts-ignore
+                        window.dataLayer.push({ ecommerce: null }); // Clear previous
+                        // @ts-ignore
+                        window.dataLayer.push({
+                            event: "purchase",
+                            ecommerce: {
+                                transaction_id: orderData.id,
+                                value: Number(orderData.amount),
+                                tax: 0,
+                                shipping: orderData.shippingCharge || 0,
+                                currency: "BDT",
+                                coupon: "",
+                                items: orderData.products.map((p: any) => ({
+                                    item_id: p.productId,
+                                    item_name: p.name,
+                                    currency: "BDT",
+                                    price: p.price,
+                                    quantity: p.quantity,
+                                    item_category: "" // Category not directly in order product, leaving empty or could fetch if needed
+                                }))
+                            },
+                            // Custom user data structure as requested
+                            orderData: {
+                                customer: {
+                                    billing: {
+                                        email: orderData.email || '',
+                                        phone: orderData.phone || '',
+                                        first_name: firstName,
+                                        last_name: lastName,
+                                        city: "", // Address in model is a single string, so specific city is unavailable without parsing
+                                        state: "",
+                                        postal_code: "",
+                                        country: "Bangladesh",
+                                        address: orderData.address
+                                    }
+                                }
+                            }
+                        });
+
+
+
                     }
                 } catch (error) {
                     console.error('Failed to fetch order for pixel tracking', error);

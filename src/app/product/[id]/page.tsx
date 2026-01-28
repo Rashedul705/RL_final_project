@@ -104,6 +104,33 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
     }
   }, [product]);
 
+  // Google Analytics 4 (GA4) View Item
+  useEffect(() => {
+    if (product) {
+      // @ts-ignore
+      window.dataLayer = window.dataLayer || [];
+      // @ts-ignore
+      window.dataLayer.push({ ecommerce: null }); // Clear the previous ecommerce object
+      // @ts-ignore
+      window.dataLayer.push({
+        event: "view_item",
+        ecommerce: {
+          currency: "BDT",
+          value: product.price,
+          items: [
+            {
+              item_id: product.id || product._id,
+              item_name: product.name,
+              price: product.price,
+              item_category: product.category,
+              quantity: 1
+            }
+          ]
+        }
+      });
+    }
+  }, [product]);
+
   useEffect(() => {
     if (!api) {
       return;

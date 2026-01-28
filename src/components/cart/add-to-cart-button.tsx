@@ -36,6 +36,29 @@ export function AddToCartButton({ product, quantity = 1, redirectToCheckout = fa
       });
     }
 
+    // Google Analytics 4 (GA4) AddToCart
+    // @ts-ignore
+    window.dataLayer = window.dataLayer || [];
+    // @ts-ignore
+    window.dataLayer.push({ ecommerce: null }); // Clear previous
+    // @ts-ignore
+    window.dataLayer.push({
+      event: "add_to_cart",
+      ecommerce: {
+        currency: "BDT",
+        value: product.price * quantity,
+        items: [
+          {
+            item_id: product.id,
+            item_name: product.name,
+            price: product.price,
+            item_category: product.category,
+            quantity: quantity
+          }
+        ]
+      }
+    });
+
     if (redirectToCheckout) {
       router.push('/checkout');
     }

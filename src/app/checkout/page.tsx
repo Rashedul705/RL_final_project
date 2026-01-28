@@ -26,7 +26,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { useCart } from '@/components/cart/cart-context';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
 import { useToast } from '@/hooks/use-toast';
@@ -119,6 +119,37 @@ export default function CheckoutPage() {
             setShippingCost(0);
         }
     }, [watchedCity, rates]);
+
+    // Google Analytics 4 (GA4) Begin Checkout
+    const beginCheckoutFired = useRef(false);
+    useEffect(() => {
+        if (cart.length > 0 && !beginCheckoutFired.current) {
+            beginCheckoutFired.current = true;
+
+            // Calculate value for the event
+            const cartValue = cart.reduce((acc, item) => acc + item.product.price * item.quantity, 0);
+
+            // @ts-ignore
+            window.dataLayer = window.dataLayer || [];
+            // @ts-ignore
+            window.dataLayer.push({ ecommerce: null }); // Clear previous
+            // @ts-ignore
+            window.dataLayer.push({
+                event: "begin_checkout",
+                ecommerce: {
+                    currency: "BDT",
+                    value: cartValue,
+                    items: cart.map(item => ({
+                        item_id: item.product.id,
+                        item_name: item.product.name,
+                        price: item.product.price,
+                        item_category: item.product.category,
+                        quantity: item.quantity
+                    }))
+                }
+            });
+        }
+    }, [cart]);
 
 
 
