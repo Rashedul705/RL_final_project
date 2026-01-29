@@ -1,5 +1,6 @@
+export const runtime = 'nodejs';
 import { NextRequest } from "next/server";
-import { Coupon } from "@/lib/models";
+import { Coupon, Order } from "@/lib/models";
 import { ApiResponse } from "@/lib/api-response";
 import dbConnect from "@/lib/db";
 
