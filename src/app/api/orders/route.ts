@@ -1,8 +1,9 @@
-export const runtime = 'nodejs';
 import { NextRequest } from 'next/server';
 import { OrderService } from '@/lib/services/order.service';
 import { ApiResponse } from '@/lib/api-response';
 import { sendMail } from '@/lib/mail';
+import { Coupon } from '@/lib/models';
+import dbConnect from '@/lib/db';
 
 export async function GET(request: NextRequest) {
     try {
@@ -45,6 +46,19 @@ export async function POST(request: NextRequest) {
             });
         } catch (emailError) {
             console.error("Failed to send admin order notification:", emailError);
+        }
+
+        // Update Coupon Usage if applicable
+        if (body.couponCode) {
+            try {
+                await dbConnect();
+                await Coupon.findOneAndUpdate(
+                    { code: body.couponCode },
+                    { $inc: { usedCount: 1 } }
+                );
+            } catch (couponError) {
+                console.error("Failed to update coupon usage:", couponError);
+            }
         }
 
         return ApiResponse.success(order);

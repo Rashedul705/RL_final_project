@@ -62,6 +62,11 @@ export default function CheckoutPage() {
     const [shippingMethods, setShippingMethods] = useState<ShippingMethod[]>([]);
     const [selectedMethod, setSelectedMethod] = useState<ShippingMethod | null>(null);
 
+    // Coupon State
+    const [couponCode, setCouponCode] = useState("");
+    const [appliedCoupon, setAppliedCoupon] = useState<{ code: string; discount: number } | null>(null);
+    const [isValidatingCoupon, setIsValidatingCoupon] = useState(false);
+
 
 
     const form = useForm<z.infer<typeof formSchema>>({
@@ -158,7 +163,42 @@ export default function CheckoutPage() {
         0
     );
 
-    const total = subtotal + shippingCost;
+    const handleApplyCoupon = async () => {
+        if (!couponCode) return;
+        setIsValidatingCoupon(true);
+        try {
+            const phoneNumber = form.getValues('phoneNumber');
+            const response = await apiClient.post<{ valid: boolean; discount: number; code: string }>('/coupons/validate', {
+                code: couponCode,
+                cartTotal: subtotal,
+                customerPhone: phoneNumber
+            });
+
+            if (response && response.valid) {
+                setAppliedCoupon({ code: response.code, discount: response.discount });
+                toast({
+                    title: "Coupon Applied",
+                    description: `You saved BDT ${response.discount}`,
+                });
+            }
+        } catch (error: any) {
+            toast({
+                title: "Invalid Coupon",
+                description: error.message || "This coupon is not valid.",
+                variant: "destructive"
+            });
+            setAppliedCoupon(null);
+        } finally {
+            setIsValidatingCoupon(false);
+        }
+    };
+
+    const handleRemoveCoupon = () => {
+        setAppliedCoupon(null);
+        setCouponCode("");
+    };
+
+    const total = subtotal + shippingCost - (appliedCoupon?.discount || 0);
 
     async function onSubmit(values: z.infer<typeof formSchema>) {
         const orderId = `ORD${Math.floor(1000 + Math.random() * 9000)}`;
@@ -188,7 +228,9 @@ export default function CheckoutPage() {
                 estimatedTime: '2-3 Days',
             },
             subtotal,
-            shippingCharge: shippingCost
+            shippingCharge: shippingCost,
+            discount: appliedCoupon?.discount || 0,
+            couponCode: appliedCoupon?.code
         };
 
         try {
@@ -405,7 +447,43 @@ export default function CheckoutPage() {
                                             <span>Shipping {watchedCity ? (watchedCity.toLowerCase() === 'dhaka' ? '(Inside Dhaka)' : (watchedCity.toLowerCase() === 'rajshahi' ? '(Inside Rajshahi)' : '(Outside Dhaka)')) : ''}</span>
                                             <span>BDT {shippingCost.toLocaleString()}</span>
                                         </div>
+                                        {appliedCoupon && (
+                                            <div className="flex justify-between text-green-600">
+                                                <span>Discount ({appliedCoupon.code})</span>
+                                                <span>- BDT {appliedCoupon.discount.toLocaleString()}</span>
+                                            </div>
+                                        )}
                                     </div>
+                                    <Separator />
+                                    {/* Coupon Input */}
+                                    {!appliedCoupon ? (
+                                        <div className="flex gap-2">
+                                            <Input
+                                                placeholder="Coupon Code"
+                                                value={couponCode}
+                                                onChange={(e) => setCouponCode(e.target.value)}
+                                            />
+                                            <Button
+                                                variant="outline"
+                                                onClick={handleApplyCoupon}
+                                                disabled={!couponCode || isValidatingCoupon}
+                                            >
+                                                {isValidatingCoupon ? "..." : "Apply"}
+                                            </Button>
+                                        </div>
+                                    ) : (
+                                        <div className="flex items-center justify-between bg-green-50 p-2 rounded border border-green-200">
+                                            <span className="text-sm font-medium text-green-700">Coupon applied!</span>
+                                            <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                className="h-auto p-1 text-green-700 hover:text-green-800 hover:bg-green-100"
+                                                onClick={handleRemoveCoupon}
+                                            >
+                                                Remove
+                                            </Button>
+                                        </div>
+                                    )}
                                     <Separator />
                                     <div className="flex justify-between font-bold text-lg">
                                         <span>Total</span>
@@ -435,8 +513,8 @@ export default function CheckoutPage() {
                         </div>
                     </div>
                 </div>
-            </main>
+            </main >
             <Footer />
-        </div>
+        </div >
     );
 }

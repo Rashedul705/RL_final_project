@@ -46,6 +46,9 @@ export interface IOrder extends Document {
     status: 'Pending' | 'Packaging' | 'Handed Over to Courier' | 'Delivered' | 'Cancelled' | 'Returned';
     products: { productId: string; name: string; quantity: number; price: number, image?: string }[];
     date: string; // ISO String
+    subtotal: number;
+    discount: number;
+    couponCode?: string;
 }
 
 const OrderSchema: Schema = new Schema({
@@ -68,7 +71,10 @@ const OrderSchema: Schema = new Schema({
         price: { type: Number, required: true },
         image: { type: String }
     }],
-    date: { type: String, required: true }
+    date: { type: String, required: true },
+    subtotal: { type: Number },
+    discount: { type: Number, default: 0 },
+    couponCode: { type: String }
 }, { timestamps: true });
 
 // --- Category Schema ---
@@ -155,6 +161,39 @@ export const Category: Model<ICategory> = mongoose.models.Category || mongoose.m
 export const ShippingMethod: Model<IShippingMethod> = mongoose.models.ShippingMethod || mongoose.model<IShippingMethod>('ShippingMethod', ShippingMethodSchema);
 export const Inquiry: Model<IInquiry> = mongoose.models.Inquiry || mongoose.model<IInquiry>('Inquiry', InquirySchema);
 export const Blacklist: Model<IBlacklist> = mongoose.models.Blacklist || mongoose.model<IBlacklist>('Blacklist', BlacklistSchema);
+
+// --- Coupon Schema ---
+export interface ICoupon extends Document {
+    code: string;
+    discountType: 'percentage' | 'fixed';
+    discountValue: number;
+    minOrderValue?: number;
+    maxDiscountAmount?: number;
+    expiryDate?: Date;
+    usageLimit?: number;
+    usageLimitPerUser?: number;
+    usedCount: number;
+    isActive: boolean;
+}
+
+const CouponSchema: Schema = new Schema({
+    code: { type: String, required: true, unique: true, uppercase: true, trim: true },
+    discountType: { type: String, enum: ['percentage', 'fixed'], required: true },
+    discountValue: { type: Number, required: true },
+    minOrderValue: { type: Number, default: 0 },
+    maxDiscountAmount: { type: Number },
+    expiryDate: { type: Date },
+    usageLimit: { type: Number },
+    usageLimitPerUser: { type: Number, default: 1 },
+    usedCount: { type: Number, default: 0 },
+    isActive: { type: Boolean, default: true }
+}, { timestamps: true });
+
+if (process.env.NODE_ENV !== 'production') {
+    if (mongoose.models.Coupon) delete mongoose.models.Coupon;
+}
+
+export const Coupon: Model<ICoupon> = mongoose.models.Coupon || mongoose.model<ICoupon>('Coupon', CouponSchema);
 
 // --- Customer Schema ---
 export interface ICustomer extends Document {
