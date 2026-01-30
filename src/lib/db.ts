@@ -30,8 +30,7 @@ export default dbConnect;
 
 async function dbConnect() {
   if (!process.env.MONGODB_URI) {
-    console.error('MONGODB_URI is not defined');
-    return null;
+    throw new Error('MONGODB_URI is not defined in environment variables');
   }
 
   if (cached.conn) {
@@ -40,11 +39,18 @@ async function dbConnect() {
 
   if (!cached.promise) {
     const opts = {
-      bufferCommands: false,
+      bufferCommands: false, // Disable mongoose buffering to prevent hanging
+      serverSelectionTimeoutMS: 5000, // Fail fast if DB is unreachable
+      socketTimeoutMS: 45000, // Close sockets after 45 seconds of inactivity
     };
 
     cached.promise = mongoose.connect(process.env.MONGODB_URI!, opts).then((mongoose) => {
+      // console.log("MongoDB Connected Successfully");
       return mongoose.connection;
+    }).catch((error) => {
+      console.error("MongoDB Connection Failed:", error);
+      cached.promise = null; // Reset promise so we can retry
+      throw error;
     });
   }
 
@@ -52,8 +58,8 @@ async function dbConnect() {
     cached.conn = await cached.promise;
   } catch (e) {
     cached.promise = null;
-    console.error('MongoDB connection error:', e);
-    return null;
+    console.error('MongoDB connection error details:', e);
+    throw e; // Re-throw to caller
   }
 
   return cached.conn;

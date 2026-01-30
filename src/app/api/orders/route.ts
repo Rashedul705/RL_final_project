@@ -45,7 +45,7 @@ export async function POST(request: NextRequest) {
                 `,
             });
         } catch (emailError) {
-            console.error("Failed to send admin order notification:", emailError);
+            console.warn("Failed to send admin order notification (non-fatal):", emailError);
         }
 
         // Update Coupon Usage if applicable
