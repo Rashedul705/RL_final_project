@@ -23,6 +23,7 @@ const nextConfig: NextConfig = {
     ],
   },
   serverExternalPackages: ['google-auth-library', 'googleapis', 'gtoken', 'jws', 'jwa', 'buffer-equal-constant-time', 'genkit', '@genkit-ai/google-genai', 'mongoose'],
+  output: 'standalone',
 };
 
 export default nextConfig;
