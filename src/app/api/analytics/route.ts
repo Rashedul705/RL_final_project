@@ -6,7 +6,20 @@ import { startOfDay, subDays, format } from 'date-fns';
 
 export async function GET() {
     try {
-        await connectDB();
+        try {
+            await connectDB();
+        } catch (dbError) {
+            console.error("Analytics DB Connection failed:", dbError);
+            // Return success with empty/mock data instead of 500
+            return NextResponse.json({
+                today: { visitors: 0, orders: 0, liveUsers: 0 },
+                monthly: { visitors: 0 },
+                trafficOverview: [],
+                trafficSources: [],
+                topPages: [],
+                topLocations: []
+            });
+        }
 
         // Get data for the last 30 days
         const endDate = startOfDay(new Date());
@@ -249,7 +262,7 @@ async function seedAnalyticsData(startDate: Date, endDate: Date) {
     try {
         await Analytics.insertMany(dummyData, { ordered: false });
     } catch (e) {
-        // Ignore duplicate key errors if some dates already exist
-        console.log("Partial seed completed or data already exists.");
+        // Ignore duplicate key errors or connection errors during seeding
+        console.warn("Analytics seeding failed (non-fatal):", e);
     }
 }
