@@ -15,3 +15,7 @@ export function isAdminEmail(email: string | null | undefined): boolean {
 
   return ALLOWED_ADMIN_EMAILS.includes(email) || email.endsWith('@rodela.com');
 }
+
+export function generateEventId(): string {
+  return crypto.randomUUID();
+}

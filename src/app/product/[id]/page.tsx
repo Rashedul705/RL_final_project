@@ -31,7 +31,8 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { apiClient } from '@/lib/api-client';
-import type { IProduct } from '@/lib/models'; // Assuming IProduct is compatible or we map it
+import type { IProduct } from '@/lib/models';
+import { trackViewContent } from '@/app/actions';
 
 // Even in a client component, params can be a promise.
 // We can use `React.use` to unwrap it.
@@ -87,20 +88,31 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
     }
   }, [slug]);
 
-  // Facebook Pixel ViewContent
+  // Facebook Pixel & CAPI ViewContent (Deduplicated)
   useEffect(() => {
     if (product) {
-      // @ts-ignore
-      if (typeof window !== 'undefined' && window.fbq) {
-        // @ts-ignore
-        window.fbq('track', 'ViewContent', {
-          content_name: product.name,
-          content_ids: [product._id || product.id],
-          content_type: 'product',
-          value: product.price,
-          currency: 'BDT',
-        });
-      }
+      const track = async () => {
+        try {
+          // 1. Call Server Action to send CAPI event and get the unique Event ID
+          const eventId = await trackViewContent(product);
+
+          // 2. Trigger Browser Pixel with the SAME Event ID
+          // @ts-ignore
+          if (typeof window !== 'undefined' && window.fbq) {
+            // @ts-ignore
+            window.fbq('track', 'ViewContent', {
+              content_name: product.name,
+              content_ids: [product._id || product.id],
+              content_type: 'product',
+              value: product.price,
+              currency: 'BDT',
+            }, { eventID: eventId }); // Pass eventID for deduplication
+          }
+        } catch (e) {
+          console.error("Failed to track ViewContent", e);
+        }
+      };
+      track();
     }
   }, [product]);
 

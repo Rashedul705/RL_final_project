@@ -13,14 +13,28 @@ export const metadata: Metadata = {
 };
 
 import { AnalyticsTracker } from "@/components/analytics-tracker";
+import { generateEventId } from "@/lib/utils";
+import { sendFbEvent } from "@/lib/fb-events";
+import { FacebookPixel } from "@/components/facebook-pixel";
+import { headers } from "next/headers";
 
 // ... existing imports
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // Server-side: Generate ID and send CAPI event
+  const eventId = generateEventId();
+  const headersList = await headers();
+  const host = headersList.get('host') || '';
+  const protocol = headersList.get('x-forwarded-proto') || 'http';
+  const url = `${protocol}://${host}`;
+
+  // Fire and forget CAPI event
+  sendFbEvent('PageView', eventId, url, {});
+
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
@@ -48,6 +62,8 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
             style={{ display: 'none', visibility: 'hidden' }}
           />
         </noscript>
+
+        <FacebookPixel eventId={eventId} />
 
         <AuthProvider>
           <CartProvider>
