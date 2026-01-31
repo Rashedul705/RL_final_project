@@ -32,6 +32,7 @@ import {
 } from "@/components/ui/dialog";
 import { apiClient } from '@/lib/api-client';
 import type { IProduct } from '@/lib/models';
+import { sendGTMEvent } from '@/lib/gtm';
 
 
 // Even in a client component, params can be a promise.
@@ -65,6 +66,16 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
 
         if (productData) {
           setProduct(productData);
+
+          // Track view_item event
+          sendGTMEvent({
+            event: 'view_item',
+            content_name: productData.name,
+            content_ids: [productData.id], // Using 'id' field as consistent with other parts
+            content_type: 'product',
+            value: productData.price,
+            currency: 'BDT',
+          });
 
           // 2. Fetch related products separately
           if (productData.category) {
