@@ -28,47 +28,7 @@ function ThankYouContent() {
                         const firstName = nameParts[0] || '';
                         const lastName = nameParts.slice(1).join(' ') || '';
 
-                        // Google Analytics 4 (GA4) Purchase
-                        // @ts-ignore
-                        window.dataLayer = window.dataLayer || [];
-                        // @ts-ignore
-                        window.dataLayer.push({ ecommerce: null }); // Clear previous
-                        // @ts-ignore
-                        window.dataLayer.push({
-                            event: "purchase",
-                            ecommerce: {
-                                transaction_id: orderData.id,
-                                value: Number(orderData.amount),
-                                tax: 0,
-                                shipping: orderData.shippingCharge || 0,
-                                currency: "BDT",
-                                coupon: "",
-                                items: orderData.products.map((p: any) => ({
-                                    item_id: p.productId,
-                                    item_name: p.name,
-                                    currency: "BDT",
-                                    price: p.price,
-                                    quantity: p.quantity,
-                                    item_category: "" // Category not directly in order product, leaving empty or could fetch if needed
-                                }))
-                            },
-                            // Custom user data structure as requested
-                            orderData: {
-                                customer: {
-                                    billing: {
-                                        email: orderData.email || '',
-                                        phone: orderData.phone || '',
-                                        first_name: firstName,
-                                        last_name: lastName,
-                                        city: "", // Address in model is a single string, so specific city is unavailable without parsing
-                                        state: "",
-                                        postal_code: "",
-                                        country: "Bangladesh",
-                                        address: orderData.address
-                                    }
-                                }
-                            }
-                        });
+
 
 
 

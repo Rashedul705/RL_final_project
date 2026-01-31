@@ -23,41 +23,9 @@ export function AddToCartButton({ product, quantity = 1, redirectToCheckout = fa
     if (isOutOfStock) return;
     addToCart(product, quantity);
 
-    // Facebook Pixel AddToCart
-    // @ts-ignore
-    if (typeof window !== 'undefined' && window.fbq) {
-      // @ts-ignore
-      window.fbq('track', 'AddToCart', {
-        content_name: product.name,
-        content_id: product.id,
-        content_type: 'product',
-        value: product.price * quantity,
-        currency: 'BDT',
-      });
-    }
 
-    // Google Analytics 4 (GA4) AddToCart
-    // @ts-ignore
-    window.dataLayer = window.dataLayer || [];
-    // @ts-ignore
-    window.dataLayer.push({ ecommerce: null }); // Clear previous
-    // @ts-ignore
-    window.dataLayer.push({
-      event: "add_to_cart",
-      ecommerce: {
-        currency: "BDT",
-        value: product.price * quantity,
-        items: [
-          {
-            item_id: product.id,
-            item_name: product.name,
-            price: product.price,
-            item_category: product.category,
-            quantity: quantity
-          }
-        ]
-      }
-    });
+
+
 
     if (redirectToCheckout) {
       router.push('/checkout');
