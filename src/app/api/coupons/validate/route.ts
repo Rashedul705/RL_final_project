@@ -63,8 +63,10 @@ export async function POST(request: NextRequest) {
             if (coupon.maxDiscountAmount && discount > coupon.maxDiscountAmount) {
                 discount = coupon.maxDiscountAmount;
             }
-        } else {
+        } else if (coupon.discountType === 'fixed') {
             discount = coupon.discountValue;
+        } else if (coupon.discountType === 'free_shipping') {
+            discount = 0;
         }
 
         // Ensure discount doesn't exceed total

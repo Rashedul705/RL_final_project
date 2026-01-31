@@ -178,7 +178,7 @@ export interface ICoupon extends Document {
 
 const CouponSchema: Schema = new Schema({
     code: { type: String, required: true, unique: true, uppercase: true, trim: true },
-    discountType: { type: String, enum: ['percentage', 'fixed'], required: true },
+    discountType: { type: String, enum: ['percentage', 'fixed', 'free_shipping'], required: true },
     discountValue: { type: Number, required: true },
     minOrderValue: { type: Number, default: 0 },
     maxDiscountAmount: { type: Number },

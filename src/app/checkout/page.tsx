@@ -64,7 +64,7 @@ export default function CheckoutPage() {
 
     // Coupon State
     const [couponCode, setCouponCode] = useState("");
-    const [appliedCoupon, setAppliedCoupon] = useState<{ code: string; discount: number } | null>(null);
+    const [appliedCoupon, setAppliedCoupon] = useState<{ code: string; discount: number; type: string } | null>(null);
     const [isValidatingCoupon, setIsValidatingCoupon] = useState(false);
 
 
@@ -125,6 +125,12 @@ export default function CheckoutPage() {
         }
     }, [watchedCity, rates]);
 
+    useEffect(() => {
+        if (appliedCoupon?.type === 'free_shipping' && appliedCoupon.discount !== shippingCost) {
+            setAppliedCoupon(prev => prev ? ({ ...prev, discount: shippingCost }) : null);
+        }
+    }, [shippingCost, appliedCoupon]);
+
 
 
 
@@ -139,17 +145,21 @@ export default function CheckoutPage() {
         setIsValidatingCoupon(true);
         try {
             const phoneNumber = form.getValues('phoneNumber');
-            const response = await apiClient.post<{ valid: boolean; discount: number; code: string }>('/coupons/validate', {
+            const response = await apiClient.post<{ valid: boolean; discount: number; code: string; type: string }>('/coupons/validate', {
                 code: couponCode,
                 cartTotal: subtotal,
                 customerPhone: phoneNumber
             });
 
             if (response && response.valid) {
-                setAppliedCoupon({ code: response.code, discount: response.discount });
+                let finalDiscount = response.discount;
+                if (response.type === 'free_shipping') {
+                    finalDiscount = shippingCost;
+                }
+                setAppliedCoupon({ code: response.code, discount: finalDiscount, type: response.type });
                 toast({
                     title: "Coupon Applied",
-                    description: `You saved BDT ${response.discount}`,
+                    description: response.type === 'free_shipping' ? "Free Shipping Applied" : `You saved BDT ${finalDiscount}`,
                 });
             }
         } catch (error: any) {

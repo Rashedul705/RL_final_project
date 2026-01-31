@@ -19,8 +19,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 
 const formSchema = z.object({
     code: z.string().min(3, "Code must be at least 3 characters").regex(/^[A-Za-z0-9]+$/, "Only alphanumeric characters allowed"),
-    discountType: z.enum(["percentage", "fixed"]),
-    discountValue: z.coerce.number().min(1, "Value must be positive"),
+    discountType: z.enum(["percentage", "fixed", "free_shipping"]),
+    discountValue: z.coerce.number().min(0, "Value must be positive"),
     minOrderValue: z.coerce.number().min(0).default(0),
     usageLimitPerUser: z.coerce.number().min(1).default(1),
     usageLimit: z.coerce.number().optional(),
@@ -94,6 +94,7 @@ export function CouponForm({ open, onOpenChange, onSubmit, initialData, isSubmit
                                             <SelectContent>
                                                 <SelectItem value="percentage">Percentage (%)</SelectItem>
                                                 <SelectItem value="fixed">Fixed Amount (BDT)</SelectItem>
+                                                <SelectItem value="free_shipping">Free Shipping</SelectItem>
                                             </SelectContent>
                                         </Select>
                                         <FormMessage />
