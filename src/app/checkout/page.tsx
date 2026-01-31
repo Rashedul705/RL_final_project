@@ -36,6 +36,7 @@ import { Plus, Minus, Truck } from 'lucide-react';
 import { bangladeshDistricts } from '@/lib/data';
 import { useAuth } from '@/components/providers/auth-provider';
 import { apiClient } from '@/lib/api-client';
+import { sendGTMEvent } from '@/lib/gtm';
 
 
 const formSchema = z.object({
@@ -61,6 +62,25 @@ export default function CheckoutPage() {
     const router = useRouter();
     const [shippingMethods, setShippingMethods] = useState<ShippingMethod[]>([]);
     const [selectedMethod, setSelectedMethod] = useState<ShippingMethod | null>(null);
+    const hasFiredBeginCheckout = useRef(false);
+
+    useEffect(() => {
+        if (cart.length > 0 && !hasFiredBeginCheckout.current) {
+            sendGTMEvent({
+                event: 'begin_checkout',
+                value: cart.reduce((acc, item) => acc + (item.product.price * item.quantity), 0),
+                currency: 'BDT',
+                items: cart.map(item => ({
+                    item_id: item.product.id,
+                    item_name: item.product.name,
+                    price: item.product.price,
+                    quantity: item.quantity,
+                    discount: 0
+                }))
+            });
+            hasFiredBeginCheckout.current = true;
+        }
+    }, [cart]);
 
     // Coupon State
     const [couponCode, setCouponCode] = useState("");

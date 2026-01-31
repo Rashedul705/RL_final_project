@@ -8,6 +8,7 @@ import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
 import { apiClient } from '@/lib/api-client';
 import type { IOrder } from '@/lib/models';
+import { sendGTMEvent } from '@/lib/gtm';
 
 function ThankYouContent() {
     const searchParams = useSearchParams();
@@ -27,6 +28,32 @@ function ThankYouContent() {
                         const nameParts = (orderData.customer || '').split(' ');
                         const firstName = nameParts[0] || '';
                         const lastName = nameParts.slice(1).join(' ') || '';
+
+                        sendGTMEvent({
+                            event: 'purchase',
+                            transaction_id: orderData.id, // Transaction ID
+                            value: Number(orderData.amount), // Total Purchase Value
+                            tax: 0,
+                            shipping: orderData.shippingCharge,
+                            currency: 'BDT',
+                            coupon: orderData.couponCode || '',
+                            items: orderData.products.map(item => ({
+                                item_id: item.productId,
+                                item_name: item.name,
+                                price: item.price,
+                                quantity: item.quantity
+                            })),
+                            user_data: {
+                                email_address: orderData.email || '',
+                                phone_number: orderData.phone,
+                                first_name: firstName,
+                                last_name: lastName,
+                                country: 'Bangladesh', // Hardcoded as mostly local
+                                city: (orderData.address || '').split(',').pop()?.trim() || 'Dhaka', // Simple extraction or default
+                                postal_code: '1000', // Default or need field in order model
+                                coupon: orderData.couponCode || ''
+                            }
+                        });
 
 
 

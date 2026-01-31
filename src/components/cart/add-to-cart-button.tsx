@@ -4,6 +4,7 @@ import { Button, type ButtonProps } from "@/components/ui/button";
 import type { Product } from "@/lib/data";
 import { useCart } from "./cart-context";
 import { useRouter } from "next/navigation";
+import { sendGTMEvent } from "@/lib/gtm";
 
 type AddToCartButtonProps = ButtonProps & {
   product: Product;
@@ -22,6 +23,15 @@ export function AddToCartButton({ product, quantity = 1, redirectToCheckout = fa
   const handleClick = () => {
     if (isOutOfStock) return;
     addToCart(product, quantity);
+
+    sendGTMEvent({
+      event: 'add_to_cart',
+      content_name: product.name,
+      content_ids: [product.id],
+      content_type: 'product',
+      value: product.price,
+      currency: 'BDT',
+    });
 
 
 

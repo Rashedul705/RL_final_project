@@ -77,7 +77,7 @@ export function Header() {
               </Link>
             </Button>
             <SearchDialog>
-              <Button variant="ghost" size="icon" aria-label="Search">
+              <Button variant="ghost" size="icon" aria-label="Search" suppressHydrationWarning>
                 <Search className="h-5 w-5" />
               </Button>
             </SearchDialog>
@@ -208,7 +208,7 @@ export function Header() {
                     </Button>
                     <SearchDialog>
                       <SheetClose asChild>
-                        <Button variant="outline" className="justify-start">
+                        <Button variant="outline" className="justify-start" suppressHydrationWarning>
                           <Search className="h-5 w-5 mr-2" />
                           Search
                         </Button>
