@@ -5,7 +5,7 @@ import { Truck, Copy, Check } from "lucide-react";
 
 export function ShippingOffer() {
     const [copied, setCopied] = useState(false);
-    const code = "FREESHIP-TEST";
+    const code = "FREESHIP";
 
     const copyToClipboard = () => {
         navigator.clipboard.writeText(code);
