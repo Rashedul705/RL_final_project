@@ -49,6 +49,8 @@ export interface IOrder extends Document {
     subtotal: number;
     discount: number;
     couponCode?: string;
+    consignment_id?: string;
+    tracking_code?: string;
 }
 
 const OrderSchema: Schema = new Schema({
@@ -74,7 +76,9 @@ const OrderSchema: Schema = new Schema({
     date: { type: String, required: true },
     subtotal: { type: Number },
     discount: { type: Number, default: 0 },
-    couponCode: { type: String }
+    couponCode: { type: String },
+    consignment_id: { type: String },
+    tracking_code: { type: String }
 }, { timestamps: true });
 
 // --- Category Schema ---

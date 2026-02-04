@@ -15,3 +15,6 @@ cmds = [
 
 [start]
 cmd = "node .next/standalone/server.js"
+
+[variables]
+HOSTNAME = "0.0.0.0"

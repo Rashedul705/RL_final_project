@@ -58,8 +58,8 @@ import { apiClient } from '@/lib/api-client';
 import { useToast } from '@/hooks/use-toast';
 import type { IOrder } from '@/lib/models'; // Use Interface
 
-// Update type definition to handle undefined shippingCharge for legacy orders
-type Order = IOrder & { shippingCharge?: number };
+// Update type definition to handle undefined shippingCharge for legacy orders and Consignment fields
+type Order = IOrder & { shippingCharge?: number; consignment_id?: string; tracking_code?: string };
 
 const ProductLink = ({ productId, name, quantity }: { productId: string, name: string, quantity: number }) => {
   const [slug, setSlug] = useState<string | null>(null);
@@ -268,6 +268,40 @@ export default function AdminOrdersPage() {
     }
   };
 
+  const handleSendToSteadfast = async (orderId: string) => {
+    try {
+      const response = await apiClient.post<{ success: boolean; message: string; data: any }>('/admin/steadfast/create-order', { orderId });
+
+      if (response.success) {
+        toast({ title: 'Success', description: response.message });
+        // Update local state to reflect status change and saved consignment info
+        const { consignment_id, tracking_code } = response.data.consignment || {};
+
+        setOrders(current => current.map(o => o.id === orderId ? {
+          ...o,
+          status: 'Handed Over to Courier',
+          consignment_id: consignment_id,
+          tracking_code: tracking_code
+        } as any : o));
+
+        // Also update selectedOrder if open
+        if (selectedOrder && selectedOrder.id === orderId) {
+          setSelectedOrder(curr => curr ? {
+            ...curr,
+            status: 'Handed Over to Courier' as any,
+            consignment_id: consignment_id,
+            tracking_code: tracking_code
+          } as any : null);
+        }
+
+      } else {
+        toast({ variant: 'destructive', title: 'Error', description: 'Failed to send to Steadfast' });
+      }
+    } catch (error: any) {
+      toast({ variant: 'destructive', title: 'Error', description: error.message || 'Failed to send to Steadfast' });
+    }
+  };
+
   if (loading) {
     return <div className="flex h-96 items-center justify-center"><Loader2 className="h-8 w-8 animate-spin" /></div>;
   }
@@ -369,6 +403,19 @@ export default function AdminOrdersPage() {
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
                             <DropdownMenuLabel>Actions</DropdownMenuLabel>
+
+                            {order.consignment_id ? (
+                              <DropdownMenuItem asChild>
+                                <Link href={`https://steadfast.com.bd/t/${order.tracking_code}`} target="_blank" rel="noopener noreferrer" className="flex items-center text-blue-600 font-medium">
+                                  Track: {order.tracking_code}
+                                </Link>
+                              </DropdownMenuItem>
+                            ) : (
+                              <DropdownMenuItem onSelect={() => handleSendToSteadfast(order.id)}>
+                                Send to Steadfast
+                              </DropdownMenuItem>
+                            )}
+
                             <DropdownMenuItem onSelect={() => setTimeout(() => setSelectedOrder(order), 100)}>
                               View Details
                             </DropdownMenuItem>
@@ -414,6 +461,15 @@ export default function AdminOrdersPage() {
                     <p><strong>Name:</strong> {selectedOrder.customer}</p>
                     <p><strong>Phone:</strong> {selectedOrder.phone}</p>
                     <p><strong>Address:</strong> {selectedOrder.address}</p>
+                    {selectedOrder.consignment_id && (
+                      <div className="mt-1 p-2 bg-blue-50 rounded border border-blue-100">
+                        <p className="text-blue-700 font-medium">Couier Info:</p>
+                        <p>CID: {selectedOrder.consignment_id}</p>
+                        <Link href={`https://steadfast.com.bd/t/${selectedOrder.tracking_code}`} target="_blank" className="text-blue-600 underline">
+                          Track: {selectedOrder.tracking_code}
+                        </Link>
+                      </div>
+                    )}
                   </div>
                 </div>
                 <Separator />
@@ -472,11 +528,27 @@ export default function AdminOrdersPage() {
                 </div>
               </div>
               <DialogFooter>
-                <Button variant="secondary" onClick={() => handlePrintInvoice(selectedOrder)}>
-                  <Printer className="mr-2 h-4 w-4" />
-                  Print Invoice
-                </Button>
-                <Button variant="outline" onClick={() => setSelectedOrder(null)}>Close</Button>
+                <div className="flex gap-2 w-full justify-between">
+                  {selectedOrder.consignment_id ? (
+                    <Button variant="outline" asChild>
+                      <Link href={`https://steadfast.com.bd/t/${selectedOrder.tracking_code}`} target="_blank">
+                        Track Order
+                      </Link>
+                    </Button>
+                  ) : (
+                    <Button variant="secondary" onClick={() => handleSendToSteadfast(selectedOrder.id)}>
+                      Send to Steadfast
+                    </Button>
+                  )}
+
+                  <div className="flex gap-2">
+                    <Button variant="secondary" onClick={() => handlePrintInvoice(selectedOrder)}>
+                      <Printer className="mr-2 h-4 w-4" />
+                      Print Invoice
+                    </Button>
+                    <Button variant="outline" onClick={() => setSelectedOrder(null)}>Close</Button>
+                  </div>
+                </div>
               </DialogFooter>
             </>
           )}
