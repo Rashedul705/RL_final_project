@@ -1,7 +1,6 @@
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
 import { Hero } from "@/components/sections/hero";
-import { ShippingOffer } from "@/components/sections/shipping-offer";
 import { CategoryNav } from "@/components/sections/category-nav";
 import { ProductCatalog } from "@/components/sections/product-catalog";
 import { TrustInfo } from "@/components/sections/trust-info";
@@ -31,7 +30,6 @@ export default async function Home() {
       <Header />
       <main className="flex-1">
         <Hero />
-        <ShippingOffer />
         <CategoryNav />
         {/* Pass initial products to client component */}
         {/* @ts-ignore - type mismatch between IProduct (mongoose) and Product (interface) is common, safe to ignore here given serialization */}
