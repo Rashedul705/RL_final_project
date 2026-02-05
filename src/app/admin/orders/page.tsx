@@ -206,6 +206,7 @@ export default function AdminOrdersPage() {
             </div>
             <div class="section">
               <p><strong>Order ID:</strong> ${order.id}</p>
+              ${order.consignment_id ? `<div style="border: 1px solid #000; padding: 5px; margin: 5px 0; font-size: 15px; font-weight: bold; display: inline-block; border-radius: 4px;">SF Id: ${order.consignment_id}</div>` : ''}
               <p><strong>Date:</strong> ${orderDate}</p>
             </div>
             <div class="section">
