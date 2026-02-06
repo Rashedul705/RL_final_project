@@ -24,6 +24,9 @@ interface UserProfile {
     name: string;
     email: string;
     phone?: string;
+    image?: string;
+    gender?: string;
+    birthday?: string;
     addressBook?: {
         fullName: string;
         phone: string;
@@ -78,18 +81,40 @@ export default function ProfilePage() {
                             <h2 className="font-medium text-gray-700">Personal Profile</h2>
                             <Link href="/profile/edit" className="text-sm text-cyan-500 hover:underline">EDIT</Link>
                         </div>
-                        <div className="text-sm text-gray-600 space-y-1">
-                            <p className="font-medium text-gray-900">{profile?.name}</p>
-                            <p>{profile?.email}</p>
-                            <div className="mt-2">
-                                <label className="flex items-center gap-2">
-                                    <input type="checkbox" className="rounded text-cyan-500" />
-                                    Receive marketing SMS
-                                </label>
-                                <label className="flex items-center gap-2">
-                                    <input type="checkbox" className="rounded text-cyan-500" />
-                                    Receive marketing emails
-                                </label>
+                        <div className="flex items-start gap-4">
+                            <div className="relative w-16 h-16 rounded-full overflow-hidden bg-gray-100 flex-shrink-0">
+                                {profile?.image ? (
+                                    <Image
+                                        src={profile.image}
+                                        alt={profile.name}
+                                        fill
+                                        className="object-cover"
+                                    />
+                                ) : (
+                                    <div className="w-full h-full flex items-center justify-center text-gray-400">
+                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                        </svg>
+                                    </div>
+                                )}
+                            </div>
+                            <div className="text-sm text-gray-600 space-y-1 flex-1">
+                                <p className="font-medium text-gray-900">{profile?.name}</p>
+                                <p>{profile?.email}</p>
+                                {profile?.phone && <p>Phone: {profile.phone}</p>}
+                                {profile?.birthday && <p>Birthday: {profile.birthday}</p>}
+                                {profile?.gender && <p className="capitalize">Gender: {profile.gender}</p>}
+
+                                <div className="mt-2">
+                                    <label className="flex items-center gap-2">
+                                        <input type="checkbox" className="rounded text-cyan-500" />
+                                        Receive marketing SMS
+                                    </label>
+                                    <label className="flex items-center gap-2">
+                                        <input type="checkbox" className="rounded text-cyan-500" />
+                                        Receive marketing emails
+                                    </label>
+                                </div>
                             </div>
                         </div>
                     </CardContent>
