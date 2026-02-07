@@ -188,15 +188,33 @@ export default function AdminOrdersPage() {
                 font-size: 12px;
               }
               .header { text-align: center; margin-bottom: 20px; }
-              .header h2 { margin: 0; font-size: 16px; font-weight: bold; }
-              .header p { margin: 5px 0 0; font-size: 12px; }
+              .header h2 { margin: 0; font-size: 8px; font-weight: bold; }
+              .header p { margin: 5px 0 0; font-size: 10px; }
               .section { margin-bottom: 15px; }
               .section-title { border-top: 1px dashed #000; border-bottom: 1px dashed #000; padding: 5px 0; margin: 10px 0; font-weight: bold; }
               table { width: 100%; border-collapse: collapse; }
-              th, td { text-align: left; padding: 4px 0; }
+              th, td { text-align: left; padding: 4px 0; vertical-align: top; }
               .text-right { text-align: right; }
               .totals-table td { padding: 2px 0; }
               .footer { text-align: center; margin-top: 20px; border-top: 1px dashed #000; padding-top: 10px;}
+              .sf-box {
+                border: 1px solid #000;
+                padding: 5px;
+                margin-top: 5px;
+                font-size: 14px;
+                font-weight: bold;
+                display: inline-block;
+              }
+              .item-name {
+                display: -webkit-box;
+                -webkit-line-clamp: 2;
+                -webkit-box-orient: vertical;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                line-height: 1.2;
+                max-height: 2.4em;
+                font-size: 8px;
+              }
             </style>
           </head>
           <body>
@@ -206,7 +224,12 @@ export default function AdminOrdersPage() {
             </div>
             <div class="section">
               <p><strong>Order ID:</strong> ${order.id}</p>
-              <p><strong>Date:</strong> ${orderDate}</p>
+              ${order.consignment_id ? `
+                <div class="sf-box">
+                  SF ID: ${order.consignment_id}
+                </div>
+              ` : ''}
+              <p style="margin-top: 5px;"><strong>Date:</strong> ${orderDate}</p>
             </div>
             <div class="section">
                 <p><strong>Customer:</strong> ${order.customer}</p>
@@ -217,16 +240,16 @@ export default function AdminOrdersPage() {
             <table>
               <thead>
                 <tr>
-                  <th>Item</th>
-                  <th class="text-right">Total</th>
+                  <th style="width: 70%">Item</th>
+                  <th class="text-right" style="width: 30%">Total</th>
                 </tr>
               </thead>
               <tbody>
                 ${order.products.map(p => `
                   <tr>
                     <td>
-                      ${p.quantity} x ${p.name}<br/>
-                      <span style="font-size: 10px; color: #555;">@ ${p.price.toLocaleString()}</span>
+                      <div class="item-name">${p.name}</div>
+                      <span style="font-size: 10px; color: #555;">x ${p.quantity} @ ${p.price.toLocaleString()}</span>
                     </td>
                     <td class="text-right">${(p.quantity * p.price).toLocaleString()}</td>
                   </tr>
