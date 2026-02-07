@@ -46,6 +46,7 @@ const formSchema = z.object({
   price: z.coerce.number().positive('Price must be a positive number.'),
   stock: z.coerce.number().int().nonnegative('Stock must be a non-negative integer.'),
   category: z.string().min(1, 'Please select a category.'),
+  brand: z.string().optional(),
   productImage: z.any().optional(),
   galleryImages: z.any().optional(),
 });
@@ -56,17 +57,22 @@ export default function AdminNewProductPage() {
   const { user } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [categories, setCategories] = useState<{ id: string, name: string }[]>([]);
+  const [brands, setBrands] = useState<{ id: string, name: string }[]>([]);
 
   useEffect(() => {
-    const fetchCategories = async () => {
+    const fetchData = async () => {
       try {
-        const data = await apiClient.get<{ id: string, name: string }[]>('/categories');
-        if (data) setCategories(data);
+        const [cats, brds] = await Promise.all([
+          apiClient.get<{ id: string, name: string }[]>('/categories'),
+          apiClient.get<{ id: string, name: string }[]>('/brands')
+        ]);
+        if (cats) setCategories(cats);
+        if (brds) setBrands(brds);
       } catch (error) {
-        console.error("Failed to fetch categories");
+        console.error("Failed to fetch data");
       }
     };
-    fetchCategories();
+    fetchData();
   }, []);
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -80,6 +86,7 @@ export default function AdminNewProductPage() {
       price: 0,
       stock: 0,
       category: '',
+      brand: '',
     },
   });
 
@@ -286,9 +293,9 @@ export default function AdminNewProductPage() {
               <div className="grid auto-rows-max items-start gap-4 lg:gap-8">
                 <Card>
                   <CardHeader>
-                    <CardTitle>Product Category</CardTitle>
+                    <CardTitle>Product Category & Brand</CardTitle>
                   </CardHeader>
-                  <CardContent>
+                  <CardContent className="grid gap-6">
                     <FormField
                       control={form.control}
                       name="category"
@@ -310,6 +317,34 @@ export default function AdminNewProductPage() {
                                 ))
                               ) : (
                                 <SelectItem value="none" disabled>No categories found</SelectItem>
+                              )}
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="brand"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Brand (Optional)</FormLabel>
+                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select brand" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {brands.length > 0 ? (
+                                brands.map((brand) => (
+                                  <SelectItem key={brand.id} value={brand.id}>
+                                    {brand.name}
+                                  </SelectItem>
+                                ))
+                              ) : (
+                                <SelectItem value="none" disabled>No brands found</SelectItem>
                               )}
                             </SelectContent>
                           </Select>

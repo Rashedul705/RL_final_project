@@ -11,6 +11,7 @@ export interface IProduct extends Document {
     images: string[];
     imageHint: string;
     category: string;
+    brand?: string; // Brand ID/Slug
     stock: number;
     sizeGuide?: string;
     size?: string;
@@ -28,6 +29,7 @@ const ProductSchema: Schema = new Schema({
     images: { type: [String], default: [] },
     imageHint: { type: String, default: '' },
     category: { type: String, required: true },
+    brand: { type: String }, // Optional reference to Brand
     stock: { type: Number, required: true, default: 0 },
     sizeGuide: { type: String },
     size: { type: String },
@@ -315,3 +317,24 @@ const UserSchema: Schema = new Schema({
 }, { timestamps: true });
 
 export const User: Model<IUser> = mongoose.models.User || mongoose.model<IUser>('User', UserSchema);
+
+// --- Brand Schema ---
+export interface IBrand extends Document {
+    id: string; // slug
+    name: string;
+    description?: string;
+    image?: string;
+}
+
+const BrandSchema: Schema = new Schema({
+    id: { type: String, required: true, unique: true },
+    name: { type: String, required: true },
+    description: { type: String },
+    image: { type: String }
+}, { timestamps: true });
+
+if (process.env.NODE_ENV !== 'production') {
+    if (mongoose.models.Brand) delete mongoose.models.Brand;
+}
+
+export const Brand: Model<IBrand> = mongoose.models.Brand || mongoose.model<IBrand>('Brand', BrandSchema);

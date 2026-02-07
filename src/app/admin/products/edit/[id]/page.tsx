@@ -44,6 +44,7 @@ const formSchema = z.object({
   price: z.coerce.number().positive('Price must be a positive number.'),
   stock: z.coerce.number().int().nonnegative('Stock must be a non-negative integer.'),
   category: z.string().min(1, 'Please select a category.'),
+  brand: z.string().optional(),
   productImage: z.any().optional(),
   galleryImages: z.any().optional(),
   size: z.string().optional(),
@@ -59,6 +60,7 @@ export default function AdminEditProductPage() {
   const [submitting, setSubmitting] = useState(false);
   const [product, setProduct] = useState<IProduct | null>(null);
   const [categories, setCategories] = useState<{ id: string, name: string }[]>([]);
+  const [brands, setBrands] = useState<{ id: string, name: string }[]>([]);
   const [deletedImages, setDeletedImages] = useState<string[]>([]);
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -70,6 +72,7 @@ export default function AdminEditProductPage() {
       price: 0,
       stock: 0,
       category: '',
+      brand: '',
       size: '',
       sizeGuide: '',
     },
@@ -79,9 +82,13 @@ export default function AdminEditProductPage() {
     async function fetchData() {
       try {
         setLoading(true);
-        // Fetch categories first or parallel
-        const cats = await apiClient.get<{ id: string, name: string }[]>('/categories');
+        // Fetch categories and brands first or parallel
+        const [cats, brds] = await Promise.all([
+          apiClient.get<{ id: string, name: string }[]>('/categories'),
+          apiClient.get<{ id: string, name: string }[]>('/brands')
+        ]);
         if (cats) setCategories(cats);
+        if (brds) setBrands(brds);
 
         // Fetch product
         if (id) {
@@ -94,6 +101,7 @@ export default function AdminEditProductPage() {
             price: data.price,
             stock: data.stock,
             category: data.category,
+            brand: data.brand || '',
             size: data.size || '',
             sizeGuide: data.sizeGuide || '',
           });
@@ -323,9 +331,9 @@ export default function AdminEditProductPage() {
               <div className="grid auto-rows-max items-start gap-4 lg:gap-8">
                 <Card>
                   <CardHeader>
-                    <CardTitle>Product Category</CardTitle>
+                    <CardTitle>Product Category & Brand</CardTitle>
                   </CardHeader>
-                  <CardContent>
+                  <CardContent className="grid gap-6">
                     <FormField
                       control={form.control}
                       name="category"
@@ -347,6 +355,34 @@ export default function AdminEditProductPage() {
                                 ))
                               ) : (
                                 <SelectItem value="none" disabled>No categories found</SelectItem>
+                              )}
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="brand"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Brand (Optional)</FormLabel>
+                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select brand" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {brands.length > 0 ? (
+                                brands.map((brand) => (
+                                  <SelectItem key={brand.id} value={brand.id}>
+                                    {brand.name}
+                                  </SelectItem>
+                                ))
+                              ) : (
+                                <SelectItem value="none" disabled>No brands found</SelectItem>
                               )}
                             </SelectContent>
                           </Select>

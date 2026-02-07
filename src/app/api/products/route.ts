@@ -16,6 +16,7 @@ const createProductSchema = z.object({
     highlights: z.string().optional(),
     size: z.string().optional(),
     sizeGuide: z.string().optional(),
+    brand: z.string().optional(),
 });
 
 export async function GET(request: NextRequest) {
@@ -28,6 +29,10 @@ export async function GET(request: NextRequest) {
         const filter: any = {};
         if (category) {
             filter.category = category;
+        }
+        const brand = searchParams.get('brand');
+        if (brand) {
+            filter.brand = brand;
         }
         if (exclude) {
             // Need to handle exclude logic. 
