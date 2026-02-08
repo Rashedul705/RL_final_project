@@ -213,7 +213,7 @@ export default function AdminOrdersPage() {
                 text-overflow: ellipsis;
                 line-height: 1.2;
                 max-height: 2.4em;
-                font-size: 8px;
+                font-size: 10px;
               }
             </style>
           </head>
