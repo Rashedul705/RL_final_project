@@ -13,7 +13,7 @@ You **MUST** configure the following environment variables in Coolify for the ap
 
 | Variable | Description | Example |
 | :--- | :--- | :--- |
-| `NEXT_PUBLIC_API_URL` | The public URL of your deployed app. | `https://your-app-domain.com` |
+| `NEXT_PUBLIC_APP_URL` | The public URL of your deployed app. | `https://rodelaslifestyle.com` |
 | `MONGODB_URI` | Connection string for MongoDB. | `mongodb+srv://user:pass@cluster.mongodb.net/dbname` |
 | `IMGBB_API_KEY` | API Key for Image upload (imgbb). | `your_imgbb_api_key` |
 | `EMAIL_HOST` | SMTP Host for emails. | `smtp.gmail.com` |
@@ -38,7 +38,7 @@ You **MUST** configure the following environment variables in Coolify for the ap
 6.  **Configuration:**
     -   Go to the **Environment Variables** tab.
     -   Add all the variables listed above.
-    -   **Important:** Set `NEXT_PUBLIC_API_URL` to your actual domains (e.g., `https://rodelas.com`).
+    -   **Important:** Set `NEXT_PUBLIC_APP_URL` to `https://rodelaslifestyle.com`.
 7.  **Deploy:** Click **"Deploy"**.
 
 ## Local Testing (Docker)
