@@ -503,7 +503,15 @@ export default function AdminOrdersPage() {
                     {selectedOrder.products.map((product, index) => {
                       return (
                         <li key={index} className="flex justify-between items-center">
-                          <ProductLink productId={product.productId} name={product.name} quantity={product.quantity} />
+                          <div>
+                            <ProductLink productId={product.productId} name={product.name} quantity={product.quantity} />
+                            {(product.color || product.size) && (
+                              <div className="text-xs text-muted-foreground mt-0.5">
+                                {product.color && <span className="mr-2">Color: {product.color}</span>}
+                                {product.size && <span>Size: {product.size}</span>}
+                              </div>
+                            )}
+                          </div>
                           <span className="font-medium">BDT {(product.price * product.quantity).toLocaleString()}</span>
                         </li>
                       )

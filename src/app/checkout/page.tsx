@@ -155,10 +155,19 @@ export default function CheckoutPage() {
 
 
 
-    const subtotal = cart.reduce(
-        (acc, item) => acc + item.product.price * item.quantity,
-        0
-    );
+    const subtotal = cart.reduce((acc, item) => {
+        let price = item.product.price;
+        if (item.variantId && item.product.variants) {
+            for (const v of item.product.variants) {
+                const size = v.sizes.find(s => s._id === item.variantId);
+                if (size) {
+                    price = size.price;
+                    break;
+                }
+            }
+        }
+        return acc + price * item.quantity;
+    }, 0);
 
     const handleApplyCoupon = async () => {
         if (!couponCode) return;
@@ -214,13 +223,30 @@ export default function CheckoutPage() {
             address: `${values.fullAddress}, ${values.city}`,
             amount: total.toString(),
             status: 'Pending',
-            products: cart.map(item => ({
-                productId: item.product.id,
-                name: item.product.name,
-                quantity: item.quantity,
-                price: item.product.price,
-                image: item.product.image
-            })),
+            products: cart.map(item => {
+                // Calculate correct price for the variant if applicable
+                let price = item.product.price;
+                if (item.variantId && item.product.variants) {
+                    for (const v of item.product.variants) {
+                        const size = v.sizes.find(s => s._id === item.variantId);
+                        if (size) {
+                            price = size.price;
+                            break;
+                        }
+                    }
+                }
+
+                return {
+                    productId: item.product.id,
+                    name: item.product.name,
+                    quantity: item.quantity,
+                    price: price, // Use calculated price
+                    image: item.image || item.product.image,
+                    variantId: item.variantId,
+                    color: item.color,
+                    size: item.size
+                };
+            }),
             date: new Date().toISOString(),
             // shippingInfo replaced by dynamic block below
             shippingInfo: {
