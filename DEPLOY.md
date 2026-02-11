@@ -24,6 +24,7 @@ You **MUST** configure the following environment variables in Coolify for the ap
 | `STEADFAST_API_KEY` | API Key for Courier integration. | `your_steadfast_key` |
 | `STEADFAST_SECRET_KEY` | Secret Key for Courier integration. | `your_steadfast_secret` |
 | `STEADFAST_BASE_URL` | Base URL for Courier API. | `https://portal.packzy.com/api/v1` |
+| `NIXPACKS_NODE_VERSION` | Node.js version for Nixpacks. | `22` |
 
 > **Note:** `NEXT_PUBLIC_` variables are baked into the build time. If you change them, you must **redeploy** (rebuild) the application.
 

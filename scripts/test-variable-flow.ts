@@ -45,7 +45,7 @@ async function runTest() {
                     images: [],
                     sizes: [
                         { _id: testVariantSizeId.toString(), size: "M", stock: 10, price: 1000 },
-                        { size: "L", stock: 5, price: 1000 }
+                        { _id: new mongoose.Types.ObjectId().toString(), size: "L", stock: 5, price: 1000 }
                     ]
                 }
             ]
