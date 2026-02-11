@@ -38,13 +38,59 @@ export function ProductCard({ product }: ProductCardProps) {
             {product.name}
           </Link>
         </CardTitle>
-        <p className="mt-2 text-lg font-semibold text-primary">BDT {product.price.toLocaleString()}</p>
-        {product.size && (
-          <div className="mt-2">
-            <Badge className="font-normal text-xs bg-[#ff3399] text-white hover:bg-[#ff3399]/90">
-              Size: {product.size}
-            </Badge>
+        {/* Price Display */}
+        <p className="mt-2 text-lg font-semibold text-primary">
+          {product.variants && product.variants.length > 0 ? (() => {
+            const prices = product.variants.flatMap(v => v.sizes.map(s => s.price));
+            if (prices.length === 0) return `BDT ${product.price.toLocaleString()}`;
+            const minPrice = Math.min(...prices);
+            const maxPrice = Math.max(...prices);
+            if (minPrice === maxPrice) return `BDT ${minPrice.toLocaleString()}`;
+            return `BDT ${minPrice.toLocaleString()} - ${maxPrice.toLocaleString()}`;
+          })() : (
+            `BDT ${product.price.toLocaleString()}`
+          )}
+        </p>
+
+        {/* Variable Product Options (Sizes & Colors) */}
+        {product.variants && product.variants.length > 0 ? (
+          <div className="mt-3 space-y-2">
+            {/* Sizes */}
+            <div className="flex flex-wrap gap-1">
+              {Array.from(new Set(product.variants.flatMap(v => v.sizes.map(s => s.size)))).map(size => (
+                <Badge key={size} variant="secondary" className="font-normal text-xs px-2 py-0.5">
+                  {size}
+                </Badge>
+              ))}
+            </div>
+            {/* Colors */}
+            <div className="flex flex-wrap gap-1">
+              {product.variants.map((variant, idx) => (
+                <div
+                  key={idx}
+                  className="w-4 h-4 rounded-full border border-gray-300 relative overflow-hidden"
+                  title={variant.color}
+                >
+                  <Image
+                    src={variant.image}
+                    alt={variant.color}
+                    fill
+                    className="object-cover"
+                    sizes="16px"
+                  />
+                </div>
+              ))}
+            </div>
           </div>
+        ) : (
+          /* Simple Product Size */
+          product.size && (
+            <div className="mt-2">
+              <Badge className="font-normal text-xs bg-[#ff3399] text-white hover:bg-[#ff3399]/90">
+                Size: {product.size}
+              </Badge>
+            </div>
+          )
         )}
       </CardContent>
 

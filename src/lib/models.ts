@@ -17,6 +17,19 @@ export interface IProduct extends Document {
     size?: string;
     highlights?: string;
     slug: string;
+    variants?: IVariant[];
+}
+
+export interface IVariant {
+    color: string;
+    image: string; // Main image for this color (swatch)
+    images: string[]; // Gallery for this color
+    sizes: {
+        _id: string; // Unique ID for stock tracking
+        size: string;
+        stock: number;
+        price: number; // Override or base price
+    }[];
 }
 
 const ProductSchema: Schema = new Schema({
@@ -34,6 +47,16 @@ const ProductSchema: Schema = new Schema({
     sizeGuide: { type: String },
     size: { type: String },
     highlights: { type: String },
+    variants: [{
+        color: { type: String, required: true },
+        image: { type: String, required: true },
+        images: { type: [String], default: [] },
+        sizes: [{
+            size: { type: String, required: true },
+            stock: { type: Number, required: true, default: 0 },
+            price: { type: Number, required: true, default: 0 }
+        }]
+    }]
 }, { timestamps: true });
 
 // --- Order Schema ---
@@ -46,7 +69,17 @@ export interface IOrder extends Document {
     amount: string; // Grand Total
     shippingCharge: number;
     status: 'Pending' | 'Packaging' | 'Handed Over to Courier' | 'Delivered' | 'Cancelled' | 'Returned';
-    products: { productId: string; name: string; quantity: number; price: number, image?: string }[];
+    products: {
+        productId: string;
+        name: string;
+        quantity: number;
+        price: number;
+        image?: string;
+        // Variant fields
+        variantId?: string; // The _id of the specific size option in the variant
+        color?: string;
+        size?: string;
+    }[];
     date: string; // ISO String
     subtotal: number;
     discount: number;
@@ -73,7 +106,10 @@ const OrderSchema: Schema = new Schema({
         name: { type: String, required: true },
         quantity: { type: Number, required: true },
         price: { type: Number, required: true },
-        image: { type: String }
+        image: { type: String },
+        variantId: { type: String },
+        color: { type: String },
+        size: { type: String }
     }],
     date: { type: String, required: true },
     subtotal: { type: Number },

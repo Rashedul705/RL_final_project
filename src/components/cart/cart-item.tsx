@@ -20,7 +20,7 @@ export function CartItem({ item }: CartItemProps) {
       <div className="flex items-start gap-4">
         <div className="relative h-20 w-20 flex-shrink-0 overflow-hidden rounded-md">
           <Image
-            src={product.image}
+            src={item.image || product.image}
             alt={product.name}
             fill
             className="object-cover"
@@ -29,6 +29,12 @@ export function CartItem({ item }: CartItemProps) {
         </div>
         <div className="flex-1">
           <h3 className="font-semibold leading-tight">{product.name}</h3>
+          {(item.color || item.size) && (
+            <div className="text-xs text-muted-foreground mt-1">
+              {item.color && <span className="mr-2">Color: {item.color}</span>}
+              {item.size && <span>Size: {item.size}</span>}
+            </div>
+          )}
           <p className="text-sm text-muted-foreground">
             BDT {product.price.toLocaleString()}
           </p>
@@ -37,7 +43,7 @@ export function CartItem({ item }: CartItemProps) {
               variant="outline"
               size="icon"
               className="h-8 w-8 text-red-500 hover:bg-red-500 hover:text-white"
-              onClick={() => updateQuantity(product.id, quantity - 1)}
+              onClick={() => updateQuantity(product.id, quantity - 1, item.variantId)}
             >
               <Minus className="h-4 w-4" />
             </Button>
@@ -45,10 +51,10 @@ export function CartItem({ item }: CartItemProps) {
               type="number"
               value={quantity}
               onChange={(e) => {
-                  const value = parseInt(e.target.value);
-                  if (value > 0) {
-                      updateQuantity(product.id, value)
-                  }
+                const value = parseInt(e.target.value);
+                if (value > 0) {
+                  updateQuantity(product.id, value, item.variantId)
+                }
               }}
               className="h-8 w-14 rounded-none border-x-0 text-center [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
             />
@@ -56,8 +62,8 @@ export function CartItem({ item }: CartItemProps) {
               variant="outline"
               size="icon"
               className="h-8 w-8 text-[#00846E] hover:bg-[#00846E] hover:text-white"
-              onClick={() => updateQuantity(product.id, quantity + 1)}
-              disabled={quantity >= product.stock}
+              onClick={() => updateQuantity(product.id, quantity + 1, item.variantId)}
+              disabled={quantity >= product.stock} // Note: Strict variant stock check handled in updateQuantity
             >
               <Plus className="h-4 w-4" />
             </Button>
@@ -65,14 +71,14 @@ export function CartItem({ item }: CartItemProps) {
         </div>
       </div>
       <div className="flex flex-col items-end">
-         <Button
-            variant="ghost"
-            size="icon"
-            className="text-muted-foreground h-8 w-8"
-            onClick={() => removeFromCart(product.id)}
+        <Button
+          variant="ghost"
+          size="icon"
+          className="text-muted-foreground h-8 w-8"
+          onClick={() => removeFromCart(product.id, item.variantId)}
         >
-            <X className="h-4 w-4" />
-             <span className="sr-only">Remove item</span>
+          <X className="h-4 w-4" />
+          <span className="sr-only">Remove item</span>
         </Button>
         <p className="font-semibold text-sm mt-auto">
           {(product.price * quantity).toLocaleString()}

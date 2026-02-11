@@ -34,10 +34,36 @@ export class OrderService {
             for (const item of data.products) {
                 const product = await Product.findOne({ id: item.productId });
                 if (product) {
-                    if (product.stock < item.quantity) {
-                        throw new Error(`Insufficient stock for ${product.name}`);
+                    if (item.variantId) {
+                        // Variant Specific Logic
+                        let variantFound = false;
+                        if (product.variants) {
+                            for (const variant of product.variants) {
+                                const sizeOption = variant.sizes.find((s: any) => s._id.toString() === item.variantId);
+                                if (sizeOption) {
+                                    if (sizeOption.stock < item.quantity) {
+                                        throw new Error(`Insufficient stock for ${product.name} (${variant.color} - ${sizeOption.size})`);
+                                    }
+                                    sizeOption.stock -= item.quantity;
+                                    // Keep total stock in sync
+                                    if (product.stock >= item.quantity) {
+                                        product.stock -= item.quantity;
+                                    }
+                                    variantFound = true;
+                                    break;
+                                }
+                            }
+                        }
+                        if (!variantFound) {
+                            throw new Error(`Variant not found for ${product.name}`);
+                        }
+                    } else {
+                        // Legacy / Simple Product Logic
+                        if (product.stock < item.quantity) {
+                            throw new Error(`Insufficient stock for ${product.name}`);
+                        }
+                        product.stock -= item.quantity;
                     }
-                    product.stock -= item.quantity;
                     await product.save();
                 }
             }
@@ -66,7 +92,19 @@ export class OrderService {
             for (const item of currentOrder.products) {
                 const product = await Product.findOne({ id: item.productId });
                 if (product) {
-                    product.stock += item.quantity;
+                    if (item.variantId && product.variants) {
+                        for (const variant of product.variants) {
+                            const sizeOption = variant.sizes.find((s: any) => s._id.toString() === item.variantId);
+                            if (sizeOption) {
+                                sizeOption.stock += item.quantity;
+                                // Keep total stock in sync
+                                product.stock += item.quantity;
+                                break;
+                            }
+                        }
+                    } else {
+                        product.stock += item.quantity;
+                    }
                     await product.save();
                 }
             }
@@ -77,10 +115,27 @@ export class OrderService {
             for (const item of currentOrder.products) {
                 const product = await Product.findOne({ id: item.productId });
                 if (product) {
-                    if (product.stock < item.quantity) {
-                        throw new Error(`Insufficient stock to restore order for ${product.name}`);
+                    if (item.variantId && product.variants) {
+                        for (const variant of product.variants) {
+                            const sizeOption = variant.sizes.find((s: any) => s._id.toString() === item.variantId);
+                            if (sizeOption) {
+                                if (sizeOption.stock < item.quantity) {
+                                    throw new Error(`Insufficient stock to restore order for ${product.name}`);
+                                }
+                                sizeOption.stock -= item.quantity;
+                                // Keep total stock in sync
+                                if (product.stock >= item.quantity) {
+                                    product.stock -= item.quantity;
+                                }
+                                break;
+                            }
+                        }
+                    } else {
+                        if (product.stock < item.quantity) {
+                            throw new Error(`Insufficient stock to restore order for ${product.name}`);
+                        }
+                        product.stock -= item.quantity;
                     }
-                    product.stock -= item.quantity;
                     await product.save();
                 }
             }
@@ -99,7 +154,19 @@ export class OrderService {
                 for (const item of order.products) {
                     const product = await Product.findOne({ id: item.productId });
                     if (product) {
-                        product.stock += item.quantity;
+                        if (item.variantId && product.variants) {
+                            for (const variant of product.variants) {
+                                const sizeOption = variant.sizes.find((s: any) => s._id.toString() === item.variantId);
+                                if (sizeOption) {
+                                    sizeOption.stock += item.quantity;
+                                    // Keep total stock in sync
+                                    product.stock += item.quantity;
+                                    break;
+                                }
+                            }
+                        } else {
+                            product.stock += item.quantity;
+                        }
                         await product.save();
                     }
                 }

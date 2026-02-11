@@ -36,7 +36,7 @@ export function CartSheet({ children }: { children?: React.ReactNode }) {
             <ScrollArea className="flex-1 px-6">
               <div className="flex flex-col gap-4">
                 {cart.map((item) => (
-                  <CartItem key={item.product.id} item={item} />
+                  <CartItem key={`${item.product.id}-${item.variantId || 'default'}`} item={item} />
                 ))}
               </div>
             </ScrollArea>

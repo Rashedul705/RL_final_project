@@ -28,6 +28,19 @@ export class ProductService {
             data.slug = data.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
         }
 
+        // Calculate total stock if variants exist
+        if (data.variants && data.variants.length > 0) {
+            let totalStock = 0;
+            data.variants.forEach((v: any) => {
+                if (v.sizes) {
+                    v.sizes.forEach((s: any) => {
+                        totalStock += (Number(s.stock) || 0);
+                    });
+                }
+            });
+            data.stock = totalStock;
+        }
+
         const product = await Product.create(data);
         return product;
     }
@@ -70,6 +83,20 @@ export class ProductService {
             }
 
             // 2. Apply updates (this might change the name, but slug remains from step 1 or existing)
+
+            // Calculate total stock if variants are being updated
+            if (data.variants && data.variants.length > 0) {
+                let totalStock = 0;
+                data.variants.forEach((v: any) => {
+                    if (v.sizes) {
+                        v.sizes.forEach((s: any) => {
+                            totalStock += (Number(s.stock) || 0);
+                        });
+                    }
+                });
+                data.stock = totalStock;
+            }
+
             Object.assign(product, data);
 
             await product.save();

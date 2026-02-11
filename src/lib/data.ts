@@ -20,6 +20,17 @@ export type Product = {
   size?: string;
   highlights?: string;
   slug?: string;
+  variants?: {
+    color: string;
+    image: string;
+    images?: string[];
+    sizes: {
+      _id: string;
+      size: string;
+      stock: number;
+      price: number;
+    }[];
+  }[];
 };
 
 export type Category = {

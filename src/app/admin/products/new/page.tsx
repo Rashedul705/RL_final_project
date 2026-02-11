@@ -20,9 +20,9 @@ import { Textarea } from '@/components/ui/textarea';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
-import { Trash2, Loader2 } from 'lucide-react';
+import { Trash2, Loader2, Plus, X } from 'lucide-react';
 import { useState, useEffect } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import {
@@ -43,12 +43,33 @@ const formSchema = z.object({
   description: z.string().min(1, 'Product description is required.'),
   sizeGuide: z.string().optional(),
   size: z.string().optional(),
-  price: z.coerce.number().positive('Price must be a positive number.'),
+  price: z.coerce.number().nonnegative('Price must be a non-negative number.'),
   stock: z.coerce.number().int().nonnegative('Stock must be a non-negative integer.'),
   category: z.string().min(1, 'Please select a category.'),
   brand: z.string().optional(),
   productImage: z.any().optional(),
   galleryImages: z.any().optional(),
+  type: z.enum(['simple', 'variable']).default('simple'),
+  variants: z.array(z.object({
+    color: z.string().min(1, "Color is required"),
+    variantImage: z.any().optional(),
+    variantGallery: z.any().optional(),
+    sizes: z.array(z.object({
+      size: z.string().min(1, "Size is required"),
+      stock: z.coerce.number().min(0),
+      price: z.coerce.number().min(0), // Optional override
+    })).min(1, "At least one size is required"),
+  })).optional(),
+}).superRefine((data, ctx) => {
+  if (data.type === 'simple') {
+    if (data.price <= 0) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Price must be a positive number.",
+        path: ["price"]
+      });
+    }
+  }
 });
 
 export default function AdminNewProductPage() {
@@ -87,7 +108,14 @@ export default function AdminNewProductPage() {
       stock: 0,
       category: '',
       brand: '',
+      type: 'simple',
+      variants: [],
     },
+  });
+
+  const { fields: variantFields, append: appendVariant, remove: removeVariant } = useFieldArray({
+    control: form.control,
+    name: "variants",
   });
 
   async function uploadFile(file: File) {
@@ -125,13 +153,46 @@ export default function AdminNewProductPage() {
         }
       }
 
-      // 3. Save Product
+      // 3. Process Variants if Variable Product
+      let processedVariants: any[] = [];
+      if (values.type === 'variable' && values.variants) {
+        for (const variant of values.variants) {
+          // Upload Variant Main Image
+          let variantImageUrl = '';
+          if (variant.variantImage && variant.variantImage.length > 0) {
+            variantImageUrl = await uploadFile(variant.variantImage[0]);
+          } else {
+            // Fallback to main product image if not provided? Or enforce it?
+            // Enforcing for now as per requirement "Show a small square image... for each color option"
+            // But if user skips, we might use main image. Let's try to upload if exists.
+          }
+
+          // Upload Variant Gallery
+          const variantGalleryUrls: string[] = [];
+          if (variant.variantGallery && variant.variantGallery.length > 0) {
+            for (const file of Array.from(variant.variantGallery)) {
+              const url = await uploadFile(file as File);
+              if (url) variantGalleryUrls.push(url);
+            }
+          }
+
+          processedVariants.push({
+            color: variant.color,
+            image: variantImageUrl,
+            images: variantGalleryUrls,
+            sizes: variant.sizes,
+          });
+        }
+      }
+
+      // 4. Save Product
       const productData = {
         ...values,
         image: mainImageUrl, // ImgBB URL
         images: galleryImageUrls, // ImgBB URLs
         price: Number(values.price),
         stock: Number(values.stock),
+        variants: values.type === 'variable' ? processedVariants : [],
       };
 
       await apiClient.post('/products', productData);
@@ -239,56 +300,206 @@ export default function AdminNewProductPage() {
                     </div>
                   </CardContent>
                 </Card>
+
+                {/* Product Type Selection */}
                 <Card>
                   <CardHeader>
-                    <CardTitle>Inventory</CardTitle>
+                    <CardTitle>Product Type</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="grid gap-6">
-                      <div className="grid grid-cols-2 gap-6">
+                    <FormField
+                      control={form.control}
+                      name="type"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Type</FormLabel>
+                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select type" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="simple">Simple Product</SelectItem>
+                              <SelectItem value="variable">Variable Product (Colors/Sizes)</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </CardContent>
+                </Card>
+
+                {/* Variants Section - Only if Variable */}
+                {form.watch('type') === 'variable' && (
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <h2 className="text-lg font-semibold">Variants</h2>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => appendVariant({
+                          color: '',
+                          sizes: [{ size: '', stock: 0, price: 0 }]
+                        })}
+                      >
+                        <Plus className="mr-2 h-4 w-4" /> Add Variant (Color)
+                      </Button>
+                    </div>
+
+                    {variantFields.map((field, index) => (
+                      <Card key={field.id}>
+                        <CardHeader className="pb-3">
+                          <div className="flex items-center justify-between">
+                            <CardTitle className="text-base">Variant {index + 1}</CardTitle>
+                            <Button type="button" variant="ghost" size="sm" onClick={() => removeVariant(index)}>
+                              <Trash2 className="h-4 w-4 text-destructive" />
+                            </Button>
+                          </div>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                          {/* Color Name */}
+                          <FormField
+                            control={form.control}
+                            name={`variants.${index}.color`}
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Color Name</FormLabel>
+                                <FormControl>
+                                  <Input placeholder="e.g. Red, Forest Green" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+
+                          {/* Variant Image (Swatch) */}
+                          <FormField
+                            control={form.control}
+                            name={`variants.${index}.variantImage`}
+                            render={({ field: { onChange, value, ...rest } }) => (
+                              <FormItem>
+                                <FormLabel>Variant Image (Swatch)</FormLabel>
+                                <FormControl>
+                                  <Input
+                                    type="file"
+                                    accept="image/*"
+                                    onChange={(e) => {
+                                      if (e.target.files) onChange(Array.from(e.target.files));
+                                    }}
+                                    {...rest}
+                                    value={undefined}
+                                  />
+                                </FormControl>
+                                <FormMessage />
+                                {value && value.length > 0 && (
+                                  <p className="text-xs text-muted-foreground mt-1">Image selected: {value[0].name}</p>
+                                )}
+                              </FormItem>
+                            )}
+                          />
+
+                          {/* Variant Gallery */}
+                          <FormField
+                            control={form.control}
+                            name={`variants.${index}.variantGallery`}
+                            render={({ field: { onChange, value, ...rest } }) => (
+                              <FormItem>
+                                <FormLabel>Variant Gallery (Optional)</FormLabel>
+                                <FormControl>
+                                  <Input
+                                    type="file"
+                                    multiple
+                                    accept="image/*"
+                                    onChange={(e) => {
+                                      if (e.target.files) {
+                                        const newFiles = Array.from(e.target.files);
+                                        const currentFiles = value || [];
+                                        onChange([...currentFiles, ...newFiles]);
+                                      }
+                                    }}
+                                    {...rest}
+                                    value={undefined}
+                                  />
+                                </FormControl>
+                                <FormMessage />
+                                {value && value.length > 0 && (
+                                  <p className="text-xs text-muted-foreground mt-1">{value.length} images selected</p>
+                                )}
+                              </FormItem>
+                            )}
+                          />
+
+
+                          {/* Sizes for this Variant */}
+                          <div className="border rounded-md p-3 bg-muted/20">
+                            <FormLabel className="mb-2 block">Sizes & Stock</FormLabel>
+                            <SizesField
+                              control={form.control}
+                              nestIndex={index}
+                            />
+                          </div>
+
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                )}
+
+
+                {form.watch('type') === 'simple' && (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Inventory</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="grid gap-6">
+                        <div className="grid grid-cols-2 gap-6">
+                          <FormField
+                            control={form.control}
+                            name="price"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Price (BDT)</FormLabel>
+                                <FormControl>
+                                  <Input type="number" step="0.01" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={form.control}
+                            name="stock"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Stock</FormLabel>
+                                <FormControl>
+                                  <Input type="number" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </div>
                         <FormField
                           control={form.control}
-                          name="price"
+                          name="size"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>Price (BDT)</FormLabel>
+                              <FormLabel>Size / Variant</FormLabel>
                               <FormControl>
-                                <Input type="number" step="0.01" {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        <FormField
-                          control={form.control}
-                          name="stock"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Stock</FormLabel>
-                              <FormControl>
-                                <Input type="number" {...field} />
+                                <Input placeholder="e.g. Free Size, or S, M, L" {...field} />
                               </FormControl>
                               <FormMessage />
                             </FormItem>
                           )}
                         />
                       </div>
-                      <FormField
-                        control={form.control}
-                        name="size"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Size / Variant</FormLabel>
-                            <FormControl>
-                              <Input placeholder="e.g. Free Size, or S, M, L" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-                  </CardContent>
-                </Card>
+                    </CardContent>
+                  </Card>
+                )}
               </div>
               <div className="grid auto-rows-max items-start gap-4 lg:gap-8">
                 <Card>
@@ -476,7 +687,74 @@ export default function AdminNewProductPage() {
             </div>
           </form>
         </Form>
-      </div>
+      </div >
     </>
+  );
+}
+
+function SizesField({ control, nestIndex }: { control: any, nestIndex: number }) {
+  const { fields, append, remove } = useFieldArray({
+    control,
+    name: `variants.${nestIndex}.sizes`,
+  });
+
+  return (
+    <div className="space-y-2">
+      {fields.map((item, k) => (
+        <div key={item.id} className="flex items-end gap-2">
+          <FormField
+            control={control}
+            name={`variants.${nestIndex}.sizes.${k}.size`}
+            render={({ field }) => (
+              <FormItem className="flex-1">
+                <FormLabel className={k === 0 ? "" : "sr-only"}>Size</FormLabel>
+                <FormControl>
+                  <Input placeholder="Size" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={control}
+            name={`variants.${nestIndex}.sizes.${k}.stock`}
+            render={({ field }) => (
+              <FormItem className="flex-1">
+                <FormLabel className={k === 0 ? "" : "sr-only"}>Stock</FormLabel>
+                <FormControl>
+                  <Input type="number" placeholder="Stock" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={control}
+            name={`variants.${nestIndex}.sizes.${k}.price`}
+            render={({ field }) => (
+              <FormItem className="flex-1">
+                <FormLabel className={k === 0 ? "" : "sr-only"}>Price (Opt)</FormLabel>
+                <FormControl>
+                  <Input type="number" step="0.01" placeholder="Price" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <Button type="button" variant="ghost" size="icon" onClick={() => remove(k)}>
+            <X className="h-4 w-4" />
+          </Button>
+        </div>
+      ))}
+      <Button
+        type="button"
+        variant="outline"
+        size="sm"
+        className="mt-2"
+        onClick={() => append({ size: '', stock: 0, price: 0 })}
+      >
+        <Plus className="mr-2 h-4 w-4" /> Add Size
+      </Button>
+    </div>
   );
 }

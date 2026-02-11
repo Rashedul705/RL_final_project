@@ -17,6 +17,16 @@ const createProductSchema = z.object({
     size: z.string().optional(),
     sizeGuide: z.string().optional(),
     brand: z.string().optional(),
+    variants: z.array(z.object({
+        color: z.string(),
+        image: z.string(),
+        images: z.array(z.string()).optional(),
+        sizes: z.array(z.object({
+            size: z.string(),
+            stock: z.number(),
+            price: z.number(),
+        })),
+    })).optional(),
 });
 
 export async function GET(request: NextRequest) {

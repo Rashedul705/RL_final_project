@@ -299,7 +299,16 @@ export default function AdminProductsPage() {
                         </Badge>
                       </TableCell>
                       <TableCell>
-                        BDT {product.price.toLocaleString()}
+                        {product.variants && product.variants.length > 0 ? (() => {
+                          const prices = product.variants.flatMap(v => v.sizes.map(s => s.price));
+                          if (prices.length === 0) return 'BDT 0';
+                          const minPrice = Math.min(...prices);
+                          const maxPrice = Math.max(...prices);
+                          if (minPrice === maxPrice) return `BDT ${minPrice.toLocaleString()}`;
+                          return `BDT ${minPrice.toLocaleString()} - ${maxPrice.toLocaleString()}`;
+                        })() : (
+                          `BDT ${product.price.toLocaleString()}`
+                        )}
                       </TableCell>
                       <TableCell className="hidden md:table-cell">
                         {product.stock || 0}

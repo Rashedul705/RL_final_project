@@ -390,10 +390,10 @@ export default function CheckoutPage() {
                                 <CardContent className="space-y-4">
                                     <div className="space-y-3">
                                         {cart.map(item => (
-                                            <div key={item.product.id} className="flex items-center gap-4">
+                                            <div key={`${item.product.id}-${item.variantId || 'default'}`} className="flex items-center gap-4">
                                                 <div className="relative h-16 w-16 rounded-md overflow-hidden">
                                                     <Image
-                                                        src={item.product.image}
+                                                        src={item.image || item.product.image}
                                                         alt={item.product.name}
                                                         fill
                                                         className="object-cover"
@@ -401,12 +401,18 @@ export default function CheckoutPage() {
                                                 </div>
                                                 <div className="flex-1">
                                                     <p className="text-sm font-medium leading-tight">{item.product.name}</p>
+                                                    {item.variantId && (
+                                                        <div className="text-xs text-muted-foreground mt-1">
+                                                            {item.color && <span className="mr-2">Color: {item.color}</span>}
+                                                            {item.size && <span>Size: {item.size}</span>}
+                                                        </div>
+                                                    )}
                                                     <div className="flex items-center mt-1">
                                                         <Button
                                                             variant="outline"
                                                             size="icon"
                                                             className="h-6 w-6 text-primary hover:bg-primary hover:text-primary-foreground"
-                                                            onClick={() => updateQuantity(item.product.id, item.quantity - 1)}
+                                                            onClick={() => updateQuantity(item.product.id, item.quantity - 1, item.variantId)}
                                                         >
                                                             <Minus className="h-3 w-3" />
                                                         </Button>
@@ -416,7 +422,7 @@ export default function CheckoutPage() {
                                                             onChange={(e) => {
                                                                 const value = parseInt(e.target.value);
                                                                 if (value > 0) {
-                                                                    updateQuantity(item.product.id, value)
+                                                                    updateQuantity(item.product.id, value, item.variantId)
                                                                 }
                                                             }}
                                                             className="h-6 w-10 rounded-none border-x-0 text-center px-0 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
@@ -425,8 +431,8 @@ export default function CheckoutPage() {
                                                             variant="outline"
                                                             size="icon"
                                                             className="h-6 w-6 text-primary hover:bg-primary hover:text-primary-foreground"
-                                                            onClick={() => updateQuantity(item.product.id, item.quantity + 1)}
-                                                            disabled={item.product.stock !== undefined && item.quantity >= item.product.stock}
+                                                            onClick={() => updateQuantity(item.product.id, item.quantity + 1, item.variantId)}
+                                                            disabled={item.product.stock !== undefined && item.quantity >= item.product.stock} // Note: strict variant stock check is handled in updateQuantity but we could improve UI disable state here if we had access to specific variant stock easily
                                                         >
                                                             <Plus className="h-3 w-3" />
                                                         </Button>

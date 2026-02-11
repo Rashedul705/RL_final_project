@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect, use } from 'react';
+import { useState, useEffect, use, useMemo } from 'react';
+import { cn } from '@/lib/utils';
 import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
 import Image from 'next/image';
@@ -56,6 +57,55 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
   // Use state for product and related products instead of derived static/fetched mix
   const [product, setProduct] = useState<any>(null);
   const [relatedProducts, setRelatedProducts] = useState<any[]>([]);
+  const [selectedVariantId, setSelectedVariantId] = useState<string | null>(null);
+  const [selectedSizeId, setSelectedSizeId] = useState<string | null>(null);
+
+  // Derived state for variants
+  const activeVariant = useMemo(() => {
+    if (!product || !product.variants || product.variants.length === 0) return null;
+    if (!selectedVariantId) return product.variants[0]; // Default to first
+    return product.variants.find((v: any) => v._id === selectedVariantId) || product.variants[0];
+  }, [product, selectedVariantId]);
+
+  const activeSize = useMemo(() => {
+    if (!activeVariant) return null;
+    // If a specific size is selected, use it
+    if (selectedSizeId) {
+      return activeVariant.sizes.find((s: any) => s._id === selectedSizeId);
+    }
+    // Otherwise, auto-select first available (in stock) or first one
+    if (activeVariant.sizes && activeVariant.sizes.length > 0) {
+      const firstAvailable = activeVariant.sizes.find((s: any) => s.stock > 0);
+      return firstAvailable || activeVariant.sizes[0];
+    }
+    return null;
+  }, [activeVariant, selectedSizeId]);
+
+  const currentPrice = useMemo(() => {
+    if (activeSize) return activeSize.price > 0 ? activeSize.price : product?.price;
+    return product?.price;
+  }, [activeSize, product]);
+
+  const currentStock = useMemo(() => {
+    if (activeSize) return activeSize.stock;
+    if (product?.variants?.length > 0 && !activeSize) return 0; // If variable but no size selected
+    return product?.stock;
+  }, [activeSize, product]);
+
+  // Gallery images based on selection
+  const galleryImages = useMemo(() => {
+    if (!product) return [];
+    let images = [];
+    if (activeVariant) {
+      if (activeVariant.image) images.push(activeVariant.image);
+      if (activeVariant.images) images.push(...activeVariant.images);
+    } else {
+      if (product.image) images.push(product.image);
+      if (product.images) images.push(...product.images);
+    }
+    // Deduplicate
+    return images.filter((img, index, self) => img && self.indexOf(img) === index);
+  }, [product, activeVariant]);
 
   useEffect(() => {
     const loadData = async () => {
@@ -121,6 +171,11 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
     };
   }, [api]);
 
+  // Reset quantity when variant/size changes
+  useEffect(() => {
+    setQuantity(1);
+  }, [selectedVariantId, selectedSizeId]);
+
   if (isLoading) {
     return (
       <div className="flex h-screen items-center justify-center">
@@ -137,21 +192,17 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
     if (newQuantity < 1) {
       setQuantity(1);
     } else if (newQuantity > product.stock) {
-      setQuantity(product.stock);
+      setQuantity(currentStock);
     } else {
       setQuantity(newQuantity);
     }
   };
 
-  // Ensure the main image is always first in the gallery
-  const galleryImages = [
-    product.image,
-    ...(product.images || [])
-  ].filter((img, index, self) => img && self.indexOf(img) === index);
-
   const handleThumbnailClick = (index: number) => {
     api?.scrollTo(index);
   };
+
+
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
@@ -219,18 +270,81 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
                 <Badge variant="outline">{product.category}</Badge>
               </div>
               <p className="mt-4 text-3xl font-bold text-primary">
-                BDT {product.price.toLocaleString()}
+                BDT {currentPrice?.toLocaleString()}
               </p>
 
-              {product.size && (
-                <div className="mt-4">
-                  <Badge className="text-base px-3 py-1 font-normal bg-[#ff3399] text-white hover:bg-[#ff3399]/90">
-                    Size: {product.size}
-                  </Badge>
+              {/* Variable Product Options */}
+              {product.variants && product.variants.length > 0 ? (
+                <div className='mt-6 space-y-6'>
+                  {/* Colors */}
+                  <div>
+                    <Label className='text-base mb-3 block'>Select Color: <span className='font-normal text-muted-foreground'>{activeVariant?.color}</span></Label>
+                    <div className='flex flex-wrap gap-3'>
+                      {product.variants.map((variant: any) => (
+                        <button
+                          key={variant._id || variant.color} // Fallback to color if no ID
+                          onClick={() => {
+                            setSelectedVariantId(variant._id);
+                            setSelectedSizeId(null); // Reset size when color changes
+                          }}
+                          className={cn(
+                            "relative h-12 w-12 rounded-full overflow-hidden border-2 transition-all hover:scale-110 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2",
+                            (activeVariant?._id === variant._id || (!selectedVariantId && variant === product.variants[0]))
+                              ? "border-primary ring-2 ring-primary ring-offset-2"
+                              : "border-transparent"
+                          )}
+                          title={variant.color}
+                        >
+                          <Image
+                            src={variant.image}
+                            alt={variant.color}
+                            fill
+                            className="object-cover"
+                            sizes="48px"
+                          />
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Sizes */}
+                  <div>
+                    <Label className='text-base mb-3 block'>Select Size: {activeSize && <span className='font-normal text-muted-foreground'>{activeSize.size}</span>}</Label>
+                    <div className='flex flex-wrap gap-3'>
+                      {activeVariant?.sizes?.map((sizeObj: any) => {
+                        // Highlight if explicitly selected OR if matching the activeSize (derived default)
+                        const isSelected = selectedSizeId === sizeObj._id || (!selectedSizeId && activeSize?._id === sizeObj._id);
+                        const isOutOfStock = sizeObj.stock <= 0;
+                        return (
+                          <button
+                            key={sizeObj._id}
+                            disabled={isOutOfStock}
+                            onClick={() => setSelectedSizeId(sizeObj._id)}
+                            className={cn(
+                              "min-w-[3rem] h-10 px-3 rounded-md border text-sm font-medium transition-colors hover:border-primary",
+                              isSelected ? "bg-primary text-primary-foreground border-primary" : "bg-background text-foreground",
+                              isOutOfStock && "opacity-50 cursor-not-allowed bg-muted text-muted-foreground decoration-slate-500 line-through"
+                            )}
+                          >
+                            {sizeObj.size}
+                          </button>
+                        )
+                      })}
+                    </div>
+                  </div>
                 </div>
+              ) : (
+                /* Simple Product Size Badge */
+                product.size && (
+                  <div className="mt-4">
+                    <Badge className="text-base px-3 py-1 font-normal bg-[#ff3399] text-white hover:bg-[#ff3399]/90">
+                      Size: {product.size}
+                    </Badge>
+                  </div>
+                )
               )}
 
-              {product.stock > 0 ? (
+              {currentStock > 0 ? (
                 <div className="mt-8 space-y-4">
                   <div className="flex items-center gap-2">
                     <Label htmlFor="quantity" className="text-sm font-medium">Quantity:</Label>
@@ -258,12 +372,18 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
                         size="icon"
                         className="h-8 w-8"
                         onClick={() => handleQuantityChange(quantity + 1)}
-                        disabled={quantity >= product.stock}
+                        disabled={quantity >= currentStock}
                       >
                         <Plus className="h-4 w-4" />
                       </Button>
                     </div>
-                    <p className="text-sm text-muted-foreground">(in stock)</p>
+                    <p className="text-sm text-muted-foreground">
+                      {currentStock > 5 ? (
+                        <span className="text-green-600 font-medium">In Stock</span>
+                      ) : (
+                        <span className="text-orange-600 font-medium">Only {currentStock} left!</span>
+                      )}
+                    </p>
                   </div>
 
                   <div className="mb-6">
@@ -292,8 +412,12 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
                     <AddToCartButton
                       product={product}
                       quantity={quantity}
+                      color={activeVariant?.color}
+                      size={activeSize?.size}
+                      variantId={activeSize?._id}
+                      image={activeVariant?.image}
                       variant="outline"
-                      className="w-full flex-1 text-lg py-6 border-primary text-primary hover:bg-primary hover:text-primary-foreground"
+                      className="w-full flex-1 text-lg py-6 border-primary text-primary hover:bg-primary hover:text-primary-foreground disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       Add to Cart
                     </AddToCartButton>
@@ -301,7 +425,11 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
                       product={product}
                       quantity={quantity}
                       redirectToCheckout
-                      className="w-full flex-1 bg-primary hover:bg-primary/90 text-primary-foreground text-lg py-6"
+                      color={activeVariant?.color}
+                      size={activeSize?.size}
+                      variantId={activeSize?._id}
+                      image={activeVariant?.image}
+                      className="w-full flex-1 bg-primary hover:bg-primary/90 text-primary-foreground text-lg py-6 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       Order Now
                     </AddToCartButton>
