@@ -61,6 +61,7 @@ type Category = {
   name: string;
   description?: string;
   image?: string;
+  position?: number;
   _id?: string; // Mongoose ID
 };
 
@@ -144,6 +145,7 @@ export default function AdminCategoriesPage() {
     const formData = new FormData(event.currentTarget);
     const name = formData.get('name') as string;
     const description = formData.get('description') as string;
+    const position = formData.get('position') ? Number(formData.get('position')) : 0;
     const imageFile = formData.get('image') as File;
 
     if (!name) {
@@ -159,7 +161,8 @@ export default function AdminCategoriesPage() {
       }
 
       const endpoint = activeTab === 'categories' ? '/categories' : '/brands';
-      const payload = { name, description, image: imageUrl };
+      const payload: any = { name, description, image: imageUrl };
+      if (activeTab === 'categories') payload.position = position;
 
       if (editingItem) {
         // Update
@@ -255,6 +258,7 @@ export default function AdminCategoriesPage() {
                       </TableHead>
                       <TableHead>Name</TableHead>
                       <TableHead>Slug (ID)</TableHead>
+                      <TableHead>Pos</TableHead>
                       <TableHead>
                         <span className="sr-only">Actions</span>
                       </TableHead>
@@ -294,6 +298,9 @@ export default function AdminCategoriesPage() {
                               {item.id}
                               <Search className="h-3 w-3" />
                             </a>
+                          </TableCell>
+                          <TableCell>
+                            {activeTab === 'categories' ? (item as Category).position ?? 0 : '-'}
                           </TableCell>
                           <TableCell>
                             <DropdownMenu>
@@ -341,6 +348,21 @@ export default function AdminCategoriesPage() {
                 </Label>
                 <Input id="name" name="name" defaultValue={editingItem?.name} className="col-span-3" required />
               </div>
+
+              {activeTab === 'categories' && (
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="position" className="text-right">
+                    Position
+                  </Label>
+                  <Input
+                    id="position"
+                    name="position"
+                    type="number"
+                    defaultValue={(editingItem as Category)?.position ?? 0}
+                    className="col-span-3"
+                  />
+                </div>
+              )}
 
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="image" className="text-right">

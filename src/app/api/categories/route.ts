@@ -1,5 +1,6 @@
 
 export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
 
 import { NextRequest } from 'next/server';
 import { Category } from '@/lib/models';
@@ -11,12 +12,13 @@ const categorySchema = z.object({
     name: z.string().min(2),
     description: z.string().optional(),
     image: z.string().optional(),
+    position: z.number().optional(),
 });
 
 export async function GET(request: NextRequest) {
     try {
         await dbConnect();
-        const categories = await Category.find({});
+        const categories = await Category.find({}).sort({ position: 1 });
         return ApiResponse.success(categories);
     } catch (error) {
         return ApiResponse.error('Failed to fetch categories', 500);
@@ -33,9 +35,8 @@ export async function POST(request: NextRequest) {
             return ApiResponse.error('Invalid input', 400);
         }
 
-        const { name } = parseResult.data;
-        const id = name.toLowerCase().replace(/\s+/g, '-'); // Simple slug generation as ID if not using _id, but models.ts has id: string required.
-        // models.ts says: id: { type: String, required: true, unique: true }
+        const { name, position } = parseResult.data;
+        const id = name.toLowerCase().replace(/\s+/g, '-');
 
         // Check uniqueness
         const existing = await Category.findOne({ id });
@@ -43,9 +44,16 @@ export async function POST(request: NextRequest) {
             return ApiResponse.error('Category slug already exists', 409);
         }
 
+        let finalPosition = position;
+        if (finalPosition === undefined) {
+            const lastCategory = await Category.findOne({}).sort({ position: -1 });
+            finalPosition = (lastCategory?.position || 0) + 1;
+        }
+
         const category = await Category.create({
             ...parseResult.data,
-            id
+            id,
+            position: finalPosition
         });
 
         return ApiResponse.success(category, 201);
