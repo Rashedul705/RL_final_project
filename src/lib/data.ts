@@ -20,6 +20,8 @@ export type Product = {
   size?: string;
   highlights?: string;
   slug?: string;
+  attributes?: { name: string; options: string[] }[];
+  variants?: any[];
 };
 
 export type Category = {

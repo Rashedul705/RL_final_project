@@ -2,6 +2,16 @@
 import mongoose, { Schema, Document, Model } from 'mongoose';
 
 // --- Product Schema ---
+// --- Product Schema ---
+export interface IVariant {
+    name: string; // e.g. "Red-S"
+    attributes: Record<string, string>; // { "Color": "Red", "Size": "S" }
+    price: number;
+    stock: number;
+    sku?: string;
+    image?: string;
+}
+
 export interface IProduct extends Document {
     id: string; // We'll keep 'id' for compatibility, but Mongoose uses _id
     name: string;
@@ -14,9 +24,11 @@ export interface IProduct extends Document {
     brand?: string; // Brand ID/Slug
     stock: number;
     sizeGuide?: string;
-    size?: string;
+    size?: string; // Legacy field, keeping for backward compatibility
     highlights?: string;
     slug: string;
+    attributes?: { name: string; options: string[] }[];
+    variants?: IVariant[];
 }
 
 const ProductSchema: Schema = new Schema({
@@ -34,6 +46,18 @@ const ProductSchema: Schema = new Schema({
     sizeGuide: { type: String },
     size: { type: String },
     highlights: { type: String },
+    attributes: [{
+        name: { type: String, required: true },
+        options: { type: [String], required: true }
+    }],
+    variants: [{
+        name: { type: String, required: true },
+        attributes: { type: Map, of: String },
+        price: { type: Number, required: true },
+        stock: { type: Number, required: true },
+        sku: { type: String },
+        image: { type: String }
+    }]
 }, { timestamps: true });
 
 // --- Order Schema ---
@@ -46,7 +70,16 @@ export interface IOrder extends Document {
     amount: string; // Grand Total
     shippingCharge: number;
     status: 'Pending' | 'Packaging' | 'Handed Over to Courier' | 'Delivered' | 'Cancelled' | 'Returned';
-    products: { productId: string; name: string; quantity: number; price: number, image?: string }[];
+    products: {
+        productId: string;
+        name: string;
+        quantity: number;
+        price: number;
+        image?: string;
+        variantId?: string;
+        variantName?: string;
+        attributes?: Record<string, string>;
+    }[];
     date: string; // ISO String
     subtotal: number;
     discount: number;
@@ -73,7 +106,10 @@ const OrderSchema: Schema = new Schema({
         name: { type: String, required: true },
         quantity: { type: Number, required: true },
         price: { type: Number, required: true },
-        image: { type: String }
+        image: { type: String },
+        variantId: { type: String },
+        variantName: { type: String },
+        attributes: { type: Map, of: String }
     }],
     date: { type: String, required: true },
     subtotal: { type: Number },

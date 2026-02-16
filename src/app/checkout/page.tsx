@@ -214,13 +214,22 @@ export default function CheckoutPage() {
             address: `${values.fullAddress}, ${values.city}`,
             amount: total.toString(),
             status: 'Pending',
-            products: cart.map(item => ({
-                productId: item.product.id,
-                name: item.product.name,
-                quantity: item.quantity,
-                price: item.product.price,
-                image: item.product.image
-            })),
+            products: cart.map(item => {
+                // Resolve image: Variant Image > Product Image
+                const variant = item.product.variants?.find((v: any) => v.id === item.variantId);
+                const displayImage = variant?.image || item.product.image;
+
+                return {
+                    productId: item.product.id,
+                    name: item.product.name,
+                    quantity: item.quantity,
+                    price: item.product.price, // Note: price might need to be item.variantPrice if we store it
+                    image: displayImage,
+                    variantId: item.variantId,
+                    variantName: item.variantName,
+                    attributes: item.attributes
+                };
+            }),
             date: new Date().toISOString(),
             // shippingInfo replaced by dynamic block below
             shippingInfo: {
@@ -392,12 +401,18 @@ export default function CheckoutPage() {
                                         {cart.map(item => (
                                             <div key={item.product.id} className="flex items-center gap-4">
                                                 <div className="relative h-16 w-16 rounded-md overflow-hidden">
-                                                    <Image
-                                                        src={item.product.image}
-                                                        alt={item.product.name}
-                                                        fill
-                                                        className="object-cover"
-                                                    />
+                                                    {(() => {
+                                                        const variant = item.product.variants?.find((v: any) => v.id === item.variantId);
+                                                        const displayImage = variant?.image || item.product.image;
+                                                        return (
+                                                            <Image
+                                                                src={displayImage}
+                                                                alt={item.product.name}
+                                                                fill
+                                                                className="object-cover"
+                                                            />
+                                                        );
+                                                    })()}
                                                 </div>
                                                 <div className="flex-1">
                                                     <p className="text-sm font-medium leading-tight">{item.product.name}</p>
@@ -406,7 +421,7 @@ export default function CheckoutPage() {
                                                             variant="outline"
                                                             size="icon"
                                                             className="h-6 w-6 text-primary hover:bg-primary hover:text-primary-foreground"
-                                                            onClick={() => updateQuantity(item.product.id, item.quantity - 1)}
+                                                            onClick={() => updateQuantity(item.product.id, item.quantity - 1, item.variantId)}
                                                         >
                                                             <Minus className="h-3 w-3" />
                                                         </Button>

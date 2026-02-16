@@ -188,15 +188,15 @@ export default function AdminOrdersPage() {
                 font-size: 12px;
               }
               .header { text-align: center; margin-bottom: 20px; }
-              .header h2 { margin: 0; font-size: 8px; font-weight: bold; }
-              .header p { margin: 5px 0 0; font-size: 10px; }
+              .header h2 { margin: 0; font-size: 16px; font-weight: bold; }
+              .header p { margin: 5px 0 0; font-size: 12px; }
               .section { margin-bottom: 15px; }
               .section-title { border-top: 1px dashed #000; border-bottom: 1px dashed #000; padding: 5px 0; margin: 10px 0; font-weight: bold; }
               table { width: 100%; border-collapse: collapse; }
               th, td { text-align: left; padding: 4px 0; vertical-align: top; }
               .text-right { text-align: right; }
               .totals-table td { padding: 2px 0; }
-              .footer { text-align: center; margin-top: 20px; border-top: 1px dashed #000; padding-top: 10px;}
+              .footer { text-align: center; margin-top: 20px; border-top: 1px dashed #000; padding-top: 10px; font-size: 12px;}
               .sf-box {
                 border: 1px solid #000;
                 padding: 5px;
@@ -248,7 +248,8 @@ export default function AdminOrdersPage() {
                 ${order.products.map(p => `
                   <tr>
                     <td>
-                      <div class="item-name">${p.name}</div>
+                      <div class="item-name">${p.name} ${p.variantName ? `(${p.variantName})` : ''}</div>
+                      ${p.attributes ? Object.entries(p.attributes).map(([k, v]) => `<div style="font-size: 9px; color: #666;">${k}: ${v}</div>`).join('') : ''}
                       <span style="font-size: 10px; color: #555;">x ${p.quantity} @ ${p.price.toLocaleString()}</span>
                     </td>
                     <td class="text-right">${(p.quantity * p.price).toLocaleString()}</td>
@@ -503,7 +504,19 @@ export default function AdminOrdersPage() {
                     {selectedOrder.products.map((product, index) => {
                       return (
                         <li key={index} className="flex justify-between items-center">
-                          <ProductLink productId={product.productId} name={product.name} quantity={product.quantity} />
+                          <div>
+                            <ProductLink productId={product.productId} name={product.name} quantity={product.quantity} />
+                            {product.variantName && (
+                              <div className="text-xs text-muted-foreground">
+                                Variant: {product.variantName}
+                              </div>
+                            )}
+                            {product.attributes && (
+                              <div className="text-xs text-muted-foreground">
+                                {Object.entries(product.attributes).map(([k, v]) => `${k}: ${v}`).join(', ')}
+                              </div>
+                            )}
+                          </div>
                           <span className="font-medium">BDT {(product.price * product.quantity).toLocaleString()}</span>
                         </li>
                       )

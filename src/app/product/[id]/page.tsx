@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, use } from 'react';
+import { useState, useEffect, use, useMemo } from 'react';
 import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
 import Image from 'next/image';
@@ -48,14 +48,31 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
   const [current, setCurrent] = useState(0);
   const [quantity, setQuantity] = useState(1);
   const [isLoading, setIsLoading] = useState(true);
-  const [fetchedProduct, setFetchedProduct] = useState<any>(null); // Use any or specific type if possible
 
   // Asynchronously get the slug from the params promise.
   const { id: slug } = use(params);
 
-  // Use state for product and related products instead of derived static/fetched mix
+  // Use state for product and related products
   const [product, setProduct] = useState<any>(null);
   const [relatedProducts, setRelatedProducts] = useState<any[]>([]);
+
+  // Variant State
+  const [selectedAttributes, setSelectedAttributes] = useState<Record<string, string>>({});
+  const [selectedVariant, setSelectedVariant] = useState<any>(null);
+
+  // Ensure the main image is always first in the gallery, add variant images if any
+  const galleryImages = useMemo<string[]>(() => {
+    if (!product) return [];
+    const images: string[] = [product.image, ...(product.images || [])];
+    if (product.variants) {
+      product.variants.forEach((v: any) => {
+        if (v.image && !images.includes(v.image)) {
+          images.push(v.image);
+        }
+      });
+    }
+    return images.filter((img: string, index: number, self: string[]) => img && self.indexOf(img) === index);
+  }, [product]);
 
   useEffect(() => {
     const loadData = async () => {
@@ -67,11 +84,21 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
         if (productData) {
           setProduct(productData);
 
+          // Initialize default attributes if variants exist
+          if (productData.attributes && productData.attributes.length > 0) {
+            const defaults: Record<string, string> = {};
+            productData.attributes.forEach((attr: any) => {
+              defaults[attr.name] = attr.options[0];
+            });
+            setSelectedAttributes(defaults);
+          }
+
+
           // Track view_item event
           sendGTMEvent({
             event: 'view_item',
             content_name: productData.name,
-            content_ids: [productData.id], // Using 'id' field as consistent with other parts
+            content_ids: [productData.id],
             content_type: 'product',
             value: productData.price,
             currency: 'BDT',
@@ -100,7 +127,15 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
   }, [slug]);
 
 
-
+  // Update selected variant when attributes change
+  useEffect(() => {
+    if (product && product.variants && product.variants.length > 0) {
+      const matchingVariant = product.variants.find((v: any) => {
+        return Object.entries(selectedAttributes).every(([key, value]) => v.attributes[key] === value);
+      });
+      setSelectedVariant(matchingVariant || null);
+    }
+  }, [selectedAttributes, product]);
 
 
   useEffect(() => {
@@ -121,6 +156,17 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
     };
   }, [api]);
 
+  // Scroll to variant image if available
+  useEffect(() => {
+    if (selectedVariant && selectedVariant.image && api) {
+      const index = galleryImages.findIndex(img => img === selectedVariant.image);
+      if (index !== -1) {
+        api.scrollTo(index);
+      }
+    }
+  }, [selectedVariant, api]);
+
+
   if (isLoading) {
     return (
       <div className="flex h-screen items-center justify-center">
@@ -133,24 +179,30 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
     notFound();
   }
 
+  // Derived Display Values
+  const currentPrice = selectedVariant ? selectedVariant.price : product.price;
+  const currentStock = selectedVariant ? selectedVariant.stock : product.stock;
+  const isOutOfStock = currentStock <= 0;
+
   const handleQuantityChange = (newQuantity: number) => {
     if (newQuantity < 1) {
       setQuantity(1);
-    } else if (newQuantity > product.stock) {
-      setQuantity(product.stock);
+    } else if (newQuantity > currentStock) {
+      setQuantity(currentStock);
     } else {
       setQuantity(newQuantity);
     }
   };
 
-  // Ensure the main image is always first in the gallery
-  const galleryImages = [
-    product.image,
-    ...(product.images || [])
-  ].filter((img, index, self) => img && self.indexOf(img) === index);
+
+
 
   const handleThumbnailClick = (index: number) => {
     api?.scrollTo(index);
+  };
+
+  const handleAttributeSelect = (attributeName: string, value: string) => {
+    setSelectedAttributes(prev => ({ ...prev, [attributeName]: value }));
   };
 
   return (
@@ -182,8 +234,6 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
                   ))}
                 </div>
               )}
-
-
 
               {/* Main Image - Right Side */}
               <div className={galleryImages.length > 1 ? "w-[80%]" : "w-full"}>
@@ -218,19 +268,51 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
               <div className="mt-4">
                 <Badge variant="outline">{product.category}</Badge>
               </div>
-              <p className="mt-4 text-3xl font-bold text-primary">
-                BDT {product.price.toLocaleString()}
-              </p>
+              <div className="mt-4 flex items-end gap-2">
+                <p className="text-3xl font-bold text-primary">
+                  BDT {currentPrice.toLocaleString()}
+                </p>
+                {selectedVariant && (
+                  <span className="text-sm text-muted-foreground mb-1">
+                    (Variant: {selectedVariant.name})
+                  </span>
+                )}
+              </div>
 
-              {product.size && (
-                <div className="mt-4">
-                  <Badge className="text-base px-3 py-1 font-normal bg-[#ff3399] text-white hover:bg-[#ff3399]/90">
-                    Size: {product.size}
-                  </Badge>
+              {/* Attributes Selection */}
+              {product.attributes && product.attributes.length > 0 ? (
+                <div className="mt-6 space-y-4">
+                  {product.attributes.map((attr: any) => (
+                    <div key={attr.name}>
+                      <Label className="text-sm font-medium mb-2 block">{attr.name}</Label>
+                      <div className="flex flex-wrap gap-2">
+                        {attr.options.map((option: string) => (
+                          <Button
+                            key={option}
+                            variant={selectedAttributes[attr.name] === option ? "default" : "outline"}
+                            size="sm"
+                            onClick={() => handleAttributeSelect(attr.name, option)}
+                            className={selectedAttributes[attr.name] === option ? "ring-2 ring-primary ring-offset-2" : ""}
+                          >
+                            {option}
+                          </Button>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
                 </div>
+              ) : (
+                product.size && (
+                  <div className="mt-4">
+                    <Badge className="text-base px-3 py-1 font-normal bg-[#ff3399] text-white hover:bg-[#ff3399]/90">
+                      Size: {product.size}
+                    </Badge>
+                  </div>
+                )
               )}
 
-              {product.stock > 0 ? (
+
+              {!isOutOfStock ? (
                 <div className="mt-8 space-y-4">
                   <div className="flex items-center gap-2">
                     <Label htmlFor="quantity" className="text-sm font-medium">Quantity:</Label>
@@ -251,19 +333,32 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
                         onChange={(e) => handleQuantityChange(parseInt(e.target.value) || 1)}
                         className="h-8 w-16 text-center [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                         min={1}
-                        max={product.stock}
+                        max={currentStock}
                       />
                       <Button
                         variant="outline"
                         size="icon"
                         className="h-8 w-8"
                         onClick={() => handleQuantityChange(quantity + 1)}
-                        disabled={quantity >= product.stock}
+                        disabled={quantity >= currentStock}
                       >
                         <Plus className="h-4 w-4" />
                       </Button>
                     </div>
-                    <p className="text-sm text-muted-foreground">(in stock)</p>
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <p className="text-sm font-medium text-primary">
+                      {isOutOfStock ? (
+                        <span className="text-red-600">Out of Stock</span>
+                      ) : (
+                        `${currentStock} items in stock`
+                      )}
+                    </p>
+                    {selectedVariant && (
+                      <p className="text-xs text-muted-foreground">
+                        Selected: {Object.entries(selectedAttributes).map(([k, v]) => `${k} ${v}`).join(', ')}
+                      </p>
+                    )}
                   </div>
 
                   <div className="mb-6">
@@ -292,6 +387,9 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
                     <AddToCartButton
                       product={product}
                       quantity={quantity}
+                      variantId={selectedVariant?.id}
+                      variantName={selectedVariant?.name}
+                      attributes={selectedAttributes}
                       variant="outline"
                       className="w-full flex-1 text-lg py-6 border-primary text-primary hover:bg-primary hover:text-primary-foreground"
                     >
@@ -300,6 +398,9 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
                     <AddToCartButton
                       product={product}
                       quantity={quantity}
+                      variantId={selectedVariant?.id}
+                      variantName={selectedVariant?.name}
+                      attributes={selectedAttributes}
                       redirectToCheckout
                       className="w-full flex-1 bg-primary hover:bg-primary/90 text-primary-foreground text-lg py-6"
                     >
@@ -348,8 +449,8 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
             </div>
           )}
         </div>
-      </main>
+      </main >
       <Footer />
-    </div>
+    </div >
   );
 }

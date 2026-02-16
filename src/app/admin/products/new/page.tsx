@@ -20,7 +20,7 @@ import { Textarea } from '@/components/ui/textarea';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
-import { Trash2, Loader2 } from 'lucide-react';
+import { Trash2, Loader2, Plus, X, Settings2, Image as ImageIcon } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -36,13 +36,28 @@ import {
 } from '@/components/ui/form';
 import { apiClient } from '@/lib/api-client';
 import { useAuth } from '@/components/providers/auth-provider';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Badge } from '@/components/ui/badge';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Label } from '@/components/ui/label';
 
 const formSchema = z.object({
   name: z.string().min(1, 'Product name is required.'),
   highlights: z.string().min(1, 'Product highlights are required.'),
   description: z.string().min(1, 'Product description is required.'),
   sizeGuide: z.string().optional(),
-  size: z.string().optional(),
+  size: z.string().optional(), // Legal field, kept for simple products
   price: z.coerce.number().positive('Price must be a positive number.'),
   stock: z.coerce.number().int().nonnegative('Stock must be a non-negative integer.'),
   category: z.string().min(1, 'Please select a category.'),
@@ -51,6 +66,30 @@ const formSchema = z.object({
   galleryImages: z.any().optional(),
 });
 
+// Types for Attributes and Variants
+interface Attribute {
+  id: string;
+  name: string;
+  options: string[];
+  currentOption: string; // Helper for input
+}
+
+interface OptionSetting {
+  image?: File | null;
+  stock?: number;
+}
+
+interface Variant {
+  id: string;
+  name: string;
+  attributes: Record<string, string>;
+  price: number;
+  stock: number;
+  sku: string;
+  image?: File | null;
+  imageUrl?: string;
+}
+
 export default function AdminNewProductPage() {
   const router = useRouter();
   const { toast } = useToast();
@@ -58,6 +97,12 @@ export default function AdminNewProductPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [categories, setCategories] = useState<{ id: string, name: string }[]>([]);
   const [brands, setBrands] = useState<{ id: string, name: string }[]>([]);
+
+  // Variants State
+  const [attributes, setAttributes] = useState<Attribute[]>([]);
+  const [variants, setVariants] = useState<Variant[]>([]);
+  const [hasVariants, setHasVariants] = useState(false);
+  const [optionSettings, setOptionSettings] = useState<Record<string, OptionSetting>>({}); // Key: `${attrId}:${optionName}`
 
   useEffect(() => {
     const fetchData = async () => {
@@ -87,9 +132,154 @@ export default function AdminNewProductPage() {
       stock: 0,
       category: '',
       brand: '',
+      productImage: undefined,
+      galleryImages: undefined,
     },
   });
 
+  // Watch price and stock to update variants if needed (optional, or just init variants with these)
+  const basePrice = form.watch('price');
+  const baseStock = form.watch('stock');
+
+  // Attribute Management
+  const addAttribute = () => {
+    setAttributes([...attributes, { id: crypto.randomUUID(), name: '', options: [], currentOption: '' }]);
+  };
+
+  const removeAttribute = (id: string) => {
+    setAttributes(attributes.filter(attr => attr.id !== id));
+  };
+
+  const updateAttributeName = (id: string, name: string) => {
+    setAttributes(attributes.map(attr => attr.id === id ? { ...attr, name } : attr));
+  };
+
+  const addOption = (id: string) => {
+    setAttributes(attributes.map(attr => {
+      if (attr.id === id && attr.currentOption.trim()) {
+        if (attr.options.includes(attr.currentOption.trim())) return attr;
+        return { ...attr, options: [...attr.options, attr.currentOption.trim()], currentOption: '' };
+      }
+      return attr;
+    }));
+  };
+
+  const removeOption = (attrId: string, option: string) => {
+    setAttributes(attributes.map(attr => {
+      if (attr.id === attrId) {
+        return { ...attr, options: attr.options.filter(o => o !== option) };
+      }
+      return attr;
+    }));
+    // Clean up settings
+    const settingKey = `${attrId}:${option}`;
+    const newSettings = { ...optionSettings };
+    delete newSettings[settingKey];
+    setOptionSettings(newSettings);
+  };
+
+  const updateOptionSetting = (attrId: string, option: string, field: keyof OptionSetting, value: any) => {
+    const key = `${attrId}:${option}`;
+    setOptionSettings(prev => ({
+      ...prev,
+      [key]: {
+        ...prev[key],
+        [field]: value
+      }
+    }));
+  };
+
+  const updateOptionInput = (id: string, value: string) => {
+    setAttributes(attributes.map(attr => attr.id === id ? { ...attr, currentOption: value } : attr));
+  };
+
+  const handleOptionKeyDown = (e: React.KeyboardEvent, id: string) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      addOption(id);
+    }
+  };
+
+
+  // Variant Generation
+  const generateVariants = () => {
+    if (attributes.length === 0 || attributes.some(a => a.options.length === 0)) {
+      toast({ title: "Error", description: "Please add attributes and options first.", variant: "destructive" });
+      return;
+    }
+
+    const cartesian = (...a: any[][]) => a.reduce((a, b) => a.flatMap(d => b.map(e => [d, e].flat())));
+
+    const optionsArrays = attributes.map(a => a.options);
+    const combinations = cartesian(...optionsArrays); // returns array of arrays of options
+
+    // Check if single attribute, implementation differs slightly for cartesian check
+    const generated: Variant[] = [];
+
+    if (attributes.length === 1) {
+      attributes[0].options.forEach(opt => {
+        // Single attribute case
+        const key = `${attributes[0].id}:${opt}`;
+        const settings = optionSettings[key];
+        const defaultImage = settings?.image || null;
+        const defaultStock = (settings?.stock !== undefined && settings.stock > 0) ? settings.stock : (Number(baseStock) || 0);
+
+        generated.push({
+          id: crypto.randomUUID(),
+          name: opt,
+          attributes: { [attributes[0].name]: opt },
+          price: Number(basePrice) || 0,
+          stock: defaultStock,
+          sku: '',
+          image: defaultImage // New file
+        });
+      });
+    } else {
+      combinations.forEach((combo: string[]) => {
+        const variantParams: Record<string, string> = {};
+        let name = "";
+        attributes.forEach((attr, idx) => {
+          variantParams[attr.name] = combo[idx];
+          name += (name ? " - " : "") + combo[idx];
+        });
+
+        // Determine default values from Option Settings
+        let defaultImage = null;
+        let defaultStock = Number(baseStock) || 0;
+
+        // Check settings for each attribute option in this combo
+        attributes.forEach((attr, idx) => {
+          const key = `${attr.id}:${combo[idx]}`;
+          const settings = optionSettings[key];
+          if (settings) {
+            if (settings.image) defaultImage = settings.image;
+            if (settings.stock !== undefined && settings.stock > 0) defaultStock = settings.stock;
+          }
+        });
+
+        generated.push({
+          id: crypto.randomUUID(),
+          name: name,
+          attributes: variantParams,
+          price: Number(basePrice) || 0,
+          stock: defaultStock,
+          sku: '',
+          image: defaultImage
+        });
+      });
+    }
+
+    setVariants(generated);
+    setHasVariants(true);
+  };
+
+  // Variant Updates
+  const updateVariant = (id: string, field: keyof Variant, value: any) => {
+    setVariants(variants.map(v => v.id === id ? { ...v, [field]: value } : v));
+  };
+
+
+  // File Upload Helper
   async function uploadFile(file: File) {
     if (!file) return null;
     const formData = new FormData();
@@ -125,14 +315,36 @@ export default function AdminNewProductPage() {
         }
       }
 
-      // 3. Save Product
-      const productData = {
+      // 3. Upload Variant Images
+      const uploadedVariants = await Promise.all(variants.map(async (v) => {
+        let vImageUrl = '';
+        if (v.image) {
+          vImageUrl = await uploadFile(v.image);
+        }
+        return { ...v, image: vImageUrl };
+      }));
+
+
+      // 4. Save Product
+      const productData: any = {
         ...values,
         image: mainImageUrl, // ImgBB URL
         images: galleryImageUrls, // ImgBB URLs
         price: Number(values.price),
         stock: Number(values.stock),
       };
+
+      if (hasVariants && uploadedVariants.length > 0) {
+        productData.attributes = attributes.map(a => ({ name: a.name, options: a.options }));
+        productData.variants = uploadedVariants.map(v => ({
+          name: v.name, // "Red - S"
+          attributes: v.attributes, // { Color: "Red", Size: "S" }
+          price: v.price,
+          stock: v.stock,
+          sku: v.sku,
+          image: v.image
+        }));
+      }
 
       await apiClient.post('/products', productData);
 
@@ -239,9 +451,206 @@ export default function AdminNewProductPage() {
                     </div>
                   </CardContent>
                 </Card>
+
+                {/* Attributes & Variants Section */}
                 <Card>
                   <CardHeader>
-                    <CardTitle>Inventory</CardTitle>
+                    <CardTitle>Product Variants</CardTitle>
+                    <CardDescription>
+                      Define attributes like Size and Color to generate variants.
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-6">
+                    <div className="space-y-4">
+                      {attributes.map((attr, index) => (
+                        <div key={attr.id} className="relative p-4 border rounded-md bg-muted/20">
+                          <Button type="button" variant="ghost" size="icon" className="absolute top-2 right-2 text-muted-foreground hover:text-destructive" onClick={() => removeAttribute(attr.id)}>
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                          <div className="grid gap-4">
+                            <div className="grid gap-2">
+                              <FormLabel>Attribute Name</FormLabel>
+                              <Input
+                                placeholder="e.g. Size, Color"
+                                value={attr.name}
+                                onChange={(e) => updateAttributeName(attr.id, e.target.value)}
+                              />
+                            </div>
+                            <div className="grid gap-2">
+                              <FormLabel>Options</FormLabel>
+                              <div className="flex flex-wrap gap-2 mb-2">
+                                {attr.options.map(opt => (
+                                  <Badge key={opt} variant="secondary" className="px-2 py-1 gap-1 pr-1">
+                                    {opt}
+                                    <Popover>
+                                      <PopoverTrigger asChild>
+                                        <Button variant="ghost" size="icon" className="h-4 w-4 ml-1 p-0 hover:bg-transparent">
+                                          <Settings2 className="w-3 h-3 text-muted-foreground hover:text-foreground" />
+                                        </Button>
+                                      </PopoverTrigger>
+                                      <PopoverContent className="w-80">
+                                        <div className="grid gap-4">
+                                          <div className="space-y-2">
+                                            <h4 className="font-medium leading-none">Option Settings</h4>
+                                            <p className="text-sm text-muted-foreground">
+                                              Set defaults for <strong>{opt}</strong> variants.
+                                            </p>
+                                          </div>
+                                          <div className="grid gap-2">
+                                            <div className="grid grid-cols-3 items-center gap-4">
+                                              <Label htmlFor={`stock-${attr.id}-${opt}`}>Stock</Label>
+                                              <Input
+                                                id={`stock-${attr.id}-${opt}`}
+                                                type="number"
+                                                className="col-span-2 h-8"
+                                                placeholder="Default Stock"
+                                                value={optionSettings[`${attr.id}:${opt}`]?.stock || ''}
+                                                onChange={(e) => updateOptionSetting(attr.id, opt, 'stock', e.target.value ? Number(e.target.value) : undefined)}
+                                              />
+                                            </div>
+                                            <div className="grid grid-cols-3 items-start gap-4">
+                                              <Label className="mt-2">Image</Label>
+                                              <div className="col-span-2">
+                                                {optionSettings[`${attr.id}:${opt}`]?.image && (
+                                                  <div className="relative w-16 h-16 mb-2 rounded border overflow-hidden">
+                                                    <img
+                                                      src={URL.createObjectURL(optionSettings[`${attr.id}:${opt}`]?.image!)}
+                                                      alt="Option Value"
+                                                      className="w-full h-full object-cover"
+                                                    />
+                                                    <Button
+                                                      type="button"
+                                                      variant="destructive"
+                                                      size="icon"
+                                                      className="absolute top-0 right-0 h-4 w-4 rounded-none"
+                                                      onClick={() => updateOptionSetting(attr.id, opt, 'image', null)}
+                                                    >
+                                                      <X className="h-3 w-3" />
+                                                    </Button>
+                                                  </div>
+                                                )}
+                                                <div className="flex items-center gap-2">
+                                                  <Input
+                                                    type="file"
+                                                    accept="image/*"
+                                                    className="h-8 text-[10px] file:text-[10px]"
+                                                    onChange={(e) => {
+                                                      if (e.target.files?.[0]) {
+                                                        updateOptionSetting(attr.id, opt, 'image', e.target.files[0]);
+                                                      }
+                                                    }}
+                                                  />
+                                                </div>
+                                              </div>
+                                            </div>
+                                          </div>
+                                        </div>
+                                      </PopoverContent>
+                                    </Popover>
+                                    <span className="cursor-pointer ml-1 text-muted-foreground hover:text-foreground" onClick={() => removeOption(attr.id, opt)}><X className="w-3 h-3" /></span>
+                                  </Badge>
+                                ))}
+                              </div>
+                              <div className="flex gap-2">
+                                <Input
+                                  placeholder="Add option (e.g. 'Red', 'S')"
+                                  value={attr.currentOption}
+                                  onChange={(e) => updateOptionInput(attr.id, e.target.value)}
+                                  onKeyDown={(e) => handleOptionKeyDown(e, attr.id)}
+                                />
+                                <Button type="button" variant="secondary" onClick={() => addOption(attr.id)}>Add</Button>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+
+                      <Button type="button" variant="outline" onClick={addAttribute} className="w-full border-dashed">
+                        <Plus className="w-4 h-4 mr-2" /> Add Attribute
+                      </Button>
+                    </div>
+
+                    {attributes.length > 0 && (
+                      <div className="pt-4 border-t">
+                        <Button type="button" onClick={generateVariants} disabled={attributes.length === 0}>
+                          Generate Variants
+                        </Button>
+                      </div>
+                    )}
+
+                    {variants.length > 0 && (
+                      <div className="border rounded-md overflow-hidden">
+                        <Table>
+                          <TableHeader>
+                            <TableRow>
+                              <TableHead className="w-[180px]">Variant</TableHead>
+                              <TableHead className="w-[100px]">Price</TableHead>
+                              <TableHead className="w-[100px]">Stock</TableHead>
+                              <TableHead className="w-[120px]">SKU</TableHead>
+                              <TableHead>Image</TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {variants.map(variant => (
+                              <TableRow key={variant.id}>
+                                <TableCell className="font-medium">{variant.name}</TableCell>
+                                <TableCell>
+                                  <Input
+                                    type="number"
+                                    value={variant.price}
+                                    onChange={(e) => updateVariant(variant.id, 'price', e.target.value)}
+                                    className="h-8 w-full"
+                                  />
+                                </TableCell>
+                                <TableCell>
+                                  <Input
+                                    type="number"
+                                    value={variant.stock}
+                                    onChange={(e) => updateVariant(variant.id, 'stock', e.target.value)}
+                                    className="h-8 w-full"
+                                  />
+                                </TableCell>
+                                <TableCell>
+                                  <Input
+                                    value={variant.sku}
+                                    onChange={(e) => updateVariant(variant.id, 'sku', e.target.value)}
+                                    className="h-8 w-full"
+                                    placeholder="SKU-123"
+                                  />
+                                </TableCell>
+                                <TableCell>
+                                  <div className="flex items-center gap-2">
+                                    {variant.image && (
+                                      <div className="relative w-8 h-8 rounded overflow-hidden border">
+                                        <img src={URL.createObjectURL(variant.image)} alt={variant.name} className="object-cover w-full h-full" />
+                                      </div>
+                                    )}
+                                    <Input
+                                      type="file"
+                                      accept="image/*"
+                                      onChange={(e) => {
+                                        if (e.target.files?.[0]) {
+                                          updateVariant(variant.id, 'image', e.target.files[0]);
+                                        }
+                                      }}
+                                      className="h-8 text-xs file:text-xs file:h-full file:border-0 file:bg-secondary file:text-secondary-foreground"
+                                    />
+                                  </div>
+                                </TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
+                      </div>
+                    )}
+
+                  </CardContent>
+                </Card>
+
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Inventory (Global / Fallback)</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="grid gap-6">
@@ -273,19 +682,21 @@ export default function AdminNewProductPage() {
                           )}
                         />
                       </div>
-                      <FormField
-                        control={form.control}
-                        name="size"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Size / Variant</FormLabel>
-                            <FormControl>
-                              <Input placeholder="e.g. Free Size, or S, M, L" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
+                      {!hasVariants && (
+                        <FormField
+                          control={form.control}
+                          name="size"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Size / Variant (Simple Product)</FormLabel>
+                              <FormControl>
+                                <Input placeholder="e.g. Free Size, or S, M, L" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      )}
                     </div>
                   </CardContent>
                 </Card>
