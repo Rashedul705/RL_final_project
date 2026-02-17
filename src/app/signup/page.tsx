@@ -23,6 +23,7 @@ import { useCreateUserWithEmailAndPassword, useUpdateProfile, useSignInWithGoogl
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { RecaptchaVerifier, signInWithPhoneNumber, ConfirmationResult } from 'firebase/auth';
 import { useState, useEffect } from 'react';
+import { pushUserData } from '@/lib/data-layer';
 
 const signupFormSchema = z.object({
     name: z.string().min(2, 'Name must be at least 2 characters.'),
@@ -97,6 +98,12 @@ export default function SignupPage() {
                 } catch (profileErr) {
                     console.error("Profile update failed:", profileErr);
                 }
+
+                pushUserData({
+                    email: values.email,
+                    name: values.name
+                });
+
                 toast({ title: 'Account Created', description: 'Welcome to Rodelas Lifestyle!' });
                 // Redirect handled by useEffect or here
                 router.push('/');
@@ -108,6 +115,7 @@ export default function SignupPage() {
 
     async function onGoogleLogin() {
         await signInWithGoogle();
+        // Google auth state change will be caught by UserDataTracker
     }
 
     // Phone Auth
@@ -147,6 +155,11 @@ export default function SignupPage() {
 
             try {
                 await confirmationResult.confirm(values.otp);
+
+                pushUserData({
+                    phone: values.phoneNumber
+                });
+
                 toast({ title: 'Success', description: 'Account verified!' });
                 router.push('/');
             } catch (err: any) {

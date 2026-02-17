@@ -5,6 +5,7 @@ import { Suspense } from 'react';
 import { Toaster } from "@/components/ui/toaster";
 import { CartProvider } from "@/components/cart/cart-context";
 import { AuthProvider } from "@/components/providers/auth-provider";
+import { UserDataTracker } from "@/components/analytics/user-data-tracker";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -52,6 +53,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
         {/* End Google Tag Manager (noscript) */}
 
         <AuthProvider>
+          <UserDataTracker />
           <CartProvider>
             <Suspense fallback={null}>
               <AnalyticsTracker />

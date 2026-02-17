@@ -9,6 +9,7 @@ type User = {
     _id: string; // Mongoose ID
     name: string;
     email: string;
+    phone?: string;
     role: 'admin' | 'manager' | 'editor' | 'user';
 }
 

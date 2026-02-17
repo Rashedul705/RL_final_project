@@ -39,6 +39,8 @@ import { apiClient } from '@/lib/api-client';
 import { sendGTMEvent } from '@/lib/gtm';
 
 
+import { pushUserData } from '@/lib/data-layer';
+
 const formSchema = z.object({
     fullName: z.string().min(2, 'Full name must be at least 2 characters.'),
     phoneNumber: z.string().regex(/^01[0-9]{9}$/, 'Please enter a valid 11-digit phone number starting with 01.'),
@@ -202,6 +204,13 @@ export default function CheckoutPage() {
     const total = subtotal + shippingCost - (appliedCoupon?.discount || 0);
 
     async function onSubmit(values: z.infer<typeof formSchema>) {
+        // Push user data to GTM
+        pushUserData({
+            email: user?.email,
+            phone: values.phoneNumber,
+            name: values.fullName
+        });
+
         const orderId = `ORD${Math.floor(1000 + Math.random() * 9000)}`;
 
 
