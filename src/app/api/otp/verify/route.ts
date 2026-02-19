@@ -17,6 +17,7 @@ export async function POST(req: Request) {
 
         const record = await OTP.findOne({ phone });
 
+
         if (!record) {
             return NextResponse.json(
                 { success: false, message: 'Invalid OTP or Expired' },
