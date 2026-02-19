@@ -5,9 +5,13 @@ interface SMSResponse {
     error_message: string;
 }
 
-const API_KEY = 'wD66rUdSwEWvl4WcwVRX';
-const SENDER_ID = '8809648906383';
-const API_URL = 'http://bulksmsbd.net/api/smsapi';
+const API_KEY = process.env.BULKSMSBD_API_KEY || '';
+const SENDER_ID = process.env.BULKSMSBD_SENDER_ID || '';
+const API_URL = process.env.BULKSMSBD_API_URL || 'http://bulksmsbd.net/api/smsapi';
+
+if (!API_KEY || !SENDER_ID) {
+    console.warn("BulkSMSBD credentials are not set in environment variables.");
+}
 
 export async function sendSMS(phone: string, message: string): Promise<{ success: boolean; error?: string }> {
     try {

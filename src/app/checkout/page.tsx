@@ -25,6 +25,13 @@ import {
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogHeader,
+    DialogTitle,
+} from "@/components/ui/dialog";
 import { useCart } from '@/components/cart/cart-context';
 import { useState, useEffect, useRef } from 'react';
 import { Header } from '@/components/layout/header';
@@ -67,7 +74,7 @@ export default function CheckoutPage() {
     const hasFiredBeginCheckout = useRef(false);
 
     // OTP State
-    const [otpSent, setOtpSent] = useState(false);
+    const [isOtpDialogOpen, setIsOtpDialogOpen] = useState(false);
     const [otp, setOtp] = useState("");
     const [isVerifying, setIsVerifying] = useState(false);
     const [isSendingOtp, setIsSendingOtp] = useState(false);
@@ -219,7 +226,7 @@ export default function CheckoutPage() {
             });
 
             if (response && response.success) {
-                setOtpSent(true);
+                setIsOtpDialogOpen(true);
                 toast({
                     title: "OTP Sent",
                     description: "Please check your phone for the verification code.",
@@ -600,58 +607,68 @@ export default function CheckoutPage() {
                                     </div>
                                 </CardContent>
                                 <CardFooter className="flex flex-col gap-4">
-                                    {!otpSent ? (
-                                        <Button
-                                            type="button"
-                                            className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
-                                            onClick={(e) => {
-                                                form.handleSubmit(handleSendOtp)(e);
-                                            }}
-                                            disabled={isSendingOtp}
-                                        >
-                                            {isSendingOtp ? "Sending OTP..." : "Place Order"}
-                                        </Button>
-                                    ) : (
-                                        <div className="w-full space-y-4">
-                                            <div className="space-y-2">
-                                                <label className="text-sm font-medium">Enter OTP Code</label>
-                                                <Input
-                                                    value={otp}
-                                                    onChange={(e) => setOtp(e.target.value)}
-                                                    placeholder="Enter 4-digit code"
-                                                    className="text-center text-lg tracking-widest"
-                                                    maxLength={6}
-                                                />
-                                                <p className="text-xs text-muted-foreground text-center">
-                                                    Code sent to {form.getValues('phoneNumber')}
-                                                </p>
-                                            </div>
-                                            <Button
-                                                type="button"
-                                                className="w-full bg-green-600 hover:bg-green-700 text-white"
-                                                onClick={onVerifyAndOrder}
-                                                disabled={isVerifying}
-                                            >
-                                                {isVerifying ? "Verifying..." : "Verify and Confirm Order"}
-                                            </Button>
-                                            <Button
-                                                type="button"
-                                                variant="ghost"
-                                                size="sm"
-                                                className="w-full text-xs"
-                                                onClick={() => setOtpSent(false)}
-                                            >
-                                                Calculated wrong number? Change Number
-                                            </Button>
-                                        </div>
-                                    )}
+                                    <Button
+                                        type="button"
+                                        className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
+                                        onClick={(e) => {
+                                            form.handleSubmit(handleSendOtp)(e);
+                                        }}
+                                        disabled={isSendingOtp}
+                                    >
+                                        {isSendingOtp ? "Sending OTP..." : "Place Order"}
+                                    </Button>
                                 </CardFooter>
                             </Card>
                         </div>
                     </div>
                 </div>
             </main >
+
             <Footer />
+
+            <Dialog open={isOtpDialogOpen} onOpenChange={setIsOtpDialogOpen}>
+                <DialogContent className="sm:max-w-md">
+                    <DialogHeader>
+                        <DialogTitle>Verify Phone Number</DialogTitle>
+                        <DialogDescription>
+                            We sent a verification code to <strong>{form.getValues('phoneNumber')}</strong>.
+                            Please enter it below to confirm your order.
+                        </DialogDescription>
+                    </DialogHeader>
+
+                    <div className="space-y-4 py-4">
+                        <div className="space-y-2">
+                            <Input
+                                value={otp}
+                                onChange={(e) => setOtp(e.target.value)}
+                                placeholder="Enter 4-digit code"
+                                className="text-center text-2xl tracking-[1em] font-bold h-14"
+                                maxLength={4}
+                                autoFocus
+                            />
+                        </div>
+
+                        <Button
+                            type="button"
+                            className="w-full bg-green-600 hover:bg-green-700 text-white h-12 text-lg"
+                            onClick={onVerifyAndOrder}
+                            disabled={isVerifying || otp.length < 4}
+                        >
+                            {isVerifying ? "Verifying..." : "Confirm Order"}
+                        </Button>
+
+                        <div className="text-center text-sm text-muted-foreground">
+                            <button
+                                type="button"
+                                className="underline hover:text-primary"
+                                onClick={() => setIsOtpDialogOpen(false)}
+                            >
+                                Change Phone Number
+                            </button>
+                        </div>
+                    </div>
+                </DialogContent>
+            </Dialog>
         </div >
     );
 }
