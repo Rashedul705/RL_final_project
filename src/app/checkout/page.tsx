@@ -66,6 +66,12 @@ export default function CheckoutPage() {
     const [selectedMethod, setSelectedMethod] = useState<ShippingMethod | null>(null);
     const hasFiredBeginCheckout = useRef(false);
 
+    // OTP State
+    const [otpSent, setOtpSent] = useState(false);
+    const [otp, setOtp] = useState("");
+    const [isVerifying, setIsVerifying] = useState(false);
+    const [isSendingOtp, setIsSendingOtp] = useState(false);
+
     useEffect(() => {
         if (cart.length > 0 && !hasFiredBeginCheckout.current) {
             sendGTMEvent({
@@ -202,6 +208,77 @@ export default function CheckoutPage() {
     };
 
     const total = subtotal + shippingCost - (appliedCoupon?.discount || 0);
+
+
+
+    const handleSendOtp = async (values: z.infer<typeof formSchema>) => {
+        setIsSendingOtp(true);
+        try {
+            const response = await apiClient.post<{ success: boolean; message: string }>('/otp/send', {
+                phone: values.phoneNumber
+            });
+
+            if (response && response.success) {
+                setOtpSent(true);
+                toast({
+                    title: "OTP Sent",
+                    description: "Please check your phone for the verification code.",
+                });
+            } else {
+                toast({
+                    title: "Failed to send OTP",
+                    description: response?.message || "Please try again.",
+                    variant: "destructive"
+                });
+            }
+        } catch (error: any) {
+            toast({
+                title: "Error",
+                description: error.message || "Something went wrong.",
+                variant: "destructive"
+            });
+        } finally {
+            setIsSendingOtp(false);
+        }
+    };
+
+    async function onVerifyAndOrder() {
+        if (!otp || otp.length < 4) {
+            toast({
+                title: "Invalid OTP",
+                description: "Please enter a valid OTP.",
+                variant: "destructive"
+            });
+            return;
+        }
+
+        setIsVerifying(true);
+        try {
+            const values = form.getValues();
+            const response = await apiClient.post<{ success: boolean; message: string }>('/otp/verify', {
+                phone: values.phoneNumber,
+                otp
+            });
+
+            if (response && response.success) {
+                await onSubmit(values);
+            } else {
+                toast({
+                    title: "Invalid OTP",
+                    description: response?.message || "The code you entered is incorrect.",
+                    variant: "destructive"
+                });
+            }
+        } catch (error: any) {
+            toast({
+                title: "Verification Failed",
+                description: error.message || "Please try again.",
+                variant: "destructive"
+            });
+        } finally {
+            setIsVerifying(false);
+        }
+    }
 
     async function onSubmit(values: z.infer<typeof formSchema>) {
         // Push user data to GTM
@@ -522,17 +599,52 @@ export default function CheckoutPage() {
                                         </div>
                                     </div>
                                 </CardContent>
-                                <CardFooter>
-                                    <Button
-                                        type="button"
-                                        className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
-                                        onClick={(e) => {
-                                            form.handleSubmit(onSubmit)(e);
-                                        }}
-                                        disabled={form.formState.isSubmitting}
-                                    >
-                                        Place Order
-                                    </Button>
+                                <CardFooter className="flex flex-col gap-4">
+                                    {!otpSent ? (
+                                        <Button
+                                            type="button"
+                                            className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
+                                            onClick={(e) => {
+                                                form.handleSubmit(handleSendOtp)(e);
+                                            }}
+                                            disabled={isSendingOtp}
+                                        >
+                                            {isSendingOtp ? "Sending OTP..." : "Place Order"}
+                                        </Button>
+                                    ) : (
+                                        <div className="w-full space-y-4">
+                                            <div className="space-y-2">
+                                                <label className="text-sm font-medium">Enter OTP Code</label>
+                                                <Input
+                                                    value={otp}
+                                                    onChange={(e) => setOtp(e.target.value)}
+                                                    placeholder="Enter 4-digit code"
+                                                    className="text-center text-lg tracking-widest"
+                                                    maxLength={6}
+                                                />
+                                                <p className="text-xs text-muted-foreground text-center">
+                                                    Code sent to {form.getValues('phoneNumber')}
+                                                </p>
+                                            </div>
+                                            <Button
+                                                type="button"
+                                                className="w-full bg-green-600 hover:bg-green-700 text-white"
+                                                onClick={onVerifyAndOrder}
+                                                disabled={isVerifying}
+                                            >
+                                                {isVerifying ? "Verifying..." : "Verify and Confirm Order"}
+                                            </Button>
+                                            <Button
+                                                type="button"
+                                                variant="ghost"
+                                                size="sm"
+                                                className="w-full text-xs"
+                                                onClick={() => setOtpSent(false)}
+                                            >
+                                                Calculated wrong number? Change Number
+                                            </Button>
+                                        </div>
+                                    )}
                                 </CardFooter>
                             </Card>
                         </div>

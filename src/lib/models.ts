@@ -185,6 +185,25 @@ const BlacklistSchema: Schema = new Schema({
     reason: { type: String }
 }, { timestamps: true });
 
+// --- OTP Schema ---
+export interface IOTP extends Document {
+    phone: string;
+    otp: string;
+    expiresAt: Date;
+}
+
+const OTPSchema: Schema = new Schema({
+    phone: { type: String, required: true, unique: true }, // One active OTP per phone
+    otp: { type: String, required: true },
+    expiresAt: { type: Date, required: true, expires: 0 } // Auto-delete after expiry
+}, { timestamps: true });
+
+if (process.env.NODE_ENV !== 'production') {
+    if (mongoose.models.OTP) delete mongoose.models.OTP;
+}
+
+export const OTP: Model<IOTP> = mongoose.models.OTP || mongoose.model<IOTP>('OTP', OTPSchema);
+
 // Prevent localized model recompilation error in Next.js
 // AND force schema updates in dev mode by deleting old models if they exist
 if (process.env.NODE_ENV !== 'production') {

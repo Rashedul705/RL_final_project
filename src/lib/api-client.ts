@@ -26,10 +26,10 @@ class ApiClient {
         const data = await response.json();
 
         if (!response.ok) {
-            throw new Error(data.error || 'API Request Failed');
+            throw new Error(data.error || data.message || 'API Request Failed');
         }
 
-        return data.data as T;
+        return (data.data !== undefined ? data.data : data) as T;
     }
 
     get<T>(endpoint: string, headers?: Record<string, string>) {
