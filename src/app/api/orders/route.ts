@@ -4,6 +4,7 @@ import { ApiResponse } from '@/lib/api-response';
 import { sendMail } from '@/lib/mail';
 import { Coupon } from '@/lib/models';
 import dbConnect from '@/lib/db';
+import { sendSMS } from '@/lib/sms';
 
 export async function GET(request: NextRequest) {
     try {
@@ -46,6 +47,16 @@ export async function POST(request: NextRequest) {
             });
         } catch (emailError) {
             console.warn("Failed to send admin order notification (non-fatal):", emailError);
+        }
+
+        // Send SMS Confirmation to Customer
+        if (body.phone) {
+            try {
+                const message = `Dear Customer, your order #${body.id} is confirmed at Rodela's Lifestyle. We will process it shortly. Helpline: 01776180359\nVisit: https://rodelaslifestyle.com`;
+                await sendSMS(body.phone, message);
+            } catch (smsError) {
+                console.warn("Failed to send customer order confirmation SMS (non-fatal):", smsError);
+            }
         }
 
         // Update Coupon Usage if applicable
