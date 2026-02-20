@@ -78,6 +78,19 @@ export default function CheckoutPage() {
     const [otp, setOtp] = useState("");
     const [isVerifying, setIsVerifying] = useState(false);
     const [isSendingOtp, setIsSendingOtp] = useState(false);
+    const [timeLeft, setTimeLeft] = useState(60);
+    const [canResend, setCanResend] = useState(false);
+    const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
+
+    useEffect(() => {
+        let timer: NodeJS.Timeout;
+        if (isOtpDialogOpen && timeLeft > 0) {
+            timer = setTimeout(() => setTimeLeft(prev => prev - 1), 1000);
+        } else if (isOtpDialogOpen && timeLeft === 0) {
+            setCanResend(true);
+        }
+        return () => clearTimeout(timer);
+    }, [timeLeft, isOtpDialogOpen]);
 
     useEffect(() => {
         if (cart.length > 0 && !hasFiredBeginCheckout.current) {
@@ -227,6 +240,9 @@ export default function CheckoutPage() {
 
             if (response && response.success) {
                 setIsOtpDialogOpen(true);
+                setTimeLeft(60);
+                setCanResend(false);
+                setOtp("");
                 toast({
                     title: "OTP Sent",
                     description: "Please check your phone for the verification code.",
@@ -246,6 +262,50 @@ export default function CheckoutPage() {
             });
         } finally {
             setIsSendingOtp(false);
+        }
+    };
+
+    const handleOtpChange = (index: number, value: string) => {
+        const val = value.replace(/\D/g, '');
+        if (!val && value !== '') return;
+        const char = val.slice(-1);
+
+        let newOtpArray = otp.padEnd(4, ' ').split('');
+        newOtpArray[index] = char || ' ';
+        const newOtp = newOtpArray.join('').trimRight();
+        setOtp(newOtp);
+
+        if (char && index < 3) {
+            inputRefs.current[index + 1]?.focus();
+        }
+    };
+
+    const handleOtpKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
+        if (e.key === 'Backspace' && (!otp[index] || otp[index] === ' ') && index > 0) {
+            inputRefs.current[index - 1]?.focus();
+            let newOtpArray = otp.padEnd(4, ' ').split('');
+            newOtpArray[index - 1] = ' ';
+            setOtp(newOtpArray.join('').trimRight());
+        }
+    };
+
+    const handleResendOtp = async () => {
+        if (!canResend) return;
+        const phone = form.getValues('phoneNumber');
+        try {
+            const response = await apiClient.post<{ success: boolean; message: string }>('/otp/send', {
+                phone
+            });
+            if (response && response.success) {
+                setTimeLeft(60);
+                setCanResend(false);
+                setOtp("");
+                toast({ title: "OTP Resent", description: "Please check your phone." });
+            } else {
+                toast({ title: "Failed to resend", description: response?.message, variant: "destructive" });
+            }
+        } catch (error: any) {
+            toast({ title: "Error", description: error.message, variant: "destructive" });
         }
     };
 
@@ -627,44 +687,69 @@ export default function CheckoutPage() {
             <Footer />
 
             <Dialog open={isOtpDialogOpen} onOpenChange={setIsOtpDialogOpen}>
-                <DialogContent className="sm:max-w-md">
-                    <DialogHeader>
-                        <DialogTitle>Verify Phone Number</DialogTitle>
-                        <DialogDescription>
-                            We sent a verification code to <strong>{form.getValues('phoneNumber')}</strong>.
-                            Please enter it below to confirm your order.
-                        </DialogDescription>
-                    </DialogHeader>
+                <DialogContent className="w-[92vw] sm:max-w-md p-6 sm:p-8 rounded-2xl border-0 shadow-xl bg-white" style={{ borderRadius: '1rem' }}>
+                    <div className="space-y-6 sm:space-y-8">
+                        <DialogHeader className="space-y-2 text-center sm:text-left">
+                            <DialogTitle className="text-2xl font-bold text-gray-900">
+                                OTP verification
+                            </DialogTitle>
+                            <DialogDescription className="text-[15px] text-gray-500 leading-relaxed">
+                                Please enter the OTP (One-Time Password) sent to your registered email/phone number to complete your verification.
+                            </DialogDescription>
+                        </DialogHeader>
 
-                    <div className="space-y-4 py-4">
-                        <div className="space-y-2">
-                            <Input
-                                value={otp}
-                                onChange={(e) => setOtp(e.target.value)}
-                                placeholder="Enter 4-digit code"
-                                className="text-center text-2xl tracking-[1em] font-bold h-14"
-                                maxLength={4}
-                                autoFocus
-                            />
+                        <div className="flex justify-between gap-2 sm:gap-4 py-2">
+                            {[0, 1, 2, 3].map((index) => (
+                                <Input
+                                    key={index}
+                                    ref={(el) => { if (el) inputRefs.current[index] = el; }}
+                                    type="text"
+                                    inputMode="numeric"
+                                    pattern="\d*"
+                                    maxLength={1}
+                                    value={otp[index] && otp[index] !== ' ' ? otp[index] : ''}
+                                    onChange={(e) => handleOtpChange(index, e.target.value)}
+                                    onKeyDown={(e) => handleOtpKeyDown(index, e)}
+                                    className="w-14 h-14 sm:w-16 sm:h-16 text-center text-2xl font-semibold rounded-xl border-gray-300 bg-white focus-visible:ring-2 focus-visible:ring-[#FE45A0] focus-visible:border-[#FE45A0] transition-shadow shadow-sm"
+                                />
+                            ))}
                         </div>
 
-                        <Button
-                            type="button"
-                            className="w-full bg-green-600 hover:bg-green-700 text-white h-12 text-lg"
-                            onClick={onVerifyAndOrder}
-                            disabled={isVerifying || otp.length < 4}
-                        >
-                            {isVerifying ? "Verifying..." : "Confirm Order"}
-                        </Button>
+                        <div className="flex items-center justify-between text-sm py-2">
+                            <span className="text-gray-600 font-medium">
+                                Remaining time: <strong className="text-gray-900 font-bold ml-1">00:{timeLeft.toString().padStart(2, '0')}s</strong>
+                            </span>
+                            <span className="text-gray-600 font-medium flex items-center gap-1">
+                                Didn't get the code?
+                                <button
+                                    type="button"
+                                    onClick={handleResendOtp}
+                                    disabled={!canResend}
+                                    className={`font-bold transition-colors ml-1 ${canResend ? 'text-[#FE45A0] hover:text-[#d93887] hover:underline cursor-pointer' : 'text-gray-400 cursor-not-allowed'}`}
+                                >
+                                    Resend
+                                </button>
+                            </span>
+                        </div>
 
-                        <div className="text-center text-sm text-muted-foreground">
-                            <button
+                        <div className="space-y-3 pt-2">
+                            <Button
                                 type="button"
-                                className="underline hover:text-primary"
+                                className="w-full h-12 sm:h-14 rounded-full bg-[#FE45A0] hover:bg-[#e03d8d] text-white text-base sm:text-lg font-semibold tracking-wide transition-colors"
+                                onClick={onVerifyAndOrder}
+                                disabled={isVerifying || otp.trim().length < 4}
+                            >
+                                {isVerifying ? "Verifying..." : "Verify"}
+                            </Button>
+
+                            <Button
+                                type="button"
+                                variant="outline"
+                                className="w-full h-12 sm:h-14 rounded-full border-2 border-[#FE45A0] text-[#FE45A0] hover:bg-[#fff0f6] text-base sm:text-lg font-semibold tracking-wide transition-colors bg-transparent"
                                 onClick={() => setIsOtpDialogOpen(false)}
                             >
-                                Change Phone Number
-                            </button>
+                                Cancel
+                            </Button>
                         </div>
                     </div>
                 </DialogContent>
