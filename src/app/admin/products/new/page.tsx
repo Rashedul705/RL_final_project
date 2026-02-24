@@ -339,8 +339,8 @@ export default function AdminNewProductPage() {
         productData.variants = uploadedVariants.map(v => ({
           name: v.name, // "Red - S"
           attributes: v.attributes, // { Color: "Red", Size: "S" }
-          price: v.price,
-          stock: v.stock,
+          price: Number(v.price),
+          stock: Number(v.stock),
           sku: v.sku,
           image: v.image
         }));
