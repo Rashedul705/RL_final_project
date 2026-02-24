@@ -61,6 +61,7 @@ type Category = {
   name: string;
   description?: string;
   image?: string;
+  order?: number;
   _id?: string; // Mongoose ID
 };
 
@@ -144,6 +145,8 @@ export default function AdminCategoriesPage() {
     const formData = new FormData(event.currentTarget);
     const name = formData.get('name') as string;
     const description = formData.get('description') as string;
+    const orderStr = formData.get('order') as string;
+    const order = orderStr ? parseInt(orderStr, 10) : 0;
     const imageFile = formData.get('image') as File;
 
     if (!name) {
@@ -159,7 +162,11 @@ export default function AdminCategoriesPage() {
       }
 
       const endpoint = activeTab === 'categories' ? '/categories' : '/brands';
-      const payload = { name, description, image: imageUrl };
+      const payload: any = { name, description, image: imageUrl };
+
+      if (activeTab === 'categories') {
+        payload.order = order;
+      }
 
       if (editingItem) {
         // Update
@@ -254,6 +261,7 @@ export default function AdminCategoriesPage() {
                         <span className="sr-only">Image</span>
                       </TableHead>
                       <TableHead>Name</TableHead>
+                      {activeTab === 'categories' && <TableHead>Order</TableHead>}
                       <TableHead>Slug (ID)</TableHead>
                       <TableHead>
                         <span className="sr-only">Actions</span>
@@ -284,6 +292,9 @@ export default function AdminCategoriesPage() {
                             )}
                           </TableCell>
                           <TableCell className="font-medium">{item.name}</TableCell>
+                          {activeTab === 'categories' && (
+                            <TableCell>{(item as Category).order ?? 0}</TableCell>
+                          )}
                           <TableCell>
                             <a
                               href={`/${activeTab === 'categories' ? 'category' : 'brand'}/${item.id}`}
@@ -341,6 +352,21 @@ export default function AdminCategoriesPage() {
                 </Label>
                 <Input id="name" name="name" defaultValue={editingItem?.name} className="col-span-3" required />
               </div>
+
+              {activeTab === 'categories' && (
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="order" className="text-right">
+                    Order
+                  </Label>
+                  <Input
+                    id="order"
+                    name="order"
+                    type="number"
+                    defaultValue={(editingItem as Category)?.order ?? 0}
+                    className="col-span-3"
+                  />
+                </div>
+              )}
 
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="image" className="text-right">

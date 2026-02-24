@@ -11,12 +11,13 @@ const categorySchema = z.object({
     name: z.string().min(2),
     description: z.string().optional(),
     image: z.string().optional(),
+    order: z.coerce.number().optional(),
 });
 
 export async function GET(request: NextRequest) {
     try {
         await dbConnect();
-        const categories = await Category.find({});
+        const categories = await Category.find({}).sort({ order: 1 });
         return ApiResponse.success(categories);
     } catch (error) {
         return ApiResponse.error('Failed to fetch categories', 500);

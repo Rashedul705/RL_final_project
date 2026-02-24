@@ -125,13 +125,15 @@ export interface ICategory extends Document {
     name: string;
     description?: string;
     image?: string;
+    order?: number;
 }
 
 const CategorySchema: Schema = new Schema({
     id: { type: String, required: true, unique: true },
     name: { type: String, required: true },
     description: { type: String },
-    image: { type: String }
+    image: { type: String },
+    order: { type: Number, default: 0 }
 }, { timestamps: true });
 
 
