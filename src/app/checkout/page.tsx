@@ -40,7 +40,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { Plus, Minus, Truck } from 'lucide-react';
-import { bangladeshDistricts } from '@/lib/data';
+import { bangladeshDistricts, bangladeshUpazilas } from '@/lib/data';
 import { useAuth } from '@/components/providers/auth-provider';
 import { apiClient } from '@/lib/api-client';
 import { sendGTMEvent } from '@/lib/gtm';
@@ -52,8 +52,8 @@ const formSchema = z.object({
     fullName: z.string().min(2, 'Full name must be at least 2 characters.'),
     phoneNumber: z.string().regex(/^01[0-9]{9}$/, 'Please enter a valid 11-digit phone number starting with 01.'),
     city: z.string().min(1, 'Please select a district.'),
+    thana: z.string().min(1, 'Please select your Thana/Upazila.'),
     fullAddress: z.string().min(10, 'Full address must be at least 10 characters.'),
-    // shippingMethodId: z.string().min(1, 'Please select a shipping method.'),
 });
 
 type ShippingMethod = {
@@ -123,12 +123,18 @@ export default function CheckoutPage() {
             fullName: "",
             phoneNumber: "",
             city: "",
+            thana: "",
             fullAddress: "",
         },
     });
 
     const watchedCity = form.watch('city');
     const [shippingCost, setShippingCost] = useState(0);
+
+    // Reset Thana whenever City changes
+    useEffect(() => {
+        form.setValue('thana', '');
+    }, [watchedCity, form]);
 
     // Dynamic Shipping State
     const [rates, setRates] = useState<{ dhaka: number, rajshahi: number, outside: number, free: boolean }>({ dhaka: 80, rajshahi: 60, outside: 110, free: false });
@@ -364,7 +370,7 @@ export default function CheckoutPage() {
             customer: values.fullName,
             email: user?.email,
             phone: values.phoneNumber,
-            address: `${values.fullAddress}, ${values.city}`,
+            address: `${values.fullAddress}, ${values.thana}, ${values.city}`,
             amount: total.toString(),
             status: 'Pending',
             products: cart.map(item => {
@@ -509,6 +515,34 @@ export default function CheckoutPage() {
                                                                         {district}
                                                                     </SelectItem>
                                                                 ))}
+                                                            </SelectContent>
+                                                        </Select>
+                                                        <FormMessage />
+                                                    </FormItem>
+                                                )}
+                                            />
+                                            <FormField
+                                                control={form.control}
+                                                name="thana"
+                                                render={({ field }) => (
+                                                    <FormItem>
+                                                        <FormLabel>Thana / Upazila</FormLabel>
+                                                        <Select onValueChange={field.onChange} value={field.value} disabled={!watchedCity}>
+                                                            <FormControl>
+                                                                <SelectTrigger>
+                                                                    <SelectValue placeholder={watchedCity ? "Select your Thana" : "Select District first"} />
+                                                                </SelectTrigger>
+                                                            </FormControl>
+                                                            <SelectContent>
+                                                                {watchedCity && bangladeshUpazilas[watchedCity] ? (
+                                                                    bangladeshUpazilas[watchedCity].map((upazila) => (
+                                                                        <SelectItem key={upazila} value={upazila}>
+                                                                            {upazila}
+                                                                        </SelectItem>
+                                                                    ))
+                                                                ) : (
+                                                                    <SelectItem value="none" disabled>Select District first</SelectItem>
+                                                                )}
                                                             </SelectContent>
                                                         </Select>
                                                         <FormMessage />
