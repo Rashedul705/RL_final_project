@@ -86,10 +86,30 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
 
           // Initialize default attributes if variants exist
           if (productData.attributes && productData.attributes.length > 0) {
+            let initialVariant = null;
+
+            // Try to find the first variant that is in stock
+            if (productData.variants && productData.variants.length > 0) {
+              initialVariant = productData.variants.find((v: any) => v.stock > 0);
+
+              // If all are out of stock, just pick the first one
+              if (!initialVariant) {
+                initialVariant = productData.variants[0];
+              }
+            }
+
             const defaults: Record<string, string> = {};
-            productData.attributes.forEach((attr: any) => {
-              defaults[attr.name] = attr.options[0];
-            });
+            if (initialVariant && initialVariant.attributes) {
+              // Set defaults to match the selected initial variant
+              Object.keys(initialVariant.attributes).forEach(key => {
+                defaults[key] = initialVariant.attributes[key];
+              });
+            } else {
+              // Fallback to first options if variants structure is missing
+              productData.attributes.forEach((attr: any) => {
+                defaults[attr.name] = attr.options[0];
+              });
+            }
             setSelectedAttributes(defaults);
           }
 
@@ -182,7 +202,17 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
   // Derived Display Values
   const currentPrice = selectedVariant ? selectedVariant.price : product.price;
   const currentStock = selectedVariant ? selectedVariant.stock : product.stock;
-  const isOutOfStock = currentStock <= 0;
+
+  // A variant is out of stock if its specific stock is <= 0
+  const isVariantOutOfStock = selectedVariant ? selectedVariant.stock <= 0 : false;
+
+  // The global product is out of stock if simple product stock <= 0 OR all variants <= 0
+  const isProductCompletelyOutOfStock = product.variants && product.variants.length > 0
+    ? product.variants.every((v: any) => v.stock <= 0)
+    : product.stock <= 0;
+
+  // What disables the button/shows stock warning currently
+  const isOutOfStock = product.variants && product.variants.length > 0 ? isVariantOutOfStock : isProductCompletelyOutOfStock;
 
   const handleQuantityChange = (newQuantity: number) => {
     if (newQuantity < 1) {
@@ -286,17 +316,38 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
                     <div key={attr.name}>
                       <Label className="text-sm font-medium mb-2 block">{attr.name}</Label>
                       <div className="flex flex-wrap gap-2">
-                        {attr.options.map((option: string) => (
-                          <Button
-                            key={option}
-                            variant={selectedAttributes[attr.name] === option ? "default" : "outline"}
-                            size="sm"
-                            onClick={() => handleAttributeSelect(attr.name, option)}
-                            className={selectedAttributes[attr.name] === option ? "ring-2 ring-primary ring-offset-2" : ""}
-                          >
-                            {option}
-                          </Button>
-                        ))}
+                        {attr.options.map((option: string) => {
+                          const isSelected = selectedAttributes[attr.name] === option;
+
+                          // Check if selecting this option (while keeping other selections) would result in an out-of-stock variant
+                          let isOptionOutOfStock = false;
+                          if (product.variants && product.variants.length > 0) {
+                            const hypotheticalAttributes = { ...selectedAttributes, [attr.name]: option };
+                            const hypotheticalVariant = product.variants.find((v: any) => {
+                              return Object.entries(hypotheticalAttributes).every(([key, value]) => v.attributes[key] === value);
+                            });
+                            // If the variant exists and has 0 stock, mark as out of stock
+                            if (hypotheticalVariant && hypotheticalVariant.stock <= 0) {
+                              isOptionOutOfStock = true;
+                            }
+                          }
+
+                          return (
+                            <Button
+                              key={option}
+                              variant={isSelected ? "default" : "outline"}
+                              size="sm"
+                              disabled={isOptionOutOfStock && !isSelected}
+                              onClick={() => handleAttributeSelect(attr.name, option)}
+                              className={`
+                                ${isSelected ? "ring-2 ring-primary ring-offset-2" : ""}
+                                ${isOptionOutOfStock ? "opacity-50 line-through cursor-not-allowed" : ""}
+                              `}
+                            >
+                              {option}
+                            </Button>
+                          );
+                        })}
                       </div>
                     </div>
                   ))}
@@ -387,7 +438,7 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
                     <AddToCartButton
                       product={product}
                       quantity={quantity}
-                      variantId={selectedVariant?.id}
+                      variantId={selectedVariant?.id || selectedVariant?._id}
                       variantName={selectedVariant?.name}
                       attributes={selectedAttributes}
                       variant="outline"
@@ -398,7 +449,7 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
                     <AddToCartButton
                       product={product}
                       quantity={quantity}
-                      variantId={selectedVariant?.id}
+                      variantId={selectedVariant?.id || selectedVariant?._id}
                       variantName={selectedVariant?.name}
                       attributes={selectedAttributes}
                       redirectToCheckout

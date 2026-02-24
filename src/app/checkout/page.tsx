@@ -369,7 +369,7 @@ export default function CheckoutPage() {
             status: 'Pending',
             products: cart.map(item => {
                 // Resolve image: Variant Image > Product Image
-                const variant = item.product.variants?.find((v: any) => v.id === item.variantId);
+                const variant = item.product.variants?.find((v: any) => v.id === item.variantId || v._id === item.variantId);
                 const displayImage = variant?.image || item.product.image;
 
                 return {
@@ -555,7 +555,7 @@ export default function CheckoutPage() {
                                             <div key={item.product.id} className="flex items-center gap-4">
                                                 <div className="relative h-16 w-16 rounded-md overflow-hidden">
                                                     {(() => {
-                                                        const variant = item.product.variants?.find((v: any) => v.id === item.variantId);
+                                                        const variant = item.product.variants?.find((v: any) => v.id === item.variantId || v._id === item.variantId);
                                                         const displayImage = variant?.image || item.product.image;
                                                         return (
                                                             <Image
