@@ -267,68 +267,88 @@ export default function AdminProductsPage() {
                     <TableCell colSpan={7} className="text-center h-24">No products found.</TableCell>
                   </TableRow>
                 ) : (
-                  filteredProducts.map((product) => (
-                    <TableRow
-                      key={product.id}
-                      data-state={
-                        selectedProductIds.includes(product.id) && 'selected'
-                      }
-                    >
-                      <TableCell>
-                        <Checkbox
-                          checked={selectedProductIds.includes(product.id)}
-                          onCheckedChange={(checked) =>
-                            handleSelectRow(product.id, checked as boolean)
-                          }
-                          aria-label="Select row"
-                        />
-                      </TableCell>
-                      <TableCell className="hidden sm:table-cell">
-                        <Image
-                          alt={product.name}
-                          className="aspect-square rounded-md object-cover"
-                          height="64"
-                          src={product.image || '/placeholder.svg'}
-                          width="64"
-                        />
-                      </TableCell>
-                      <TableCell className="font-medium">{product.name}</TableCell>
-                      <TableCell>
-                        <Badge variant={(product.stock || 0) > 0 ? ((product.stock || 0) <= 5 ? 'secondary' : 'default') : 'destructive'}>
-                          {(product.stock || 0) > 0 ? ((product.stock || 0) <= 5 ? 'Low Stock' : 'In Stock') : 'Out of Stock'}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        BDT {product.price.toLocaleString()}
-                      </TableCell>
-                      <TableCell className="hidden md:table-cell">
-                        {product.stock || 0}
-                      </TableCell>
-                      <TableCell>
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button
-                              aria-haspopup="true"
-                              size="icon"
-                              variant="ghost"
-                            >
-                              <MoreHorizontal className="h-4 w-4" />
-                              <span className="sr-only">Toggle menu</span>
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                            <DropdownMenuItem asChild>
-                              <Link href={`/admin/products/edit/${product.id}`}>Edit</Link>
-                            </DropdownMenuItem>
-                            <DropdownMenuItem className="text-red-500" onSelect={() => setDeleteProduct(product.id)}>
-                              Delete
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </TableCell>
-                    </TableRow>
-                  )))}
+                  filteredProducts.map((product) => {
+                    const hasVariants = product.variants && product.variants.length > 0;
+                    const totalStock = hasVariants
+                      ? product.variants!.reduce((sum, v) => sum + (v.stock || 0), 0)
+                      : (product.stock || 0);
+
+                    const minPrice = hasVariants
+                      ? Math.min(...product.variants!.map(v => v.price))
+                      : product.price;
+
+                    const maxPrice = hasVariants
+                      ? Math.max(...product.variants!.map(v => v.price))
+                      : product.price;
+
+                    const displayPrice = minPrice === maxPrice
+                      ? `BDT ${minPrice.toLocaleString()}`
+                      : `BDT ${minPrice.toLocaleString()} - ${maxPrice.toLocaleString()}`;
+
+                    return (
+                      <TableRow
+                        key={product.id}
+                        data-state={
+                          selectedProductIds.includes(product.id) && 'selected'
+                        }
+                      >
+                        <TableCell>
+                          <Checkbox
+                            checked={selectedProductIds.includes(product.id)}
+                            onCheckedChange={(checked) =>
+                              handleSelectRow(product.id, checked as boolean)
+                            }
+                            aria-label="Select row"
+                          />
+                        </TableCell>
+                        <TableCell className="hidden sm:table-cell">
+                          <Image
+                            alt={product.name}
+                            className="aspect-square rounded-md object-cover"
+                            height="64"
+                            src={product.image || '/placeholder.svg'}
+                            width="64"
+                          />
+                        </TableCell>
+                        <TableCell className="font-medium">{product.name}</TableCell>
+                        <TableCell>
+                          <Badge variant={totalStock > 0 ? (totalStock <= 5 ? 'secondary' : 'default') : 'destructive'}>
+                            {totalStock > 0 ? (totalStock <= 5 ? 'Low Stock' : 'In Stock') : 'Out of Stock'}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          {displayPrice}
+                        </TableCell>
+                        <TableCell className="hidden md:table-cell">
+                          {totalStock}
+                        </TableCell>
+                        <TableCell>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button
+                                aria-haspopup="true"
+                                size="icon"
+                                variant="ghost"
+                              >
+                                <MoreHorizontal className="h-4 w-4" />
+                                <span className="sr-only">Toggle menu</span>
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                              <DropdownMenuItem asChild>
+                                <Link href={`/admin/products/edit/${product.id}`}>Edit</Link>
+                              </DropdownMenuItem>
+                              <DropdownMenuItem className="text-red-500" onSelect={() => setDeleteProduct(product.id)}>
+                                Delete
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })
+                )}
               </TableBody>
             </Table>
           </div>
