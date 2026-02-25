@@ -422,20 +422,14 @@ export default function CheckoutPage() {
 
             console.error("Order failed:", error);
 
-
-            // Fallback: Save to Local Storage
-            const offlineOrders = JSON.parse(localStorage.getItem('offline_orders') || '[]');
-            const offlineOrder = { ...orderData, isOffline: true };
-            offlineOrders.push(offlineOrder);
-            localStorage.setItem('offline_orders', JSON.stringify(offlineOrders));
-
             toast({
-                title: 'Order Saved Locally',
-                description: 'Network issue detected. Your order has been saved to your device.',
-                variant: "default"
+                title: 'Order Failed',
+                description: error.message || 'We could not process your order at this time. Please try again.',
+                variant: "destructive"
             });
-            clearCart();
-            router.push(`/thank-you?orderId=${orderId}`);
+
+            // Note: We deliberately do NOT redirect to /thank-you here 
+            // so that Facebook/GA4 URL-based purchase rules do not fire on failed orders.
         }
     }
 
@@ -709,7 +703,7 @@ export default function CheckoutPage() {
                                         }}
                                         disabled={isSendingOtp}
                                     >
-                                        {isSendingOtp ? "Sending OTP..." : "Place Order"}
+                                        {isSendingOtp ? "Sending OTP..." : "Continue"}
                                     </Button>
                                 </CardFooter>
                             </Card>
