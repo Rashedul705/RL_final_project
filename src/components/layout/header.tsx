@@ -35,6 +35,11 @@ export function Header() {
   const cartItemCount = cart.reduce((sum, item) => sum + item.quantity, 0);
   const [user, loading] = useAuthState(auth);
   const router = useRouter();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const handleLogout = async () => {
     await auth.signOut();
@@ -95,7 +100,7 @@ export function Header() {
           </Link>
 
           {/* User Profile / Login Section */}
-          {!loading && (
+          {mounted && !loading && (
             user ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
