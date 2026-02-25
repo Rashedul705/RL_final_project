@@ -240,6 +240,29 @@ export default function CheckoutPage() {
     const handleSendOtp = async (values: z.infer<typeof formSchema>) => {
         setIsSendingOtp(true);
         try {
+            // Track incomplete order / abandoned cart in background
+            try {
+                await apiClient.post('/abandoned-carts', {
+                    phone: values.phoneNumber,
+                    name: values.fullName,
+                    products: cart.map(item => {
+                        const variant = item.product.variants?.find((v: any) => v.id === item.variantId || v._id === item.variantId);
+                        const displayImage = variant?.image || item.product.image;
+                        return {
+                            productId: item.product.id,
+                            name: item.product.name,
+                            quantity: item.quantity,
+                            price: item.product.price,
+                            image: displayImage,
+                            variantId: item.variantId,
+                            variantName: item.variantName
+                        };
+                    })
+                });
+            } catch (err) {
+                console.error("Failed to save incomplete order tracking", err);
+            }
+
             const response = await apiClient.post<{ success: boolean; message: string }>('/otp/send', {
                 phone: values.phoneNumber
             });

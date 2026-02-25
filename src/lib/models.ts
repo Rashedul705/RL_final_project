@@ -187,6 +187,36 @@ const BlacklistSchema: Schema = new Schema({
     reason: { type: String }
 }, { timestamps: true });
 
+// --- Abandoned Cart Schema ---
+export interface IAbandonedCart extends Document {
+    phone: string;
+    name: string;
+    products: {
+        productId: string;
+        name: string;
+        quantity: number;
+        price: number;
+        image?: string;
+        variantId?: string;
+        variantName?: string;
+    }[];
+}
+
+const AbandonedCartSchema: Schema = new Schema({
+    phone: { type: String, required: true, unique: true }, // Store latest cart by phone
+    name: { type: String, required: true },
+    products: [{
+        productId: { type: String, required: true },
+        name: { type: String, required: true },
+        quantity: { type: Number, required: true },
+        price: { type: Number, required: true },
+        image: { type: String },
+        variantId: { type: String },
+        variantName: { type: String }
+    }]
+}, { timestamps: true });
+
+
 // --- OTP Schema ---
 export interface IOTP extends Document {
     phone: string;
@@ -216,6 +246,7 @@ if (process.env.NODE_ENV !== 'production') {
     if (mongoose.models.ShippingMethod) delete mongoose.models.ShippingMethod;
     if (mongoose.models.Inquiry) delete mongoose.models.Inquiry;
     if (mongoose.models.Blacklist) delete mongoose.models.Blacklist;
+    if (mongoose.models.AbandonedCart) delete mongoose.models.AbandonedCart;
 }
 
 export const Product: Model<IProduct> = mongoose.models.Product || mongoose.model<IProduct>('Product', ProductSchema);
@@ -224,6 +255,7 @@ export const Category: Model<ICategory> = mongoose.models.Category || mongoose.m
 export const ShippingMethod: Model<IShippingMethod> = mongoose.models.ShippingMethod || mongoose.model<IShippingMethod>('ShippingMethod', ShippingMethodSchema);
 export const Inquiry: Model<IInquiry> = mongoose.models.Inquiry || mongoose.model<IInquiry>('Inquiry', InquirySchema);
 export const Blacklist: Model<IBlacklist> = mongoose.models.Blacklist || mongoose.model<IBlacklist>('Blacklist', BlacklistSchema);
+export const AbandonedCart: Model<IAbandonedCart> = mongoose.models.AbandonedCart || mongoose.model<IAbandonedCart>('AbandonedCart', AbandonedCartSchema);
 
 // --- Coupon Schema ---
 export interface ICoupon extends Document {
