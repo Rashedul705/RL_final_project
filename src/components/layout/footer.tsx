@@ -56,23 +56,23 @@ export function Footer() {
             <h3 className="text-sm font-bold uppercase tracking-wider">Help</h3>
             <ul className="space-y-2 text-sm">
               <li>
-                <Link href="/#contact" className="text-muted-foreground hover:text-foreground">
+                <Link href="/contact-us" className="text-muted-foreground hover:text-foreground">
                   Contact Us
                 </Link>
               </li>
               <li>
-                <Link href="/#faq" className="text-muted-foreground hover:text-foreground">
-                  Shipping & Returns
+                <Link href="/return-policy" className="text-muted-foreground hover:text-foreground">
+                  Return Policy
                 </Link>
               </li>
               <li>
-                <Link href="/#faq" className="text-muted-foreground hover:text-foreground">
-                  Size Guide
+                <Link href="/terms-and-conditions" className="text-muted-foreground hover:text-foreground">
+                  Terms & Conditions
                 </Link>
               </li>
               <li>
-                <Link href="/#faq" className="text-muted-foreground hover:text-foreground">
-                  FAQ
+                <Link href="/privacy-policy" className="text-muted-foreground hover:text-foreground">
+                  Privacy Policy
                 </Link>
               </li>
             </ul>
