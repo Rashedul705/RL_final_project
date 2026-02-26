@@ -71,6 +71,7 @@ export default function CheckoutPage() {
     const router = useRouter();
     const [shippingMethods, setShippingMethods] = useState<ShippingMethod[]>([]);
     const [selectedMethod, setSelectedMethod] = useState<ShippingMethod | null>(null);
+    const [isOtpEnabled, setIsOtpEnabled] = useState(true);
     const hasFiredBeginCheckout = useRef(false);
 
     // OTP State
@@ -109,6 +110,22 @@ export default function CheckoutPage() {
             hasFiredBeginCheckout.current = true;
         }
     }, [cart]);
+
+    // Fetch Global Settings for OTP Config
+    useEffect(() => {
+        const fetchSettings = async () => {
+            try {
+                const data = await apiClient.get<any>('/settings');
+                if (data) {
+                    const enabled = data.isOtpEnabled ?? true;
+                    setIsOtpEnabled(enabled);
+                }
+            } catch (error) {
+                console.error("Failed to fetch settings", error);
+            }
+        };
+        fetchSettings();
+    }, []);
 
     // Coupon State
     const [couponCode, setCouponCode] = useState("");
@@ -240,6 +257,13 @@ export default function CheckoutPage() {
     const handleSendOtp = async (values: z.infer<typeof formSchema>) => {
         setIsSendingOtp(true);
         try {
+            // Bypass OTP if administratively disabled
+            if (!isOtpEnabled) {
+                await onSubmit(values);
+                setIsSendingOtp(false);
+                return;
+            }
+
             // Track incomplete order / abandoned cart in background
             try {
                 await apiClient.post('/abandoned-carts', {
@@ -488,7 +512,7 @@ export default function CheckoutPage() {
                                 </CardHeader>
                                 <CardContent>
                                     <Form {...form}>
-                                        <form onSubmit={form.handleSubmit(onSubmit)} id="checkout-form" className="space-y-6">
+                                        <form onSubmit={form.handleSubmit(handleSendOtp)} id="checkout-form" className="space-y-6">
                                             <FormField
                                                 control={form.control}
                                                 name="fullName"

@@ -429,3 +429,20 @@ if (process.env.NODE_ENV !== 'production') {
 }
 
 export const Brand: Model<IBrand> = mongoose.models.Brand || mongoose.model<IBrand>('Brand', BrandSchema);
+
+// --- Settings Schema ---
+export interface ISetting extends Document {
+    key: string; // Identifier for the setting group (e.g. 'global')
+    isOtpEnabled: boolean;
+}
+
+const SettingSchema: Schema = new Schema({
+    key: { type: String, required: true, unique: true },
+    isOtpEnabled: { type: Boolean, default: true }
+}, { timestamps: true });
+
+if (process.env.NODE_ENV !== 'production') {
+    if (mongoose.models.Setting) delete mongoose.models.Setting;
+}
+
+export const Setting: Model<ISetting> = mongoose.models.Setting || mongoose.model<ISetting>('Setting', SettingSchema);

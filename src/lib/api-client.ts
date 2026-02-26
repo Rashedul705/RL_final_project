@@ -21,6 +21,7 @@ class ApiClient {
                 ...headers,
             },
             body: body ? JSON.stringify(body) : undefined,
+            cache: 'no-store', // Disable Next.js aggressive caching for dynamic data
         });
 
         const data = await response.json();
