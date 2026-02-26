@@ -628,7 +628,7 @@ export default function CheckoutPage() {
                                 <CardContent className="space-y-4">
                                     <div className="space-y-3">
                                         {cart.map(item => (
-                                            <div key={item.product.id} className="flex items-center gap-4">
+                                            <div key={`${item.product.id}-${item.variantId || 'default'}`} className="flex items-center gap-4">
                                                 <div className="relative h-16 w-16 rounded-md overflow-hidden">
                                                     {(() => {
                                                         const variant = item.product.variants?.find((v: any) => v.id === item.variantId || v._id === item.variantId);

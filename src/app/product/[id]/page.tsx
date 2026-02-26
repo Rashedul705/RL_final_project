@@ -441,6 +441,7 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
                       variantId={selectedVariant?.id || selectedVariant?._id}
                       variantName={selectedVariant?.name}
                       attributes={selectedAttributes}
+                      disabled={false}
                       variant="outline"
                       className="w-full flex-1 text-lg py-6 border-primary text-primary hover:bg-primary hover:text-primary-foreground"
                     >
@@ -452,6 +453,7 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
                       variantId={selectedVariant?.id || selectedVariant?._id}
                       variantName={selectedVariant?.name}
                       attributes={selectedAttributes}
+                      disabled={false}
                       redirectToCheckout
                       className="w-full flex-1 bg-primary hover:bg-primary/90 text-primary-foreground text-lg py-6"
                     >

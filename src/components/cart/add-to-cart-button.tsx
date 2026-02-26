@@ -37,7 +37,7 @@ export function AddToCartButton({
   // Here we just check if we are adding more than available.
   // For now, let's assume valid quantity is passed.
 
-  const isOutOfStock = product.stock === 0; // Global check, might need refinement 
+  const isOutOfStock = props.disabled !== undefined ? props.disabled : product.stock === 0;
 
   const handleClick = () => {
     if (isOutOfStock) return;
