@@ -84,32 +84,21 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
         if (productData) {
           setProduct(productData);
 
-          // Initialize default attributes if variants exist
+          // Initialize default attributes to empty unless there's only one option per attribute
           if (productData.attributes && productData.attributes.length > 0) {
-            let initialVariant = null;
-
-            // Try to find the first variant that is in stock
-            if (productData.variants && productData.variants.length > 0) {
-              initialVariant = productData.variants.find((v: any) => v.stock > 0);
-
-              // If all are out of stock, just pick the first one
-              if (!initialVariant) {
-                initialVariant = productData.variants[0];
-              }
-            }
-
             const defaults: Record<string, string> = {};
-            if (initialVariant && initialVariant.attributes) {
-              // Set defaults to match the selected initial variant
-              Object.keys(initialVariant.attributes).forEach(key => {
-                defaults[key] = initialVariant.attributes[key];
-              });
-            } else {
-              // Fallback to first options if variants structure is missing
-              productData.attributes.forEach((attr: any) => {
+            let allSingleOptions = true;
+
+            productData.attributes.forEach((attr: any) => {
+              if (attr.options.length === 1) {
+                // If there is only one option, select it by default
                 defaults[attr.name] = attr.options[0];
-              });
-            }
+              } else {
+                allSingleOptions = false;
+              }
+            });
+
+            // Set the defaults (might be empty if attributes have multiple options)
             setSelectedAttributes(defaults);
           }
 
@@ -150,10 +139,19 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
   // Update selected variant when attributes change
   useEffect(() => {
     if (product && product.variants && product.variants.length > 0) {
-      const matchingVariant = product.variants.find((v: any) => {
-        return Object.entries(selectedAttributes).every(([key, value]) => v.attributes[key] === value);
-      });
-      setSelectedVariant(matchingVariant || null);
+      // Ensure all required attributes are selected before matching
+      const allAttributesSelected = product.attributes?.every(
+        (attr: any) => selectedAttributes[attr.name]
+      );
+
+      if (allAttributesSelected) {
+        const matchingVariant = product.variants.find((v: any) => {
+          return Object.entries(selectedAttributes).every(([key, value]) => v.attributes[key] === value);
+        });
+        setSelectedVariant(matchingVariant || null);
+      } else {
+        setSelectedVariant(null);
+      }
     }
   }, [selectedAttributes, product]);
 
@@ -211,8 +209,12 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
     ? product.variants.every((v: any) => v.stock <= 0)
     : product.stock <= 0;
 
+  // Check if variants are present but not fully selected
+  const needsVariantSelection = product.variants && product.variants.length > 0
+    && (!product.attributes || product.attributes.some((attr: any) => !selectedAttributes[attr.name]));
+
   // What disables the button/shows stock warning currently
-  const isOutOfStock = product.variants && product.variants.length > 0 ? isVariantOutOfStock : isProductCompletelyOutOfStock;
+  const isOutOfStock = product.variants && product.variants.length > 0 ? (needsVariantSelection ? false : isVariantOutOfStock) : isProductCompletelyOutOfStock;
 
   const handleQuantityChange = (newQuantity: number) => {
     if (newQuantity < 1) {
@@ -298,14 +300,21 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
               <div className="mt-4">
                 <Badge variant="outline">{product.category}</Badge>
               </div>
-              <div className="mt-4 flex items-end gap-2">
-                <p className="text-3xl font-bold text-primary">
-                  BDT {currentPrice.toLocaleString()}
-                </p>
-                {selectedVariant && (
-                  <span className="text-sm text-muted-foreground mb-1">
-                    (Variant: {selectedVariant.name})
-                  </span>
+              <div className="mt-4 flex flex-col gap-1">
+                <div className="flex items-end gap-2">
+                  <p className="text-3xl font-bold text-primary">
+                    BDT {currentPrice.toLocaleString()}
+                  </p>
+                  {selectedVariant && (
+                    <span className="text-sm text-muted-foreground mb-1">
+                      (Variant: {selectedVariant.name})
+                    </span>
+                  )}
+                </div>
+                {needsVariantSelection && (
+                  <p className="text-sm font-medium text-destructive mt-1">
+                    Please select your preferred options to view availability.
+                  </p>
                 )}
               </div>
 
@@ -401,13 +410,15 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
                     <p className="text-sm font-medium text-primary">
                       {isOutOfStock ? (
                         <span className="text-red-600">Out of Stock</span>
+                      ) : needsVariantSelection ? (
+                        <span className="text-muted-foreground">Select options to see stock</span>
                       ) : (
                         `${currentStock} items in stock`
                       )}
                     </p>
                     {selectedVariant && (
                       <p className="text-xs text-muted-foreground">
-                        Selected: {Object.entries(selectedAttributes).map(([k, v]) => `${k} ${v}`).join(', ')}
+                        Selected: {Object.entries(selectedAttributes).map(([k, v]) => `${k}: ${v}`).join(', ')}
                       </p>
                     )}
                   </div>
@@ -441,11 +452,11 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
                       variantId={selectedVariant?.id || selectedVariant?._id}
                       variantName={selectedVariant?.name}
                       attributes={selectedAttributes}
-                      disabled={false}
+                      disabled={needsVariantSelection || isOutOfStock}
                       variant="outline"
                       className="w-full flex-1 text-lg py-6 border-primary text-primary hover:bg-primary hover:text-primary-foreground"
                     >
-                      Add to Cart
+                      {needsVariantSelection ? 'Select Options' : 'Add to Cart'}
                     </AddToCartButton>
                     <AddToCartButton
                       product={product}
@@ -453,11 +464,11 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
                       variantId={selectedVariant?.id || selectedVariant?._id}
                       variantName={selectedVariant?.name}
                       attributes={selectedAttributes}
-                      disabled={false}
+                      disabled={needsVariantSelection || isOutOfStock}
                       redirectToCheckout
                       className="w-full flex-1 bg-primary hover:bg-primary/90 text-primary-foreground text-lg py-6"
                     >
-                      Order Now
+                      {needsVariantSelection ? 'Select Options' : 'Order Now'}
                     </AddToCartButton>
                   </div>
                 </div>

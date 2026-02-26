@@ -17,6 +17,7 @@ type CartContextType = {
   addToCart: (product: Product, quantity?: number, variantId?: string, variantName?: string, attributes?: Record<string, string>) => void;
   removeFromCart: (productId: string, variantId?: string) => void;
   updateQuantity: (productId: string, quantity: number, variantId?: string) => void;
+  updateItemVariant: (productId: string, oldVariantId: string | undefined, newVariantId: string, newVariantName: string, newAttributes: Record<string, string>) => void;
   clearCart: () => void;
   getItem: (productId: string, variantId?: string) => CartItem | undefined;
 };
@@ -61,6 +62,12 @@ export function CartProvider({ children }: { children: ReactNode }) {
       return;
     }
 
+    let targetStock = product.stock;
+    if (variantId && product.variants && product.variants.length > 0) {
+      const v = product.variants.find((v: any) => (v.id || v._id) === variantId);
+      if (v) targetStock = v.stock;
+    }
+
     setCart((prevCart) => {
       const existingItem = prevCart.find(
         (item) => item.product.id === product.id && item.variantId === variantId
@@ -68,22 +75,18 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
       if (existingItem) {
         const newQuantity = existingItem.quantity + quantity;
-        // Check stock limit if possible. For now checking global stock as proxy or strict limit.
-        // If variants have specific stock, we should ideally check that. 
-        // But 'product' object passed here might be the base product.
-        // Assuming optimistic add for now, or relying on parent to check variant stock.
 
-        if (newQuantity > product.stock) {
+        if (newQuantity > targetStock) {
           setTimeout(() => {
             toast({
               variant: "destructive",
               title: "Stock limit reached",
-              description: `You can only add up to ${product.stock} of ${product.name}.`,
+              description: `You can only add up to ${targetStock} of ${product.name}${variantName ? ` (${variantName})` : ''}.`,
             });
           }, 0);
           return prevCart.map((item) =>
             item.product.id === product.id && item.variantId === variantId
-              ? { ...item, quantity: product.stock }
+              ? { ...item, quantity: targetStock }
               : item
           );
         }
@@ -96,15 +99,15 @@ export function CartProvider({ children }: { children: ReactNode }) {
       }
 
       // New item
-      if (quantity > product.stock) {
+      if (quantity > targetStock) {
         setTimeout(() => {
           toast({
             variant: "destructive",
             title: "Stock limit reached",
-            description: `You can only add up to ${product.stock} of ${product.name}.`,
+            description: `You can only add up to ${targetStock} of ${product.name}${variantName ? ` (${variantName})` : ''}.`,
           });
         }, 0);
-        return [...prevCart, { product, quantity: product.stock, variantId, variantName, attributes }];
+        return [...prevCart, { product, quantity: targetStock, variantId, variantName, attributes }];
       }
 
       setTimeout(() => {
@@ -131,18 +134,24 @@ export function CartProvider({ children }: { children: ReactNode }) {
     const item = getItem(productId, variantId);
     if (!item) return;
 
-    if (quantity > item.product.stock) {
+    let targetStock = item.product.stock;
+    if (variantId && item.product.variants && item.product.variants.length > 0) {
+      const v = item.product.variants.find((v: any) => (v.id || v._id) === variantId);
+      if (v) targetStock = v.stock;
+    }
+
+    if (quantity > targetStock) {
       setTimeout(() => {
         toast({
           variant: "destructive",
           title: "Stock limit reached",
-          description: `You can only add up to ${item.product.stock} of ${item.product.name}.`,
+          description: `You can only add up to ${targetStock} of ${item.product.name}${item.variantName ? ` (${item.variantName})` : ''}.`,
         });
       }, 0);
       setCart((prevCart) =>
         prevCart.map((cartItem) =>
           cartItem.product.id === productId && cartItem.variantId === variantId
-            ? { ...cartItem, quantity: item.product.stock }
+            ? { ...cartItem, quantity: targetStock }
             : cartItem
         )
       );
@@ -162,12 +171,86 @@ export function CartProvider({ children }: { children: ReactNode }) {
     );
   };
 
+  const updateItemVariant = (productId: string, oldVariantId: string | undefined, newVariantId: string, newVariantName: string, newAttributes: Record<string, string>) => {
+    setCart((prevCart) => {
+      // Find the item being modified
+      const itemToModify = prevCart.find(item => item.product.id === productId && item.variantId === oldVariantId);
+      if (!itemToModify) return prevCart;
+
+      // Check if the NEW variant already exists in the cart for this product
+      const existingNewVariantItem = prevCart.find(item => item.product.id === productId && item.variantId === newVariantId);
+
+      if (existingNewVariantItem) {
+        // If it exists, merge quantities into the existing one and remove the old one
+        const mergedQuantity = existingNewVariantItem.quantity + itemToModify.quantity;
+
+        let targetStock = existingNewVariantItem.product.stock;
+
+        // Detailed specific variant stock check
+        if (existingNewVariantItem.product.variants && existingNewVariantItem.product.variants.length > 0) {
+          const v = existingNewVariantItem.product.variants.find((v: any) => (v.id || v._id) === newVariantId);
+          if (v) targetStock = v.stock;
+        }
+
+        const cappedQuantity = Math.min(mergedQuantity, targetStock);
+
+        if (mergedQuantity > targetStock) {
+          setTimeout(() => {
+            toast({
+              variant: "destructive",
+              title: "Stock limit reached",
+              description: `You can only add up to ${targetStock} of this variant.`,
+            });
+          }, 0);
+        }
+
+        return prevCart
+          .map(item =>
+            item.product.id === productId && item.variantId === newVariantId
+              ? { ...item, quantity: cappedQuantity }
+              : item
+          )
+          .filter(item => !(item.product.id === productId && item.variantId === oldVariantId));
+      }
+
+      // If it doesn't exist, just update the variant info on the existing item
+      return prevCart.map(item => {
+        if (item.product.id === productId && item.variantId === oldVariantId) {
+          let targetStock = item.product.stock;
+          const v = item.product.variants?.find((v: any) => (v.id || v._id) === newVariantId);
+          if (v) targetStock = v.stock;
+
+          let newQuantity = item.quantity;
+          if (newQuantity > targetStock) {
+            newQuantity = targetStock;
+            setTimeout(() => {
+              toast({
+                variant: "destructive",
+                title: "Stock limit reached",
+                description: `Quantity reduced to ${targetStock} to match available stock for this variant.`,
+              });
+            }, 0);
+          }
+
+          return {
+            ...item,
+            variantId: newVariantId,
+            variantName: newVariantName,
+            attributes: newAttributes,
+            quantity: newQuantity
+          };
+        }
+        return item;
+      });
+    });
+  };
+
   const clearCart = () => {
     setCart([]);
   }
 
   return (
-    <CartContext.Provider value={{ cart, addToCart, removeFromCart, updateQuantity, clearCart, getItem }}>
+    <CartContext.Provider value={{ cart, addToCart, removeFromCart, updateQuantity, updateItemVariant, clearCart, getItem }}>
       {children}
     </CartContext.Provider>
   );

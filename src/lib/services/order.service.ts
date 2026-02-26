@@ -35,14 +35,20 @@ export class OrderService {
                 const product = await Product.findOne({ id: item.productId });
                 if (product) {
                     // 1. Variant Stock Check & Decrease
-                    if (item.variantId && product.variants && product.variants.length > 0) {
+                    if (product.variants && product.variants.length > 0) {
+                        if (!item.variantId) {
+                            throw new Error(`Please select a variant for ${product.name}`);
+                        }
+
                         const variantIndex = product.variants.findIndex((v: any) => v.id === item.variantId);
                         if (variantIndex > -1) {
                             const variant = product.variants[variantIndex];
                             if (variant.stock < item.quantity) {
-                                throw new Error(`Insufficient stock for ${product.name} (Variant: ${item.variantName})`);
+                                throw new Error(`Insufficient stock for ${product.name} (Variant: ${item.variantName || variant.name})`);
                             }
                             product.variants[variantIndex].stock -= item.quantity;
+                        } else {
+                            throw new Error(`Invalid variant selected for ${product.name}`);
                         }
                     }
 

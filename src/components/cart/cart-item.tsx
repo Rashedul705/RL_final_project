@@ -78,7 +78,14 @@ export function CartItem({ item }: CartItemProps) {
               size="icon"
               className="h-8 w-8 text-[#00846E] hover:bg-[#00846E] hover:text-white"
               onClick={() => updateQuantity(product.id, quantity + 1, variantId)}
-              disabled={quantity >= product.stock}
+              disabled={(() => {
+                let targetStock = product.stock;
+                if (variantId && product.variants && product.variants.length > 0) {
+                  const v = product.variants.find((v: any) => (v.id || v._id) === variantId);
+                  if (v) targetStock = v.stock;
+                }
+                return quantity >= targetStock;
+              })()}
             >
               <Plus className="h-4 w-4" />
             </Button>

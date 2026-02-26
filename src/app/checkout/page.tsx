@@ -65,7 +65,7 @@ type ShippingMethod = {
 };
 
 export default function CheckoutPage() {
-    const { cart, clearCart, updateQuantity } = useCart();
+    const { cart, clearCart, updateQuantity, updateItemVariant } = useCart();
     const { user } = useAuth();
     const { toast } = useToast();
     const router = useRouter();
@@ -669,12 +669,48 @@ export default function CheckoutPage() {
                                                             variant="outline"
                                                             size="icon"
                                                             className="h-6 w-6 text-primary hover:bg-primary hover:text-primary-foreground"
-                                                            onClick={() => updateQuantity(item.product.id, item.quantity + 1)}
-                                                            disabled={item.product.stock !== undefined && item.quantity >= item.product.stock}
+                                                            onClick={() => updateQuantity(item.product.id, item.quantity + 1, item.variantId)}
+                                                            disabled={(() => {
+                                                                let targetStock = item.product.stock;
+                                                                if (item.variantId && item.product.variants && item.product.variants.length > 0) {
+                                                                    const v = item.product.variants.find((v: any) => (v.id || v._id) === item.variantId);
+                                                                    if (v) targetStock = v.stock;
+                                                                }
+                                                                return targetStock !== undefined && item.quantity >= targetStock;
+                                                            })()}
                                                         >
                                                             <Plus className="h-3 w-3" />
                                                         </Button>
                                                     </div>
+
+                                                    {/* Variant Selector */}
+                                                    {item.product.variants && item.product.variants.length > 0 && (
+                                                        <div className="mt-2 text-xs">
+                                                            <Select
+                                                                value={item.variantId || "unselected"}
+                                                                onValueChange={(val) => {
+                                                                    if (val === "unselected") return;
+                                                                    const selectedVar = item.product.variants?.find((v: any) => (v.id || v._id) === val);
+                                                                    if (selectedVar) {
+                                                                        updateItemVariant(item.product.id, item.variantId, selectedVar.id || selectedVar._id, selectedVar.name, selectedVar.attributes || {});
+                                                                    }
+                                                                }}
+                                                            >
+                                                                <SelectTrigger className={`h-8 w-full max-w-[200px] text-xs ${!item.variantId ? "border-red-500 text-red-600 bg-red-50" : ""}`}>
+                                                                    <SelectValue placeholder="Select Variant" />
+                                                                </SelectTrigger>
+                                                                <SelectContent>
+                                                                    <SelectItem value="unselected" disabled>Choose an option</SelectItem>
+                                                                    {item.product.variants.map((v: any) => (
+                                                                        <SelectItem key={v.id || v._id} value={v.id || v._id} disabled={v.stock === 0}>
+                                                                            {v.name} {v.stock === 0 ? "(Out of Stock)" : ""}
+                                                                        </SelectItem>
+                                                                    ))}
+                                                                </SelectContent>
+                                                            </Select>
+                                                        </div>
+                                                    )}
+
                                                 </div>
                                                 <div className="text-sm font-medium">
                                                     {(item.product.price * item.quantity).toLocaleString()}
@@ -747,6 +783,16 @@ export default function CheckoutPage() {
                                         type="button"
                                         className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
                                         onClick={(e) => {
+                                            // Check if any cart item needs a variant but doesn't have one
+                                            const missingVariants = cart.some(item => item.product.variants && item.product.variants.length > 0 && !item.variantId);
+                                            if (missingVariants) {
+                                                toast({
+                                                    title: "Missing Variant Selection",
+                                                    description: "Please select a variant for all items in your cart before continuing.",
+                                                    variant: "destructive"
+                                                });
+                                                return;
+                                            }
                                             form.handleSubmit(handleSendOtp)(e);
                                         }}
                                         disabled={isSendingOtp}
