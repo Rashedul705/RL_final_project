@@ -8,7 +8,7 @@ export const runtime = 'nodejs';
 export async function POST(request: NextRequest) {
     try {
         const body = await request.json();
-        const { phone, name, products } = body;
+        const { phone, name, address, products } = body;
 
         if (!phone || !name || !products || !Array.isArray(products)) {
             return ApiResponse.error("Missing required fields", 400);
@@ -22,6 +22,7 @@ export async function POST(request: NextRequest) {
             {
                 phone,
                 name,
+                address, // NEW FIELD
                 products
             },
             { new: true, upsert: true }

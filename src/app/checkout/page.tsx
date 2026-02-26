@@ -245,6 +245,7 @@ export default function CheckoutPage() {
                 await apiClient.post('/abandoned-carts', {
                     phone: values.phoneNumber,
                     name: values.fullName,
+                    address: `${values.fullAddress}, ${values.thana}, ${values.city}`,
                     products: cart.map(item => {
                         const variant = item.product.variants?.find((v: any) => v.id === item.variantId || v._id === item.variantId);
                         const displayImage = variant?.image || item.product.image;

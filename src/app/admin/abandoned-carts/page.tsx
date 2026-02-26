@@ -28,6 +28,7 @@ interface IAbandonedCart {
     _id: string;
     phone: string;
     name: string;
+    address?: string;
     products: {
         productId: string;
         name: string;
@@ -91,6 +92,7 @@ export default function AbandonedCartsPage() {
                                 <TableRow>
                                     <TableHead>Customer</TableHead>
                                     <TableHead>Phone</TableHead>
+                                    <TableHead>Address</TableHead>
                                     <TableHead>Cart Items</TableHead>
                                     <TableHead>Total Value</TableHead>
                                     <TableHead>Last Active</TableHead>
@@ -99,7 +101,7 @@ export default function AbandonedCartsPage() {
                             <TableBody>
                                 {carts.length === 0 ? (
                                     <TableRow>
-                                        <TableCell colSpan={5} className="text-center h-24">No abandoned carts found.</TableCell>
+                                        <TableCell colSpan={6} className="text-center h-24">No abandoned carts found.</TableCell>
                                     </TableRow>
                                 ) : (
                                     carts.map((cart) => {
@@ -109,6 +111,9 @@ export default function AbandonedCartsPage() {
                                                 <TableCell className="font-medium">{cart.name}</TableCell>
                                                 <TableCell>
                                                     <a href={`tel:${cart.phone}`} className="text-blue-600 hover:underline">{cart.phone}</a>
+                                                </TableCell>
+                                                <TableCell className="max-w-[200px] truncate" title={cart.address || 'N/A'}>
+                                                    {cart.address || <span className="text-muted-foreground italic">N/A</span>}
                                                 </TableCell>
                                                 <TableCell>
                                                     <div className="flex flex-col gap-2">

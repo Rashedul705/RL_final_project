@@ -191,6 +191,7 @@ const BlacklistSchema: Schema = new Schema({
 export interface IAbandonedCart extends Document {
     phone: string;
     name: string;
+    address?: string; // NEW FIELD
     products: {
         productId: string;
         name: string;
@@ -205,6 +206,7 @@ export interface IAbandonedCart extends Document {
 const AbandonedCartSchema: Schema = new Schema({
     phone: { type: String, required: true, unique: true }, // Store latest cart by phone
     name: { type: String, required: true },
+    address: { type: String }, // NEW FIELD
     products: [{
         productId: { type: String, required: true },
         name: { type: String, required: true },
