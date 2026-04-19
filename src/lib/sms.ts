@@ -18,7 +18,10 @@ export async function sendSMS(phone: string, message: string): Promise<{ success
         const url = new URL(API_URL);
         url.searchParams.append('api_key', API_KEY);
         url.searchParams.append('type', 'text');
-        url.searchParams.append('number', phone);
+        // Ensure Bangladeshi numbers start with 88 for better delivery success with BulkSMSBD
+        const formattedPhone = phone.startsWith('88') ? phone : (phone.startsWith('01') ? `88${phone}` : phone);
+
+        url.searchParams.append('number', formattedPhone);
         url.searchParams.append('senderid', SENDER_ID);
         url.searchParams.append('message', message);
 

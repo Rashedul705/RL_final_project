@@ -55,10 +55,14 @@ function ThankYouContent() {
                             }
                         });
 
-
-
-
-
+                        // Explicitly fire Facebook Pixel Purchase event with valid parameters
+                        if (typeof window !== 'undefined' && (window as any).fbq) {
+                            (window as any).fbq('track', 'Purchase', {
+                                value: Number(orderData.amount),
+                                currency: 'BDT',
+                                content_type: 'product'
+                            });
+                        }
                     }
                 } catch (error) {
                     console.error('Failed to fetch order for pixel tracking', error);
