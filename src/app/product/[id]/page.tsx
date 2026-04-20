@@ -312,8 +312,8 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
                   )}
                 </div>
                 {needsVariantSelection && (
-                  <p className="text-sm font-medium text-destructive mt-1">
-                    Please select your preferred options to view availability.
+                  <p className="text-lg font-bold text-destructive mt-1">
+                    আপনার সাইজ বেছে নিন
                   </p>
                 )}
               </div>
