@@ -125,7 +125,7 @@ export default function AdminEditProductPage() {
               brand: data.brand || '',
             });
 
-            if (data.productType === 'variant' && data.sizes) {
+            if (data.productType === 'variant' && data.sizes && data.sizes.length > 0) {
               setProductType('variant');
               setSizes(data.sizes.map((s: any) => ({
                 id: crypto.randomUUID(),
@@ -133,6 +133,16 @@ export default function AdminEditProductPage() {
                 price: s.price,
                 discountPrice: s.discountPrice || 0,
                 stock: s.stock
+              })));
+            } else if (!data.productType && data.variants && data.variants.length > 0) {
+              // Legacy Migration
+              setProductType('variant');
+              setSizes(data.variants.map((v: any) => ({
+                id: crypto.randomUUID(),
+                name: v.name,
+                price: v.price,
+                discountPrice: v.discountPrice || 0,
+                stock: v.stock
               })));
             } else {
               setProductType('simple');

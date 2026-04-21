@@ -74,6 +74,20 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
         const productData = await apiClient.get<IProduct>(`/products/${slug}`);
 
         if (productData) {
+          // Legacy Migration
+          if (!productData.productType && productData.variants && productData.variants.length > 0) {
+            productData.productType = 'variant';
+            productData.sizes = productData.variants.map((v: any) => ({
+              id: v.id || v._id,
+              name: v.name,
+              price: v.price,
+              stock: v.stock,
+              discountPrice: v.discountPrice || 0
+            }));
+          } else if (!productData.productType) {
+             productData.productType = 'simple';
+          }
+
           setProduct(productData);
 
           // Initialize default size if there is only one size
