@@ -35,20 +35,20 @@ export class OrderService {
                 const product = await Product.findOne({ id: item.productId });
                 if (product) {
                     // 1. Variant Stock Check & Decrease
-                    if (product.variants && product.variants.length > 0) {
-                        if (!item.variantId) {
-                            throw new Error(`Please select a variant for ${product.name}`);
+                    if (product.productType === 'variant' && product.sizes && product.sizes.length > 0) {
+                        if (!item.variantName && !item.variantId) {
+                            throw new Error(`Please select a size for ${product.name}`);
                         }
 
-                        const variantIndex = product.variants.findIndex((v: any) => v.id === item.variantId);
-                        if (variantIndex > -1) {
-                            const variant = product.variants[variantIndex];
-                            if (variant.stock < item.quantity) {
-                                throw new Error(`Insufficient stock for ${product.name} (Variant: ${item.variantName || variant.name})`);
+                        const sizeIndex = product.sizes.findIndex((s: any) => s.name === item.variantName || s.name === item.variantId || s._id?.toString() === item.variantId);
+                        if (sizeIndex > -1) {
+                            const size = product.sizes[sizeIndex];
+                            if (size.stock < item.quantity) {
+                                throw new Error(`Insufficient stock for ${product.name} (Size: ${item.variantName || size.name})`);
                             }
-                            product.variants[variantIndex].stock -= item.quantity;
+                            product.sizes[sizeIndex].stock -= item.quantity;
                         } else {
-                            throw new Error(`Invalid variant selected for ${product.name}`);
+                            throw new Error(`Invalid size selected for ${product.name}`);
                         }
                     }
 
@@ -88,10 +88,10 @@ export class OrderService {
                 const product = await Product.findOne({ id: item.productId });
                 if (product) {
                     // Restore Variant Stock
-                    if (item.variantId && product.variants) {
-                        const variantIndex = product.variants.findIndex((v: any) => v.id === item.variantId);
-                        if (variantIndex > -1) {
-                            product.variants[variantIndex].stock += item.quantity;
+                    if ((item.variantName || item.variantId) && product.productType === 'variant' && product.sizes) {
+                        const sizeIndex = product.sizes.findIndex((s: any) => s.name === item.variantName || s.name === item.variantId || s._id?.toString() === item.variantId);
+                        if (sizeIndex > -1) {
+                            product.sizes[sizeIndex].stock += item.quantity;
                         }
                     }
                     // Restore Global Stock
@@ -107,13 +107,13 @@ export class OrderService {
                 const product = await Product.findOne({ id: item.productId });
                 if (product) {
                     // Check & Decrease Variant Stock
-                    if (item.variantId && product.variants) {
-                        const variantIndex = product.variants.findIndex((v: any) => v.id === item.variantId);
-                        if (variantIndex > -1) {
-                            if (product.variants[variantIndex].stock < item.quantity) {
-                                throw new Error(`Insufficient stock for variant ${product.variants[variantIndex].name}`);
+                    if ((item.variantName || item.variantId) && product.productType === 'variant' && product.sizes) {
+                        const sizeIndex = product.sizes.findIndex((s: any) => s.name === item.variantName || s.name === item.variantId || s._id?.toString() === item.variantId);
+                        if (sizeIndex > -1) {
+                            if (product.sizes[sizeIndex].stock < item.quantity) {
+                                throw new Error(`Insufficient stock for size ${product.sizes[sizeIndex].name}`);
                             }
-                            product.variants[variantIndex].stock -= item.quantity;
+                            product.sizes[sizeIndex].stock -= item.quantity;
                         }
                     }
 
@@ -141,10 +141,10 @@ export class OrderService {
                     const product = await Product.findOne({ id: item.productId });
                     if (product) {
                         // Restore Variant Stock
-                        if (item.variantId && product.variants) {
-                            const variantIndex = product.variants.findIndex((v: any) => v.id === item.variantId);
-                            if (variantIndex > -1) {
-                                product.variants[variantIndex].stock += item.quantity;
+                        if ((item.variantName || item.variantId) && product.productType === 'variant' && product.sizes) {
+                            const sizeIndex = product.sizes.findIndex((s: any) => s.name === item.variantName || s.name === item.variantId || s._id?.toString() === item.variantId);
+                            if (sizeIndex > -1) {
+                                product.sizes[sizeIndex].stock += item.quantity;
                             }
                         }
                         // Restore Global Stock

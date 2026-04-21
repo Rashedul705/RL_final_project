@@ -29,6 +29,14 @@ export interface IProduct extends Document {
     slug: string;
     attributes?: { name: string; options: string[] }[];
     variants?: IVariant[];
+    productType?: 'simple' | 'variant';
+    discountPrice?: number;
+    sizes?: {
+        name: string;
+        price: number;
+        discountPrice?: number;
+        stock: number;
+    }[];
 }
 
 const ProductSchema: Schema = new Schema({
@@ -43,6 +51,14 @@ const ProductSchema: Schema = new Schema({
     category: { type: String, required: true },
     brand: { type: String }, // Optional reference to Brand
     stock: { type: Number, required: true, default: 0 },
+    productType: { type: String, enum: ['simple', 'variant'], default: 'simple' },
+    discountPrice: { type: Number, default: 0 },
+    sizes: [{
+        name: { type: String, required: true },
+        price: { type: Number, required: true },
+        discountPrice: { type: Number, default: 0 },
+        stock: { type: Number, required: true, default: 0 }
+    }],
     sizeGuide: { type: String },
     size: { type: String },
     highlights: { type: String },

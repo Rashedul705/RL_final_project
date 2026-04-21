@@ -17,6 +17,14 @@ const createProductSchema = z.object({
     size: z.string().optional(),
     sizeGuide: z.string().optional(),
     brand: z.string().optional(),
+    productType: z.enum(['simple', 'variant']).optional(),
+    discountPrice: z.number().optional(),
+    sizes: z.array(z.object({
+        name: z.string(),
+        price: z.number(),
+        discountPrice: z.number().optional(),
+        stock: z.number()
+    })).optional(),
     attributes: z.array(z.object({
         name: z.string(),
         options: z.array(z.string())

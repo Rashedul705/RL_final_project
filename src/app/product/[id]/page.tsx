@@ -57,20 +57,12 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
   const [relatedProducts, setRelatedProducts] = useState<any[]>([]);
 
   // Variant State
-  const [selectedAttributes, setSelectedAttributes] = useState<Record<string, string>>({});
-  const [selectedVariant, setSelectedVariant] = useState<any>(null);
+  const [selectedSize, setSelectedSize] = useState<any>(null);
 
-  // Ensure the main image is always first in the gallery, add variant images if any
+  // Ensure the main image is always first in the gallery
   const galleryImages = useMemo<string[]>(() => {
     if (!product) return [];
     const images: string[] = [product.image, ...(product.images || [])];
-    if (product.variants) {
-      product.variants.forEach((v: any) => {
-        if (v.image && !images.includes(v.image)) {
-          images.push(v.image);
-        }
-      });
-    }
     return images.filter((img: string, index: number, self: string[]) => img && self.indexOf(img) === index);
   }, [product]);
 
@@ -84,22 +76,9 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
         if (productData) {
           setProduct(productData);
 
-          // Initialize default attributes to empty unless there's only one option per attribute
-          if (productData.attributes && productData.attributes.length > 0) {
-            const defaults: Record<string, string> = {};
-            let allSingleOptions = true;
-
-            productData.attributes.forEach((attr: any) => {
-              if (attr.options.length === 1) {
-                // If there is only one option, select it by default
-                defaults[attr.name] = attr.options[0];
-              } else {
-                allSingleOptions = false;
-              }
-            });
-
-            // Set the defaults (might be empty if attributes have multiple options)
-            setSelectedAttributes(defaults);
+          // Initialize default size if there is only one size
+          if (productData.productType === 'variant' && productData.sizes && productData.sizes.length === 1) {
+            setSelectedSize(productData.sizes[0]);
           }
 
 
@@ -136,24 +115,7 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
   }, [slug]);
 
 
-  // Update selected variant when attributes change
-  useEffect(() => {
-    if (product && product.variants && product.variants.length > 0) {
-      // Ensure all required attributes are selected before matching
-      const allAttributesSelected = product.attributes?.every(
-        (attr: any) => selectedAttributes[attr.name]
-      );
 
-      if (allAttributesSelected) {
-        const matchingVariant = product.variants.find((v: any) => {
-          return Object.entries(selectedAttributes).every(([key, value]) => v.attributes[key] === value);
-        });
-        setSelectedVariant(matchingVariant || null);
-      } else {
-        setSelectedVariant(null);
-      }
-    }
-  }, [selectedAttributes, product]);
 
 
   useEffect(() => {
@@ -174,15 +136,6 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
     };
   }, [api]);
 
-  // Scroll to variant image if available
-  useEffect(() => {
-    if (selectedVariant && selectedVariant.image && api) {
-      const index = galleryImages.findIndex(img => img === selectedVariant.image);
-      if (index !== -1) {
-        api.scrollTo(index);
-      }
-    }
-  }, [selectedVariant, api]);
 
 
   if (isLoading) {
@@ -198,23 +151,22 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
   }
 
   // Derived Display Values
-  const currentPrice = selectedVariant ? selectedVariant.price : product.price;
-  const currentStock = selectedVariant ? selectedVariant.stock : product.stock;
+  const currentPrice = selectedSize ? selectedSize.price : product.price;
+  const currentStock = selectedSize ? selectedSize.stock : product.stock;
 
   // A variant is out of stock if its specific stock is <= 0
-  const isVariantOutOfStock = selectedVariant ? selectedVariant.stock <= 0 : false;
+  const isVariantOutOfStock = selectedSize ? selectedSize.stock <= 0 : false;
 
   // The global product is out of stock if simple product stock <= 0 OR all variants <= 0
-  const isProductCompletelyOutOfStock = product.variants && product.variants.length > 0
-    ? product.variants.every((v: any) => v.stock <= 0)
+  const isProductCompletelyOutOfStock = product.productType === 'variant' && product.sizes && product.sizes.length > 0
+    ? product.sizes.every((s: any) => s.stock <= 0)
     : product.stock <= 0;
 
   // Check if variants are present but not fully selected
-  const needsVariantSelection = product.variants && product.variants.length > 0
-    && (!product.attributes || product.attributes.some((attr: any) => !selectedAttributes[attr.name]));
+  const needsVariantSelection = product.productType === 'variant' && product.sizes && product.sizes.length > 0 && !selectedSize;
 
   // What disables the button/shows stock warning currently
-  const isOutOfStock = product.variants && product.variants.length > 0 ? (needsVariantSelection ? false : isVariantOutOfStock) : isProductCompletelyOutOfStock;
+  const isOutOfStock = product.productType === 'variant' && product.sizes && product.sizes.length > 0 ? (needsVariantSelection ? false : isVariantOutOfStock) : isProductCompletelyOutOfStock;
 
   const handleQuantityChange = (newQuantity: number) => {
     if (newQuantity < 1) {
@@ -231,10 +183,6 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
 
   const handleThumbnailClick = (index: number) => {
     api?.scrollTo(index);
-  };
-
-  const handleAttributeSelect = (attributeName: string, value: string) => {
-    setSelectedAttributes(prev => ({ ...prev, [attributeName]: value }));
   };
 
   return (
@@ -305,9 +253,9 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
                   <p className="text-3xl font-bold text-primary">
                     BDT {currentPrice.toLocaleString()}
                   </p>
-                  {selectedVariant && (
+                  {selectedSize && (
                     <span className="text-sm text-muted-foreground mb-1">
-                      (Variant: {selectedVariant.name})
+                      (Size: {selectedSize.name})
                     </span>
                   )}
                 </div>
@@ -318,48 +266,34 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
                 )}
               </div>
 
-              {/* Attributes Selection */}
-              {product.attributes && product.attributes.length > 0 ? (
+              {/* Size Selection */}
+              {product.productType === 'variant' && product.sizes && product.sizes.length > 0 ? (
                 <div className="mt-6 space-y-4">
-                  {product.attributes.map((attr: any) => (
-                    <div key={attr.name}>
-                      <Label className="text-sm font-medium mb-2 block">{attr.name}</Label>
-                      <div className="flex flex-wrap gap-2">
-                        {attr.options.map((option: string) => {
-                          const isSelected = selectedAttributes[attr.name] === option;
+                  <div>
+                    <Label className="text-sm font-medium mb-2 block">Size</Label>
+                    <div className="flex flex-wrap gap-2">
+                      {product.sizes.map((sizeObj: any) => {
+                        const isSelected = selectedSize?.name === sizeObj.name;
+                        const isOptionOutOfStock = sizeObj.stock <= 0;
 
-                          // Check if selecting this option (while keeping other selections) would result in an out-of-stock variant
-                          let isOptionOutOfStock = false;
-                          if (product.variants && product.variants.length > 0) {
-                            const hypotheticalAttributes = { ...selectedAttributes, [attr.name]: option };
-                            const hypotheticalVariant = product.variants.find((v: any) => {
-                              return Object.entries(hypotheticalAttributes).every(([key, value]) => v.attributes[key] === value);
-                            });
-                            // If the variant exists and has 0 stock, mark as out of stock
-                            if (hypotheticalVariant && hypotheticalVariant.stock <= 0) {
-                              isOptionOutOfStock = true;
-                            }
-                          }
-
-                          return (
-                            <Button
-                              key={option}
-                              variant={isSelected ? "default" : "outline"}
-                              size="sm"
-                              disabled={isOptionOutOfStock && !isSelected}
-                              onClick={() => handleAttributeSelect(attr.name, option)}
-                              className={`
-                                ${isSelected ? "ring-2 ring-primary ring-offset-2" : ""}
-                                ${isOptionOutOfStock ? "opacity-50 line-through cursor-not-allowed" : ""}
-                              `}
-                            >
-                              {option}
-                            </Button>
-                          );
-                        })}
-                      </div>
+                        return (
+                          <Button
+                            key={sizeObj.name}
+                            variant={isSelected ? "default" : "outline"}
+                            size="sm"
+                            disabled={isOptionOutOfStock && !isSelected}
+                            onClick={() => setSelectedSize(sizeObj)}
+                            className={`
+                              ${isSelected ? "ring-2 ring-primary ring-offset-2" : ""}
+                              ${isOptionOutOfStock ? "opacity-50 line-through cursor-not-allowed" : ""}
+                            `}
+                          >
+                            {sizeObj.name}
+                          </Button>
+                        );
+                      })}
                     </div>
-                  ))}
+                  </div>
                 </div>
               ) : (
                 product.size && (
@@ -416,9 +350,9 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
                         `${currentStock} items in stock`
                       )}
                     </p>
-                    {selectedVariant && (
+                    {selectedSize && (
                       <p className="text-xs text-muted-foreground">
-                        Selected: {Object.entries(selectedAttributes).map(([k, v]) => `${k}: ${v}`).join(', ')}
+                        Selected: Size: {selectedSize.name}
                       </p>
                     )}
                   </div>
@@ -449,9 +383,9 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
                     <AddToCartButton
                       product={product}
                       quantity={quantity}
-                      variantId={selectedVariant?.id || selectedVariant?._id}
-                      variantName={selectedVariant?.name}
-                      attributes={selectedAttributes}
+                      variantId={selectedSize?._id || selectedSize?.name}
+                      variantName={selectedSize?.name}
+                      attributes={selectedSize ? { Size: selectedSize.name } : undefined}
                       disabled={needsVariantSelection || isOutOfStock}
                       variant="outline"
                       className="w-full flex-1 text-lg py-6 border-primary text-primary hover:bg-primary hover:text-primary-foreground"
@@ -461,9 +395,9 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
                     <AddToCartButton
                       product={product}
                       quantity={quantity}
-                      variantId={selectedVariant?.id || selectedVariant?._id}
-                      variantName={selectedVariant?.name}
-                      attributes={selectedAttributes}
+                      variantId={selectedSize?._id || selectedSize?.name}
+                      variantName={selectedSize?.name}
+                      attributes={selectedSize ? { Size: selectedSize.name } : undefined}
                       disabled={needsVariantSelection || isOutOfStock}
                       redirectToCheckout
                       className="w-full flex-1 bg-primary hover:bg-primary/90 text-primary-foreground text-lg py-6"
